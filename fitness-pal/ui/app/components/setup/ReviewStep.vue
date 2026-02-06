@@ -1,144 +1,157 @@
 <script setup lang="ts">
+import ReviewCard from '~/components/setup/ReviewCard.vue'
 import Card from '~/components/ui/card/Card.vue'
 import CardContent from '~/components/ui/card/CardContent.vue'
 
-interface PersonalInfo {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-}
-
-interface Goals {
-  primaryGoal: string
-  targetWeight: string
-  timeline: string
-  motivation: string
-}
-
-interface Nutrition {
-  dietType: string
-  allergies: string
-  dailyCalories: string
-  mealsPerDay: string
-}
-
-interface Training {
-  experienceLevel: string
-  workoutFrequency: string
-  preferredActivities: string
-  injuries: string
-}
-
 interface Props {
-  personalInfo: PersonalInfo
-  goals: Goals
-  nutrition: Nutrition
-  training: Training
+  basicDemographics: Record<string, any>
+  activityLifestyle: Record<string, any>
+  goals: Record<string, any>
+  trainingBackground: Record<string, any>
+  medicalHistory: Record<string, any>
+  nutritionHistory: Record<string, any>
+  behavioralFactors: Record<string, any>
+  metricsTracking: Record<string, any>
+  notes: string
 }
 
 const props = defineProps<Props>()
+
+// Field configurations for each section
+const personalInfoFields = [
+  { key: 'age', label: 'Age', suffix: 'years' },
+  { key: 'height', label: 'Height', suffix: 'in' },
+  { key: 'weight', label: 'Weight', suffix: 'lbs' },
+  { key: 'sex', label: 'Sex' },
+  { key: 'gender', label: 'Gender' },
+  { key: 'bodyFatPercentage', label: 'Body Fat %' },
+  { key: 'leanMass', label: 'Lean Mass', suffix: 'lbs' },
+]
+
+const lifestyleFields = [
+  { key: 'activityLevel', label: 'Activity Level' },
+  { key: 'dailyStepCount', label: 'Daily Steps' },
+  { key: 'jobType', label: 'Job Type' },
+  { key: 'sleepDuration', label: 'Sleep Duration', suffix: 'hrs' },
+  { key: 'sleepQuality', label: 'Sleep Quality' },
+  { key: 'stressLevel', label: 'Stress Level' },
+  { key: 'recoveryCapacity', label: 'Recovery' },
+]
+
+const goalsFields = [
+  { key: 'primaryGoal', label: 'Primary Goal' },
+  { key: 'timeframe', label: 'Timeframe' },
+  { key: 'targetWeight', label: 'Target Weight', suffix: 'lbs' },
+  { key: 'performanceMetric', label: 'Performance Metric' },
+  { key: 'secondaryGoals', label: 'Secondary Goals', type: 'badges' as const },
+  { key: 'healthGoals', label: 'Health Goals', type: 'badges' as const, badgeVariant: 'outline' as const },
+]
+
+const trainingFields = [
+  { key: 'trainingAge', label: 'Experience' },
+  { key: 'equipmentAccess', label: 'Equipment' },
+  { key: 'daysPerWeek', label: 'Days/Week' },
+  { key: 'timePerSession', label: 'Time/Session', suffix: 'min' },
+  { key: 'exercisePreferences', label: 'Preferred Exercises', type: 'badges' as const },
+  { key: 'exerciseDislikes', label: 'Dislikes', type: 'badges' as const, badgeVariant: 'outline' as const },
+]
+
+const nutritionFields = [
+  { key: 'currentDietPattern', label: 'Diet Pattern' },
+  { key: 'cookingSkillLevel', label: 'Cooking Skill' },
+  { key: 'foodBudget', label: 'Budget' },
+  { key: 'alcoholIntake', label: 'Alcohol' },
+  { key: 'calorieTrackingExperience', label: 'Tracked Calories Before', type: 'boolean' as const },
+  { key: 'foodAllergies', label: 'Allergies', type: 'badges' as const, badgeVariant: 'destructive' as const },
+  { key: 'dietaryRestrictions', label: 'Dietary Restrictions', type: 'badges' as const },
+  { key: 'supplementUse', label: 'Supplements', type: 'badges' as const, badgeVariant: 'outline' as const },
+]
+
+const medicalFields = [
+  { key: 'painPatterns', label: 'Pain Patterns' },
+  { key: 'doctorRestrictions', label: 'Doctor Restrictions' },
+  { key: 'injuries', label: 'Injuries', type: 'badges' as const },
+  { key: 'chronicConditions', label: 'Chronic Conditions', type: 'badges' as const },
+  { key: 'mobilityRestrictions', label: 'Mobility Restrictions', type: 'badges' as const },
+  { key: 'medications', label: 'Medications', type: 'badges' as const, badgeVariant: 'outline' as const },
+]
+
+const behavioralFields = [
+  { key: 'motivationLevel', label: 'Motivation' },
+  { key: 'consistencyHistory', label: 'Consistency' },
+  { key: 'accountabilityPreference', label: 'Accountability' },
+  { key: 'supportSystem', label: 'Support System' },
+]
+
+const metricsFields = [
+  { key: 'checkinFrequency', label: 'Check-in Frequency' },
+  { key: 'preferredProgressMetrics', label: 'Progress Metrics', type: 'badges' as const },
+  { key: 'trackingTools', label: 'Tracking Tools', type: 'badges' as const, badgeVariant: 'outline' as const },
+]
 </script>
 
 <template>
   <div>
-    <h2 class="text-2xl font-semibold mb-2">Review</h2>
-    <p class="text-muted-foreground mb-8">Final check</p>
+    <h2 class="text-2xl font-semibold mb-2">Review Your Profile</h2>
+    <p class="text-muted-foreground mb-8">Please review your information before submitting</p>
 
     <div class="space-y-6">
-      <Card>
-        <CardContent class="pt-6">
-          <h3 class="text-lg font-semibold mb-4">Personal Information</h3>
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p class="text-muted-foreground">First Name</p>
-              <p class="text-foreground">{{ personalInfo.firstName || '—' }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Last Name</p>
-              <p class="text-foreground">{{ personalInfo.lastName || '—' }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Email</p>
-              <p class="text-foreground">{{ personalInfo.email || '—' }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Phone</p>
-              <p class="text-foreground">{{ personalInfo.phone || '—' }}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <ReviewCard
+        title="Personal Information"
+        :data="basicDemographics"
+        :fields="personalInfoFields"
+        show-empty
+      />
 
-      <Card>
-        <CardContent class="pt-6">
-          <h3 class="text-lg font-semibold mb-4">Goals</h3>
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p class="text-muted-foreground">Primary Goal</p>
-              <p class="text-foreground">{{ goals.primaryGoal || '—' }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Target Weight</p>
-              <p class="text-foreground">{{ goals.targetWeight || '—' }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Timeline</p>
-              <p class="text-foreground">{{ goals.timeline || '—' }}</p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-muted-foreground">Motivation</p>
-              <p class="text-foreground">{{ goals.motivation || '—' }}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <ReviewCard
+        title="Lifestyle & Activity"
+        :data="activityLifestyle"
+        :fields="lifestyleFields"
+        show-empty
+      />
 
-      <Card>
-        <CardContent class="pt-6">
-          <h3 class="text-lg font-semibold mb-4">Nutrition</h3>
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p class="text-muted-foreground">Diet Type</p>
-              <p class="text-foreground">{{ nutrition.dietType || '—' }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Daily Calorie Target</p>
-              <p class="text-foreground">{{ nutrition.dailyCalories || '—' }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Meals Per Day</p>
-              <p class="text-foreground">{{ nutrition.mealsPerDay || '—' }}</p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-muted-foreground">Allergies & Restrictions</p>
-              <p class="text-foreground">{{ nutrition.allergies || '—' }}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <ReviewCard
+        title="Goals & Priorities"
+        :data="goals"
+        :fields="goalsFields"
+        show-empty
+      />
 
-      <Card>
+      <ReviewCard
+        title="Training Background"
+        :data="trainingBackground"
+        :fields="trainingFields"
+      />
+
+      <ReviewCard
+        title="Nutrition"
+        :data="nutritionHistory"
+        :fields="nutritionFields"
+      />
+
+      <ReviewCard
+        title="Medical History"
+        :data="medicalHistory"
+        :fields="medicalFields"
+      />
+
+      <ReviewCard
+        title="Behavioral Factors"
+        :data="behavioralFactors"
+        :fields="behavioralFields"
+      />
+
+      <ReviewCard
+        title="Metrics & Tracking"
+        :data="metricsTracking"
+        :fields="metricsFields"
+      />
+
+      <!-- Notes -->
+      <Card v-if="notes">
         <CardContent class="pt-6">
-          <h3 class="text-lg font-semibold mb-4">Training</h3>
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p class="text-muted-foreground">Experience Level</p>
-              <p class="text-foreground">{{ training.experienceLevel || '—' }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">Workout Frequency</p>
-              <p class="text-foreground">{{ training.workoutFrequency || '—' }}</p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-muted-foreground">Preferred Activities</p>
-              <p class="text-foreground">{{ training.preferredActivities || '—' }}</p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-muted-foreground">Past Injuries or Limitations</p>
-              <p class="text-foreground">{{ training.injuries || '—' }}</p>
-            </div>
-          </div>
+          <h3 class="text-lg font-semibold mb-4">Additional Notes</h3>
+          <p class="text-sm text-foreground">{{ notes }}</p>
         </CardContent>
       </Card>
     </div>

@@ -1,63 +1,176 @@
 package com.nutrify.lib.factories
 
-import com.zaxxer.hikari.HikariDataSource
-import kotlin.use
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.rpc
+import kotlinx.serialization.json.JsonElement
 
 
-data class Result(val body: Any?, val error: Exception? )
+data class Result<T>(val body: T?, val error: Exception?)
 
-class SupabaseManager(val dataSource: HikariDataSource, val sqlFactory: SQLFactory) {
+class SupabaseManager(val client: SupabaseClient) {
 
-
-    private fun getSQLQuery(queryName: String): String? {
-        return sqlFactory.get(queryName)
-    }
-
-
-    fun mutate(queryName: String, params: List<Any>): Result {
-        val sqlQuery = getSQLQuery(queryName) ?: return Result(null, Exception("SQL Query not found"))
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(sqlQuery).use { statement ->
-                params.forEachIndexed { index, param ->
-                    statement.setObject(index + 1, param)
-                }
-
-                try {
-                    statement.executeQuery().use { resultSet ->
-                        val resultVal = if (resultSet.next()) resultSet.getObject(1) else "No result found"
-                        return Result(resultVal, null)
-                    }
-                } catch (e: Exception) {
-                    println(e.message)
-                    println(e.cause)
-                    return Result(null, e)
-                }
-            }
+    suspend inline fun <reified T : Any> insert(table: String, data: T): Result<T> {
+        return try {
+            val result = client.postgrest[table].insert(data) {
+                select()
+            }.decodeSingle<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Insert error: ${e.message}")
+            Result(null, e)
         }
     }
 
-    fun <T> query(queryName: String, params: List<Any> = emptyList(), mapper: (java.sql.ResultSet) -> T): Result {
-        val sqlQuery = getSQLQuery(queryName) ?: return Result(null, Exception("SQL Query not found"))
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(sqlQuery).use { statement ->
-                params.forEachIndexed { index, param ->
-                    statement.setObject(index + 1, param)
-                }
+    suspend inline fun <reified T : Any> insertMany(table: String, data: List<T>): Result<List<T>> {
+        return try {
+            val result = client.postgrest[table].insert(data) {
+                select()
+            }.decodeList<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Insert many error: ${e.message}")
+            Result(null, e)
+        }
+    }
 
-                try {
-                    statement.executeQuery().use { resultSet ->
-                        val results = mutableListOf<T>()
-                        while (resultSet.next()) {
-                            results.add(mapper(resultSet))
-                        }
-                        return Result(results, null)
+    suspend inline fun <reified T : Any> select(
+        table: String,
+        columns: String = "*"
+    ): Result<List<T>> {
+        return try {
+            val result = client.postgrest[table]
+                .select(columns = Columns.raw(columns))
+                .decodeList<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Select error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    suspend inline fun <reified T : Any> selectWhere(
+        table: String,
+        column: String,
+        value: Any,
+        columns: String = "*"
+    ): Result<List<T>> {
+        return try {
+            val result = client.postgrest[table]
+                .select(columns = Columns.raw(columns)) {
+                    filter {
+                        eq(column, value)
                     }
-                } catch (e: Exception) {
-                    println(e.message)
-                    println(e.cause)
-                    return Result(null, e)
+                    select()
                 }
+                .decodeList<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Select where error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    suspend inline fun <reified T : Any> selectSingle(
+        table: String,
+        column: String,
+        value: Any,
+        columns: String = "*"
+    ): Result<T> {
+        return try {
+            val result = client.postgrest[table]
+                .select(columns = Columns.raw(columns)) {
+                    filter {
+                        eq(column, value)
+                    }
+                }
+                .decodeSingle<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Select single error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    suspend inline fun <reified T : Any> update(
+        table: String,
+        data: T,
+        column: String,
+        value: Any
+    ): Result<T> {
+        return try {
+            val result = client.postgrest[table].update(data) {
+                filter {
+                    eq(column, value)
+                }
+                select()
+            }.decodeSingle<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Update error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+
+
+    suspend inline fun <reified T : Any> upsert(table: String, data: T): Result<T> {
+        return try {
+            val result = client.postgrest[table].upsert(data) {
+                select()
+            }.decodeSingle<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Upsert error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    suspend fun delete(
+        table: String,
+        column: String,
+        value: Any
+    ): Result<Unit> {
+        return try {
+            client.postgrest[table].delete {
+                filter {
+                    eq(column, value)
+                }
+                select()
             }
+            Result(Unit, null)
+        } catch (e: Exception) {
+            println("Delete error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    suspend fun rpc(
+        functionName: String,
+        parameters: Map<String, Any> = emptyMap()
+    ): Result<JsonElement> {
+        return try {
+            val result = client.postgrest.rpc(functionName, parameters)
+                .decodeAs<JsonElement>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("RPC error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    suspend inline fun <reified T : Any> rpcDecoded(
+        functionName: String,
+        parameters: Map<String, Any> = emptyMap()
+    ): Result<T> {
+        return try {
+            val result = client.postgrest.rpc(functionName, parameters)
+                .decodeAs<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("RPC decoded error: ${e.message}")
+            Result(null, e)
         }
     }
 }

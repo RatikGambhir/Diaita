@@ -22,13 +22,25 @@ fun Application.configureUserRoutes(userController: UserController) {
                 return@post
             }
             val registeredUser = userController.registerUserProfile(user)
-            if(registeredUser === "Mutation Success") {
-                call.respond(HttpStatusCode.OK)
+            if(registeredUser == "Mutation Success") {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "ok"))
                 return@post
             }
             call.respondText("Server Error occurred", status = HttpStatusCode.BadRequest)
+        }
 
-            return@post
+        post("/user/profile") {
+            val user = call.receive<RegisterUserProfileRequest>()
+            if(user.userId.isBlank()) {
+                call.respondText("Invalid request, request body is invalid", status = HttpStatusCode.BadRequest)
+                return@post
+            }
+            val registeredUser = userController.registerUserProfile(user)
+            if(registeredUser == "Mutation Success") {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "ok"))
+                return@post
+            }
+            call.respondText("Server Error occurred", status = HttpStatusCode.BadRequest)
         }
     }
 }

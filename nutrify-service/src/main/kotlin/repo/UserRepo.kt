@@ -1,35 +1,65 @@
 package com.nutrify.repo
 
-import com.nutrify.entity.UserMetadata
+import com.nutrify.dto.RegisterUserProfileRequest
 import com.nutrify.lib.factories.SupabaseManager
-import java.util.UUID
+import com.nutrify.lib.mappings.*
 
 class UserRepo(private val supabaseManager: SupabaseManager) {
 
+    suspend fun upsertFullProfile(request: RegisterUserProfileRequest): String {
+        val userId = request.userId
 
-    fun insertUserMetadata(userMetadata: UserMetadata): String {
-        val queryName = "registerUserMetadata"
-        val userId = UUID.fromString(userMetadata.userId.trim())
-        println(userId)
-        println(queryName)
-        val params: List<Any> = listOf(userId, userMetadata.height,
-            userMetadata.weight, userMetadata.age, userMetadata.gender, userMetadata.activityLevel,
-            userMetadata.userId)
-        val result = supabaseManager.mutate(queryName, params)
-         if(result.body != null) {
-             println("Success")
-            return ""
-        } else {
-            println("Error")
-            //TODO: Handle Error or missing value
-            return "Hello"
-         }
+        if (upsertOrFail("user_profile", request.toUserProfileRow(userId)) == null) {
+            return "Mutation Failed"
+        }
+        if (upsertOrFail("basic_demographics", request.toBasicDemographicsRow(userId)) == null) {
+            return "Mutation Failed"
+        }
+        if (upsertOrFail("activity_lifestyle", request.toActivityLifestyleRow(userId)) == null) {
+            return "Mutation Failed"
+        }
+        if (upsertOrFail("goals_priorities", request.toGoalsPrioritiesRow(userId)) == null) {
+            return "Mutation Failed"
+        }
 
+        request.trainingBackground?.let { trainingBackground ->
+            if (upsertOrFail("training_background", trainingBackground.toTrainingBackgroundRow(userId)) == null) {
+                return "Mutation Failed"
+            }
+        }
+
+        request.medicalHistory?.let { medicalHistory ->
+            if (upsertOrFail("medical_history", medicalHistory.toMedicalHistoryRow(userId)) == null) {
+                return "Mutation Failed"
+            }
+        }
+
+        request.nutritionHistory?.let { nutritionHistory ->
+            if (upsertOrFail("nutrition_history", nutritionHistory.toNutritionHistoryRow(userId)) == null) {
+                return "Mutation Failed"
+            }
+        }
+
+        request.behavioralFactors?.let { behavioralFactors ->
+            if (upsertOrFail("behavioral_factors", behavioralFactors.toBehavioralFactorsRow(userId)) == null) {
+                return "Mutation Failed"
+            }
+        }
+
+        request.metricsTracking?.let { metricsTracking ->
+            if (upsertOrFail("metrics_tracking", metricsTracking.toMetricsTrackingRow(userId)) == null) {
+                return "Mutation Failed"
+            }
+        }
+
+        return "Mutation Success"
     }
 
-    fun saveUserRecommendations(userId: String): UserMetadata? {
-        return null
+    private suspend inline fun <reified T : Any> upsertOrFail(table: String, data: T): T? {
+        val result = supabaseManager.upsert(table, data)
+        if (result.body == null) {
+            println("Error upserting $table: ${result.error?.message}")
+        }
+        return result.body
     }
-
-
 }

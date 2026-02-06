@@ -1,37 +1,36 @@
 package com.nutrify
 
-import com.google.genai.Client
-import com.nutrify.lib.factories.SQLFactory
+import com.nutrify.lib.clients.GeminiRestClient
 import com.nutrify.lib.factories.SupabaseManager
-import com.zaxxer.hikari.HikariDataSource
+import io.github.jan.supabase.SupabaseClient
 import io.mockk.mockk
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 
-// Test classes - Empty objects (no constructor parameters)
 class EmptyObject1
 class EmptyObject2
 class EmptyObject3
 
-// Test classes - Objects with nested dependencies
-class NestedObject1
-class NestedObject2(val dep: NestedObject1)
-class NestedObject3(val dep1: NestedObject1, val dep2: NestedObject2)
+class LeafDependency
+class NeedsDependency(val leaf: LeafDependency)
 
 class ContainerTest {
 
     @Test
-    fun testBindAllWithEmptyObjects() {
+    fun instance_exists_returns_null_for_missing_type() {
         val container = Container()
-        val emptyObjects = listOf(
-            EmptyObject1(),
-            EmptyObject2(),
-            EmptyObject3()
-        )
 
-        container.bindAll(emptyObjects)
+        assertNull(container.instanceExists(EmptyObject1::class))
+    }
+
+    @Test
+    fun bind_all_registers_simple_instances() {
+        val container = Container()
+        val instances = listOf(EmptyObject1(), EmptyObject2(), EmptyObject3())
+
+        container.bindAll(instances)
 
         assertNotNull(container.instanceExists(EmptyObject1::class))
         assertNotNull(container.instanceExists(EmptyObject2::class))
@@ -39,98 +38,47 @@ class ContainerTest {
     }
 
     @Test
-    fun testBindAllWithNestedObjects() {
+    fun bind_singleton_does_not_replace_existing_binding_for_same_type() {
         val container = Container()
+        val first = EmptyObject1()
+        val second = EmptyObject1()
 
-        val nested1 = NestedObject1()
-        val nested2 = NestedObject2(nested1)
-        val nested3 = NestedObject3(nested1, nested2)
+        container.bindSingleton(first)
+        container.bindSingleton(second)
 
-        val nestedObjects = listOf(
-            nested1,
-            nested2,
-            nested3
-        )
-
-        container.bindAll(nestedObjects)
-
-        assertNotNull(container.instanceExists(NestedObject1::class))
-        assertNotNull(container.instanceExists(NestedObject2::class))
-        assertNotNull(container.instanceExists(NestedObject3::class))
+        val bound = container.instanceExists(EmptyObject1::class)
+        assertNotNull(bound)
+        assertSame(first, bound)
     }
 
     @Test
-    fun testBindAllWithMockedSupabaseManagerAndGeminiClient() {
+    fun bind_all_supports_current_supabase_and_rest_client_types() {
         val container = Container()
+        val mockSupabaseClient = mockk<SupabaseClient>(relaxed = true)
+        val supabaseManager = SupabaseManager(mockSupabaseClient)
+        val geminiClient = GeminiRestClient(apiKey = "test-api-key")
 
-        val mockDataSource = mockk<HikariDataSource>(relaxed = true)
-        val mockSQLFactory = mockk<SQLFactory>(relaxed = true)
-        val mockGeminiGenAIClient = mockk<Client>(relaxed = true)
-
-        val supabaseManager = SupabaseManager(mockDataSource, mockSQLFactory)
-        val geminiClient = GeminiClient(mockGeminiGenAIClient)
-
-        val instances = listOf(supabaseManager, geminiClient)
-        container.bindAll(instances)
-
-        val boundSupabaseManager = container.instanceExists(SupabaseManager::class)
-        assertNotNull(boundSupabaseManager)
-        assertSame(supabaseManager, boundSupabaseManager)
-
-        val boundGeminiClient = container.instanceExists(GeminiClient::class)
-        assertNotNull(boundGeminiClient)
-        assertSame(geminiClient, boundGeminiClient)
-
-        assertEquals(mockDataSource, boundSupabaseManager.dataSource)
-        assertEquals(mockSQLFactory, boundSupabaseManager.sqlFactory)
-        assertEquals(mockGeminiGenAIClient, boundGeminiClient.client)
-    }
-
-    @Test
-    fun testBindAllWithMockedDependenciesInList() {
-        val container = Container()
-
-        val mockDataSource = mockk<HikariDataSource>(relaxed = true)
-        val mockSQLFactory = mockk<SQLFactory>(relaxed = true)
-        val mockGeminiGenAIClient = mockk<Client>(relaxed = true)
-
-        val supabaseManager = SupabaseManager(mockDataSource, mockSQLFactory)
-        val geminiClient = GeminiClient(mockGeminiGenAIClient)
-
-        val allComponents = listOf(
-            supabaseManager,
-            geminiClient
-        )
-
-        container.bindAll(allComponents)
-
-        assertNotNull(container.instanceExists(SupabaseManager::class))
-        assertNotNull(container.instanceExists(GeminiClient::class))
-
-        val retrievedSupabaseManager = container.instanceExists(SupabaseManager::class)!!
-        val retrievedGeminiClient = container.instanceExists(GeminiClient::class)!!
-
-        assertSame(mockDataSource, retrievedSupabaseManager.dataSource)
-        assertSame(mockSQLFactory, retrievedSupabaseManager.sqlFactory)
-        assertSame(mockGeminiGenAIClient, retrievedGeminiClient.client)
-    }
-
-    @Test
-    fun testBindAllDoesNotDuplicateBindings() {
-        val container = Container()
-
-        val mockDataSource = mockk<HikariDataSource>(relaxed = true)
-        val mockSQLFactory = mockk<SQLFactory>(relaxed = true)
-
-        val supabaseManager1 = SupabaseManager(mockDataSource, mockSQLFactory)
-        val supabaseManager2 = SupabaseManager(mockDataSource, mockSQLFactory)
-
-        container.bindAll(listOf(supabaseManager1))
-
-        container.bindAll(listOf(supabaseManager2))
+        container.bindAll(listOf(supabaseManager, geminiClient))
 
         val boundManager = container.instanceExists(SupabaseManager::class)
+        val boundGemini = container.instanceExists(GeminiRestClient::class)
+
         assertNotNull(boundManager)
-        assertSame(supabaseManager1, boundManager)
+        assertNotNull(boundGemini)
+        assertSame(supabaseManager, boundManager)
+        assertSame(geminiClient, boundGemini)
+        assertSame(mockSupabaseClient, boundManager.client)
+    }
+
+    @Test
+    fun get_creates_object_graph_when_not_prebound() {
+        val container = Container()
+
+        val created = container.get<NeedsDependency>()
+        val leaf = container.instanceExists(LeafDependency::class)
+
+        assertNotNull(created)
+        assertNotNull(leaf)
+        assertSame(leaf, created.leaf)
     }
 }

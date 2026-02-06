@@ -19,6 +19,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     kotlinOptions { jvmTarget = "23" }
 }
 
+tasks.withType<Test>().configureEach {
+    jvmArgs("-Dnet.bytebuddy.experimental=true")
+}
+
 dependencies {
     // --- Ktor server ---
     implementation(libs.ktor.server.core)
@@ -36,9 +40,14 @@ dependencies {
     // --- DB / pool / logging ---
     implementation(libs.postgresql)
     implementation(libs.h2)
-    implementation(libs.hikariCP)          // ← correct accessor (not libs.HikariCP)
+    implementation(libs.hikariCP)
     implementation(libs.logback.classic)
     implementation("com.google.genai:google-genai:1.0.0")
+
+    // --- Supabase Kotlin Client ---
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.ktor:ktor-client-cio:3.1.1")
 
 
     // --- Ktor client (optional in a server module) ---

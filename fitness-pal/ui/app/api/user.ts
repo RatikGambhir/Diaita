@@ -36,8 +36,8 @@ export const userApi = {
     return response.data;
   },
 
-  createUserProfile: async (data: Omit<UserProfile, 'userId'>): Promise<UserProfile> => {
-    const response = await apiClient.post<UserProfile>('/user/profile', data);
+  createUserProfile: async (data: RegisterUserProfileRequest): Promise<{ status: string }> => {
+    const response = await apiClient.post<{ status: string }>('/user/profile', data);
     return response.data;
   },
 };
@@ -49,3 +49,102 @@ export const setAuthToken = (token: string | null) => {
     delete apiClient.defaults.headers.common['Authorization'];
   }
 };
+
+type BasicDemographicsRequest = {
+  age: number
+  sex: string | null
+  gender: string | null
+  height: number
+  weight: number
+  bodyFatPercentage: number | null
+  leanMass: number | null
+  biologicalConsiderations: string | null
+  menstrualCycleInfo: string | null
+}
+
+type ActivityLifestyleRequest = {
+  activityLevel: string
+  dailyStepCount: number | null
+  jobType: string | null
+  commuteTime: string | null
+  sleepDuration: number | null
+  sleepQuality: string | null
+  stressLevel: string | null
+  recoveryCapacity: string | null
+}
+
+type GoalsPrioritiesRequest = {
+  primaryGoal: string
+  secondaryGoals: string[] | null
+  timeframe: string | null
+  targetWeight: number | null
+  performanceMetric: string | null
+  aestheticGoals: string | null
+  healthGoals: string[] | null
+}
+
+type TrainingBackgroundRequest = {
+  trainingAge: string | null
+  trainingHistory: string | null
+  currentWorkoutRoutine: string | null
+  exercisePreferences: string[] | null
+  exerciseDislikes: string[] | null
+  equipmentAccess: string | null
+  timePerSession: number | null
+  daysPerWeek: number | null
+}
+
+type MedicalHistoryRequest = {
+  injuries: string[] | null
+  chronicConditions: string[] | null
+  painPatterns: string | null
+  mobilityRestrictions: string[] | null
+  medications: string[] | null
+  doctorRestrictions: string | null
+}
+
+type NutritionHistoryRequest = {
+  currentDietPattern: string | null
+  calorieTrackingExperience: boolean | null
+  macronutrientPreferences: string | null
+  foodAllergies: string[] | null
+  dietaryRestrictions: string[] | null
+  culturalFoodPreferences: string | null
+  cookingSkillLevel: string | null
+  foodBudget: string | null
+  eatingSchedule: string | null
+  snackingHabits: string | null
+  alcoholIntake: string | null
+  supplementUse: string[] | null
+}
+
+type BehavioralFactorsRequest = {
+  motivationLevel: string | null
+  consistencyHistory: string | null
+  accountabilityPreference: string | null
+  pastSuccessFailurePatterns: string | null
+  relationshipWithFood: string | null
+  disorderedEatingHistory: string | null
+  stressEatingTendencies: string | null
+  supportSystem: string | null
+}
+
+type MetricsTrackingRequest = {
+  preferredProgressMetrics: string[] | null
+  trackingTools: string[] | null
+  checkinFrequency: string | null
+}
+
+export type RegisterUserProfileRequest = {
+  id: string
+  userId: string
+  basicDemographics: BasicDemographicsRequest
+  activityLifestyle: ActivityLifestyleRequest
+  goals: GoalsPrioritiesRequest
+  trainingBackground: TrainingBackgroundRequest | null
+  medicalHistory: MedicalHistoryRequest | null
+  nutritionHistory: NutritionHistoryRequest | null
+  behavioralFactors: BehavioralFactorsRequest | null
+  metricsTracking: MetricsTrackingRequest | null
+  notes: string | null
+}

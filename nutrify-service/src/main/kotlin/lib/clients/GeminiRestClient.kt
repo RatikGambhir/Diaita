@@ -20,17 +20,17 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         prompt: String,
         config: com.nutrify.dto.GenerationConfig? = null,
         systemInstruction: String? = null
-    ): String {
+    ): String? {
         val request = GeminiRequest.fromPrompt(prompt, config, systemInstruction)
-
-        val response = client.post {
-            contentType(ContentType.Application.Json)
-            setBody(request)
+        try {
+            return client.post {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body<GeminiResponse>().candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
+        } catch (e: Exception) {
+            println("Error calling Gemini API: ${e.message}")
+            return null
         }
-
-        val result = response.body<GeminiResponse>()
-        return result.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
-            ?: throw Exception("No response from Gemini API")
     }
 
 }
