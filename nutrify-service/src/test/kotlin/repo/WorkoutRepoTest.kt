@@ -23,7 +23,7 @@ class WorkoutRepoTest {
 
         val filters = repo.buildFilters(request)
 
-        assertEquals("eq" to "Rowing", filters["exercise"])
+        assertEquals("ilike" to "Rowing", filters["exercise"])
         assertEquals("eq" to "Cardio/Conditioning", filters["exercise_type"])
         assertEquals("ilike" to "steady", filters["exercise_variation"])
         assertEquals("ilike" to "endurance", filters["primary_fitness_focus"])
