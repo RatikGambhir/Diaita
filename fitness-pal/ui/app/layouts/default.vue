@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { Home, Dumbbell, Utensils, Settings, MessageCircle, HelpCircle, Search, PanelLeftClose, PanelLeft } from 'lucide-vue-next'
+import { Home, Dumbbell, Utensils, Settings, MessageCircle, LogOut, Search, PanelLeftClose, PanelLeft } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
+import { supabase } from '~/utils'
+import { useUserStore } from '~/stores/useUserStore'
 
 const route = useRoute()
 const toast = useToast()
+const userStore = useUserStore()
 
-const sidebarOpen = ref(true)
 const sidebarCollapsed = ref(false)
 
 const mainNavItems = [
@@ -16,12 +18,32 @@ const mainNavItems = [
 ]
 
 const secondaryNavItems = [
-  { label: 'Feedback', icon: MessageCircle, to: 'https://github.com/nuxt-ui-pro/dashboard', external: true },
-  { label: 'Help & Support', icon: HelpCircle, to: 'https://github.com/nuxt/ui-pro', external: true }
+  { label: 'Feedback', icon: MessageCircle, to: 'https://github.com/nuxt-ui-pro/dashboard', external: true }
 ]
 
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
+}
+
+const signOut = async () => {
+  const { error } = await supabase.auth.signOut()
+  userStore.clearSession()
+
+  if (error) {
+    toast.add({
+      title: 'Signed out locally',
+      description: `Could not fully sign out from Supabase: ${error.message}`,
+      color: 'warning'
+    })
+  } else {
+    toast.add({
+      title: 'Signed out',
+      description: 'Your session has ended.',
+      color: 'success'
+    })
+  }
+
+  await navigateTo('/login')
 }
 
 onMounted(async () => {
@@ -96,6 +118,15 @@ onMounted(async () => {
           <component :is="item.icon" class="h-5 w-5 shrink-0" />
           <span v-if="!sidebarCollapsed">{{ item.label }}</span>
         </a>
+        <button
+          type="button"
+          class="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          :class="{ 'justify-center': sidebarCollapsed }"
+          @click="signOut"
+        >
+          <LogOut class="h-5 w-5 shrink-0" />
+          <span v-if="!sidebarCollapsed">Sign Out</span>
+        </button>
       </div>
 
       <!-- Collapse Toggle -->

@@ -30,7 +30,6 @@ const handleMealPlanSubmit = (data: any) => {
 <template>
   <div class="bg-card rounded-2xl shadow-sm overflow-hidden">
     <Tabs v-model="activeTab" class="w-full">
-      <!-- Custom Tab List -->
       <div class="border-b border-border">
         <TabsList class="w-full h-auto p-0 bg-transparent rounded-none grid grid-cols-2">
           <TabsTrigger
@@ -39,7 +38,6 @@ const handleMealPlanSubmit = (data: any) => {
           >
             <Dumbbell class="w-4 h-4 mr-2" />
             Generate Workout
-            <!-- Active indicator line -->
             <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500 scale-x-0 data-[state=active]:scale-x-100 transition-transform origin-left" />
           </TabsTrigger>
           <TabsTrigger
@@ -53,10 +51,8 @@ const handleMealPlanSubmit = (data: any) => {
         </TabsList>
       </div>
 
-      <!-- Tab Contents -->
       <div class="p-6 md:p-8">
         <TabsContent value="workout" class="m-0 focus-visible:outline-none focus-visible:ring-0">
-          <!-- Workout Header -->
           <div class="flex items-center gap-3 mb-6">
             <div class="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
               <Dumbbell class="w-6 h-6 text-orange-600 dark:text-orange-400" />
@@ -71,7 +67,6 @@ const handleMealPlanSubmit = (data: any) => {
         </TabsContent>
 
         <TabsContent value="meal" class="m-0 focus-visible:outline-none focus-visible:ring-0">
-          <!-- Meal Plan Header -->
           <div class="flex items-center gap-3 mb-6">
             <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
               <UtensilsCrossed class="w-6 h-6 text-emerald-600 dark:text-emerald-400" />

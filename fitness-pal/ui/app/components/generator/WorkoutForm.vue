@@ -99,19 +99,16 @@ const fields = [
 
 <template>
   <div class="space-y-5">
-    <!-- Form fields -->
     <div
       v-for="field in fields"
       :key="field.key"
       class="space-y-2"
     >
-      <!-- Label with icon -->
       <div class="flex items-center gap-2">
         <component :is="field.icon" :class="['w-4 h-4', field.iconColor]" />
         <label class="text-sm font-medium text-foreground">{{ field.label }}</label>
       </div>
 
-      <!-- Select -->
       <Select v-model="formData[field.key]" :disabled="loading">
         <SelectTrigger class="w-full h-12 rounded-xl border-input bg-background shadow-sm">
           <SelectValue :placeholder="field.placeholder" />
@@ -128,7 +125,6 @@ const fields = [
       </Select>
     </div>
 
-    <!-- Submit button -->
     <Button
       class="w-full h-14 rounded-2xl text-base font-medium bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all duration-200 disabled:from-slate-300 disabled:to-slate-400 disabled:shadow-none"
       :disabled="!isFormComplete || loading"

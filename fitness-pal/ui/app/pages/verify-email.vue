@@ -112,11 +112,6 @@ async function onContinue(): Promise<void> {
   )
     console.log("Verifying code:", verificationCode);
 
-  toast.add({
-    title: "Verifying...",
-    description: "Checking your verification code",
-    color: "primary",
-  });
 
   if(error) {
     toast.add({
@@ -135,12 +130,18 @@ async function onContinue(): Promise<void> {
     });
     userStore.addUserSession(user, session)
 
-    // Check if user has completed profile
     const { fetchProfile } = useUserProfile()
     const profile = await fetchProfile()
 
+    const redirectPath = route.query.redirect as string | undefined
+
     if (!profile) {
-      await router.push({ path: "/setup-profile" })
+      await router.push({
+        path: "/setup-profile",
+        query: redirectPath ? { redirect: redirectPath } : {},
+      })
+    } else if (redirectPath) {
+      await router.push(redirectPath)
     } else {
       await router.push({ path: "/" })
     }

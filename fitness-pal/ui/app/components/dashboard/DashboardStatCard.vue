@@ -16,7 +16,6 @@ const isPositive = (change: number) => change >= 0
 
 <template>
   <div class="bg-muted rounded-2xl p-5 relative">
-    <!-- Header with title and badge -->
     <div class="flex items-start justify-between mb-3">
       <span class="text-sm text-muted-foreground">{{ title }}</span>
       <span
@@ -30,12 +29,10 @@ const isPositive = (change: number) => change >= 0
       </span>
     </div>
 
-    <!-- Main value -->
     <div class="text-4xl font-bold text-foreground mb-4">
       {{ value }}
     </div>
 
-    <!-- Trend line -->
     <div class="flex items-center gap-2 mb-1">
       <span class="text-sm font-medium text-foreground">{{ trend }}</span>
       <component
@@ -44,7 +41,6 @@ const isPositive = (change: number) => change >= 0
       />
     </div>
 
-    <!-- Description -->
     <p class="text-sm text-muted-foreground">{{ description }}</p>
   </div>
 </template>

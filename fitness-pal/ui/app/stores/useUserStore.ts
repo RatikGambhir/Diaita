@@ -18,5 +18,11 @@ export const useUserStore = defineStore("user", {
     setProfile(profile: UserProfile | null) {
       this.profile = profile;
     },
+    clearSession() {
+      this.user = {};
+      this.session = {};
+      this.profile = null;
+      this.error = null;
+    },
   },
 });

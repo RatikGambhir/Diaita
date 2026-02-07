@@ -35,6 +35,7 @@ const { handleSubmit } = useForm({
 });
 
 const router = useRouter();
+const route = useRoute();
 
 async function login(email: string): Promise<UserSession> {
     const { data, error } = await supabase.auth.signInWithOtp({
@@ -71,9 +72,15 @@ const onSubmit = handleSubmit(async (values) => {
       });
     } else {
       userStore.addUserSession(user ?? {}, session ?? {});
+
+      const redirectPath = route.query.redirect as string | undefined
+
       await router.push({
         path: "/verify-email",
-        query: {email: values.email},
+        query: {
+          email: values.email,
+          ...(redirectPath && { redirect: redirectPath }),
+        },
       });
     }
 });
@@ -82,14 +89,15 @@ const onSubmit = handleSubmit(async (values) => {
 <template>
     <div class="min-h-screen flex">
         <div
-            class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary/80 via-primary to-primary/90"
+            class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-cover bg-center bg-no-repeat"
+            style="background-image: url('/assets/fitness-bento.jpeg')"
         >
             <div class="absolute bottom-12 left-12 max-w-lg z-10">
                 <p class="text-white text-2xl font-medium mb-4">
                     "This platform has helped me to save time and serve my
                     clients faster than ever before."
                 </p>
-                <p class="text-white/80 text-sm">~ Ali Hassan</p>
+                <p class="text-white/80 text-sm">Amanda Go - Yoga Instructor</p>
             </div>
         </div>
 
@@ -99,9 +107,6 @@ const onSubmit = handleSubmit(async (values) => {
             <div class="w-full max-w-md">
                 <div class="mb-16">
                     <NuxtLink to="/" class="flex items-center gap-2">
-                        <div
-                            class="w-8 h-8 bg-primary rounded"
-                        />
                         <span
                             class="text-xl font-bold text-foreground"
                             >Nutrify</span

@@ -78,7 +78,6 @@ const handleDuplicate = () => {
             </div>
         </div>
 
-        <!-- Expanded Content -->
         <Transition
             enter-active-class="transition-all duration-300 ease-out"
             enter-from-class="max-h-0 opacity-0"
@@ -91,10 +90,8 @@ const handleDuplicate = () => {
                 <div class="px-5 pb-5">
                     <Separator class="mb-4" />
 
-                    <!-- Exercise List Header -->
                     <h4 class="font-medium mb-3">Exercises</h4>
 
-                    <!-- No Exercises -->
                     <p
                         v-if="workout.exercises.length === 0"
                         class="text-muted-foreground text-sm italic py-2"
@@ -102,7 +99,6 @@ const handleDuplicate = () => {
                         No exercises added yet
                     </p>
 
-                    <!-- Exercise List -->
                     <div v-else class="space-y-2">
                         <div
                             v-for="exercise in workout.exercises"

@@ -14,6 +14,7 @@ import NutritionStep from '~/components/setup/NutritionStep.vue'
 import BehavioralStep from '~/components/setup/BehavioralStep.vue'
 import MetricsStep from '~/components/setup/MetricsStep.vue'
 import ReviewStep from '~/components/setup/ReviewStep.vue'
+import LoadingScreen from '~/components/ui/LoadingScreen.vue'
 import { cn } from '~/lib/utils'
 
 definePageMeta({
@@ -119,8 +120,10 @@ const steps = [
 ]
 
 const currentStep = ref(1)
+const isSubmitting = ref(false)
 const toast = useToast()
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 // Form data matching backend entities
@@ -362,15 +365,20 @@ const handleSubmit = async () => {
   payload.nutritionHistory = hasNutritionData ? payload.nutritionHistory : null
   payload.behavioralFactors = hasBehavioralData ? payload.behavioralFactors : null
   payload.metricsTracking = hasMetricsData ? payload.metricsTracking : null
-  console.log("payload!!", payload)
+  isSubmitting.value = true
   try {
     await userApi.createUserProfile(payload)
+
+    userStore.setProfile(payload as any)
+
     toast.add({
       title: 'Profile setup completed',
       description: 'Your profile has been saved successfully.',
       color: 'success',
     })
-    await router.push('/')
+
+    const redirectPath = route.query.redirect as string | undefined
+    await router.push(redirectPath || '/')
   } catch (error) {
     console.error('Error submitting profile:', error)
     toast.add({
@@ -378,6 +386,8 @@ const handleSubmit = async () => {
       description: 'Please try again.',
       color: 'error',
     })
+  } finally {
+    isSubmitting.value = false
   }
 }
 
@@ -564,6 +574,7 @@ const handleSkip = () => {
                 <Button
                   v-else
                   class="gap-2"
+                  :disabled="isSubmitting"
                   @click="handleSubmit"
                 >
                   Complete Setup
@@ -575,5 +586,11 @@ const handleSkip = () => {
         </div>
       </div>
     </div>
+
+    <LoadingScreen
+        v-if="isSubmitting"
+      :show="isSubmitting"
+      message="Setting up your profile..."
+    />
   </div>
 </template>

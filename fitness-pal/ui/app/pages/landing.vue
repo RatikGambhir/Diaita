@@ -2,6 +2,12 @@
 definePageMeta({
   layout: 'landing',
 })
+
+const router = useRouter();
+
+const handleGetStarted = async () => {
+  await router.push("/login")
+}
 </script>
 
 <template>

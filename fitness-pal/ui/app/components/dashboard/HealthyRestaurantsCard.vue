@@ -32,21 +32,17 @@ const prevPage = () => {
 
 <template>
   <div class="bg-card rounded-2xl shadow-sm overflow-hidden">
-    <!-- Header -->
     <div class="flex items-center justify-between px-5 py-4 md:px-6">
       <div class="flex items-center gap-3">
-        <!-- Icon badge -->
         <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
           <UtensilsCrossed class="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <!-- Title block -->
         <div>
           <h3 class="text-base font-semibold text-foreground">Healthy Restaurants</h3>
           <p class="text-sm text-muted-foreground">{{ restaurants.length }} locations in your area</p>
         </div>
       </div>
 
-      <!-- Nav buttons -->
       <div class="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -67,12 +63,9 @@ const prevPage = () => {
       </div>
     </div>
 
-    <!-- Map Panel -->
     <div class="relative h-[320px] md:h-[400px] bg-slate-50 dark:bg-slate-900/50 mx-4 md:mx-5 rounded-xl overflow-hidden">
-      <!-- Grid background -->
       <div class="absolute inset-0 grid-background opacity-50" />
 
-      <!-- Restaurant pins -->
       <div
         v-for="restaurant in restaurants"
         :key="restaurant.id"
@@ -87,7 +80,6 @@ const prevPage = () => {
         </div>
       </div>
 
-      <!-- You marker -->
       <div
         class="absolute transform -translate-x-1/2 -translate-y-1/2"
         style="top: 52%; left: 55%"
@@ -101,7 +93,6 @@ const prevPage = () => {
       </div>
     </div>
 
-    <!-- Restaurant List -->
     <div class="p-4 md:p-5">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <RestaurantPill

@@ -25,7 +25,6 @@ const props = withDefaults(defineProps<Props>(), {
       props.class
     )"
   >
-    <!-- Corner blob decoration -->
     <div
       :class="cn(
         'absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-60 blur-xl',
@@ -33,7 +32,6 @@ const props = withDefaults(defineProps<Props>(), {
       )"
     />
 
-    <!-- Icon -->
     <div class="relative z-10 mb-3">
       <component
         :is="icon"
@@ -41,7 +39,6 @@ const props = withDefaults(defineProps<Props>(), {
       />
     </div>
 
-    <!-- Content -->
     <div class="relative z-10">
       <p class="text-sm text-muted-foreground mb-1">{{ label }}</p>
       <div class="flex items-baseline gap-1.5">
