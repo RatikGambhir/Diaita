@@ -28,9 +28,9 @@ class UserService(private val userRepo: UserRepo, private val client: GeminiRest
     }
 
     suspend fun registerUser(request: RegisterUserProfileRequestDto): String? = coroutineScope {
-        val upsertDefered = async(Dispatchers.IO) { userRepo.upsertFullProfile(request) }
+        val upsertDeferred = async(Dispatchers.IO) { userRepo.upsertFullProfile(request) }
         val recommendationDeferred = async(Dispatchers.Default) {genRecommendations(request)}
-        upsertDefered.await()
+        upsertDeferred.await()
         recommendationDeferred.await() ?: return@coroutineScope null
         "Mutation Success"
     }
