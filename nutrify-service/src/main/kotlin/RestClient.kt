@@ -22,8 +22,9 @@ import io.ktor.client.request.setBody
 
 fun Application.configureRestClient(): List<RestClient> {
         val geminiKey = environment.config.property("api.gemini").getString()
-        val nutritionAPIKey = environment.config.property("api.nutrition").getString()
+        val nutritionAPIKey = environment.config.property("foodapi.apiKey").getString()
+        val nutritionAPIUrl = environment.config.property("foodapi.url").getString()
         val geminiClient = GeminiRestClient(geminiKey)
-        val nutritionAPIClient = NutritionRestClient(nutritionAPIKey)
+        val nutritionAPIClient = NutritionRestClient(nutritionAPIKey, nutritionAPIUrl)
         return listOf(geminiClient, nutritionAPIClient)
 }
