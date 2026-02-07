@@ -8,6 +8,13 @@ import kotlinx.serialization.json.JsonElement
 
 
 data class Result<T>(val body: T?, val error: Exception?)
+data class PaginatedResult<T>(
+    val data: List<T>,
+    val total: Int,
+    val page: Int,
+    val pageSize: Int,
+    val hasMore: Boolean
+)
 
 class SupabaseManager(val client: SupabaseClient) {
 
@@ -68,6 +75,56 @@ class SupabaseManager(val client: SupabaseClient) {
             Result(result, null)
         } catch (e: Exception) {
             println("Select where error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    suspend inline fun <reified T : Any> selectWithFilters(
+        table: String,
+        filters: Map<String, Pair<String, Any>>,
+        page: Int = 0,
+        pageSize: Int = 20,
+        columns: String = "*"
+    ): Result<PaginatedResult<T>> {
+        return try {
+            val rows = client.postgrest[table]
+                .select(columns = Columns.raw(columns)) {
+                    filter {
+                        filters.forEach { (column, filterConfig) ->
+                            val (operator, value) = filterConfig
+                            when (operator) {
+                                "eq" -> eq(column, value)
+                                "ilike" -> ilike(column, "%$value%")
+                            }
+                        }
+                    }
+                }
+                .decodeList<T>()
+
+            val normalizedPage = page.coerceAtLeast(0)
+            val normalizedPageSize = pageSize.coerceAtLeast(1)
+            val offset = normalizedPage * normalizedPageSize
+            val data = if (offset >= rows.size) {
+                emptyList()
+            } else {
+                rows.drop(offset).take(normalizedPageSize)
+            }
+
+            val total = rows.size
+            val hasMore = offset + data.size < total
+
+            Result(
+                PaginatedResult(
+                    data = data,
+                    total = total,
+                    page = normalizedPage,
+                    pageSize = normalizedPageSize,
+                    hasMore = hasMore
+                ),
+                null
+            )
+        } catch (e: Exception) {
+            println("Select with filters error: ${e.message}")
             Result(null, e)
         }
     }
