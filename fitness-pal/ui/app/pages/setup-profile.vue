@@ -245,18 +245,18 @@ const handleSubmit = async () => {
   const currentUser = userStore.getUser as { id?: string } | null
   const userId = currentUser?.id
 
-  if (!userId) {
-    toast.add({
-      title: 'Missing user session',
-      description: 'Please log in again before saving your profile.',
-      color: 'error',
-    })
-    return
-  }
+  // if (!userId) {
+  //   toast.add({
+  //     title: 'Missing user session',
+  //     description: 'Please log in again before saving your profile.',
+  //     color: 'error',
+  //   })
+  //   return
+  // }
 
   const payload: RegisterUserProfileRequest = {
     id: crypto.randomUUID(),
-    userId,
+    userId: "39183c95-ccbb-4cd0-9a6a-328327a39d1c",
     basicDemographics: {
       age: basicDemographics.value.age!,
       sex: basicDemographics.value.sex || null,
@@ -362,7 +362,7 @@ const handleSubmit = async () => {
   payload.nutritionHistory = hasNutritionData ? payload.nutritionHistory : null
   payload.behavioralFactors = hasBehavioralData ? payload.behavioralFactors : null
   payload.metricsTracking = hasMetricsData ? payload.metricsTracking : null
-
+  console.log("payload!!", payload)
   try {
     await userApi.createUserProfile(payload)
     toast.add({

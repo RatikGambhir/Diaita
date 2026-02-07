@@ -15,7 +15,7 @@ fun Application.configureDatabases(): SupabaseManager {
 
 fun Application.connectToSupabase(): SupabaseClient {
     val supabaseUrl = environment.config.property("postgres.url").getString()
-    val supabaseKey = environment.config.property("postgres.publishable_key").getString()
+    val supabaseKey = environment.config.property("postgres.secret_key").getString()
 
     return createSupabaseClient(
         supabaseUrl = supabaseUrl,

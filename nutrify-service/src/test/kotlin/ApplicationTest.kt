@@ -15,7 +15,7 @@ class Testing {
         environment {
             config = MapApplicationConfig(
                 "postgres.url" to "https://example.supabase.co",
-                "postgres.publishable_key" to "test-publishable-key",
+                "postgres.secret_key" to "test-publishable-key",
                 "api.gemini" to "test-gemini-key",
                 "api.nutrition" to "test-nutrition-key"
             )

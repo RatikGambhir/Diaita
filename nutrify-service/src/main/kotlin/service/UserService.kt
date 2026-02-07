@@ -13,10 +13,10 @@ class UserService(private val userRepo: UserRepo, private val client: GeminiRest
 
     suspend fun registerUserProfile(request: RegisterUserProfileRequest): String? {
         val result = userRepo.upsertFullProfile(request)
-        if (result != "Mutation Success") {
+        val recommendation = genRecommendations(request)
+        if (result != "Mutation Success" || recommendation == null) {
             return null
         }
-        genRecommendations(request)
         return "Mutation Success"
     }
 
@@ -26,7 +26,7 @@ class UserService(private val userRepo: UserRepo, private val client: GeminiRest
         systemInstruction: String? = null
     ): String? {
         val prompt = PromptFactory.getPromptWithVariables("registerUserMetadata", request.toPromptVariables())
-        val result = client.askQuestion(prompt, config, systemInstruction)
+        val result = client.askQuestionStream(prompt, systemInstruction, config)
         return result
     }
 
