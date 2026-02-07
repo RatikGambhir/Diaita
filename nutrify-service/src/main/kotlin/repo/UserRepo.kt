@@ -1,12 +1,12 @@
 package com.nutrify.repo
 
-import com.nutrify.dto.RegisterUserProfileRequest
+import com.nutrify.dto.RegisterUserProfileRequestDto
 import com.nutrify.lib.factories.SupabaseManager
 import com.nutrify.lib.mappings.*
 
 class UserRepo(private val supabaseManager: SupabaseManager) {
 
-    suspend fun upsertFullProfile(request: RegisterUserProfileRequest): String {
+    suspend fun upsertFullProfile(request: RegisterUserProfileRequestDto): String {
         val userId = request.userId
 
         if (upsertOrFail("user_profile", request.toUserProfileRow(userId)) == null) {

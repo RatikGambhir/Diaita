@@ -1,8 +1,8 @@
 package com.nutrify.lib.prompt_extensions
 
-import com.nutrify.dto.RegisterUserProfileRequest
+import com.nutrify.dto.RegisterUserProfileRequestDto
 
-fun RegisterUserProfileRequest.toPromptVariables(): Map<String, Any> {
+fun RegisterUserProfileRequestDto.toPromptVariables(): Map<String, Any> {
     return mapOf(
         // Basic Demographics
         "userId" to userId,

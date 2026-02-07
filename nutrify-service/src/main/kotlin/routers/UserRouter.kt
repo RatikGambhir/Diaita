@@ -1,7 +1,7 @@
 package com.nutrify.routers
 
 import com.nutrify.controllers.UserController
-import com.nutrify.dto.RegisterUserProfileRequest
+import com.nutrify.dto.RegisterUserProfileRequestDto
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.request.receive
@@ -16,7 +16,7 @@ import io.ktor.server.routing.routing
 fun Application.configureUserRoutes(userController: UserController) {
     routing {
         post("/register") {
-            val user = call.receive<RegisterUserProfileRequest>()
+            val user = call.receive<RegisterUserProfileRequestDto>()
             if(user.userId.isBlank()) {
                 call.respondText("Invalid request, request body is invalid", status = HttpStatusCode.BadRequest)
                 return@post
@@ -30,7 +30,7 @@ fun Application.configureUserRoutes(userController: UserController) {
         }
 
         post("/user/profile") {
-            val user = call.receive<RegisterUserProfileRequest>()
+            val user = call.receive<RegisterUserProfileRequestDto>()
             if(user.userId.isBlank()) {
                 call.respondText("Invalid request, request body is invalid", status = HttpStatusCode.BadRequest)
                 return@post

@@ -9,7 +9,7 @@ import java.util.UUID
 
 
 @Serializable
-data class BasicDemographics(
+data class BasicDemographicsDto(
     val age: Int,
     val sex: String? = null,
     val gender: String? = null,
@@ -22,7 +22,7 @@ data class BasicDemographics(
 )
 
 @Serializable
-data class ActivityLevelLifestyle(
+data class ActivityLevelLifestyleDto(
     val activityLevel: String,
     val dailyStepCount: Int? = null,
     val jobType: String? = null,
@@ -34,7 +34,7 @@ data class ActivityLevelLifestyle(
 )
 
 @Serializable
-data class GoalsPriorities(
+data class GoalsPrioritiesDto(
     val primaryGoal: String,
     val secondaryGoals: List<String>? = null,
     val timeframe: String? = null,
@@ -45,7 +45,7 @@ data class GoalsPriorities(
 )
 
 @Serializable
-data class TrainingBackground(
+data class TrainingBackgroundDto(
     val trainingAge: String? = null,
     val trainingHistory: String? = null,
     val currentWorkoutRoutine: String? = null,
@@ -57,7 +57,7 @@ data class TrainingBackground(
 )
 
 @Serializable
-data class MedicalHistory(
+data class MedicalHistoryDto(
     val injuries: List<String>? = null,
     val chronicConditions: List<String>? = null,
     val painPatterns: String? = null,
@@ -67,7 +67,7 @@ data class MedicalHistory(
 )
 
 @Serializable
-data class NutritionDietHistory(
+data class NutritionDietHistoryDto(
     val currentDietPattern: String? = null,
     val calorieTrackingExperience: Boolean? = null,
     val macronutrientPreferences: String? = null,
@@ -83,7 +83,7 @@ data class NutritionDietHistory(
 )
 
 @Serializable
-data class BehavioralFactors(
+data class BehavioralFactorsDto(
     val motivationLevel: String? = null,
     val consistencyHistory: String? = null,
     val accountabilityPreference: String? = null,
@@ -95,24 +95,24 @@ data class BehavioralFactors(
 )
 
 @Serializable
-data class MetricsTracking(
+data class MetricsTrackingDto(
     val preferredProgressMetrics: List<String>? = null, // scale weight, measurements, photos, performance
     val trackingTools: List<String>? = null, // Apple Watch, Fitbit, MyFitnessPal, Cronometer
     val checkinFrequency: String? = null
 )
 
 @Serializable
-data class RegisterUserProfileRequest(
+data class RegisterUserProfileRequestDto(
     val id: String,
     val userId: String,
-    val basicDemographics: BasicDemographics,
-    val activityLifestyle: ActivityLevelLifestyle,
-    val goals: GoalsPriorities,
-    val trainingBackground: TrainingBackground? = null,
-    val medicalHistory: MedicalHistory? = null,
-    val nutritionHistory: NutritionDietHistory? = null,
-    val behavioralFactors: BehavioralFactors? = null,
-    val metricsTracking: MetricsTracking? = null,
+    val basicDemographics: BasicDemographicsDto,
+    val activityLifestyle: ActivityLevelLifestyleDto,
+    val goals: GoalsPrioritiesDto,
+    val trainingBackground: TrainingBackgroundDto? = null,
+    val medicalHistory: MedicalHistoryDto? = null,
+    val nutritionHistory: NutritionDietHistoryDto? = null,
+    val behavioralFactors: BehavioralFactorsDto? = null,
+    val metricsTracking: MetricsTrackingDto? = null,
     val notes: String? = null
 )
 

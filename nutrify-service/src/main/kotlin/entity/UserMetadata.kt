@@ -1,6 +1,6 @@
 package com.nutrify.entity
 
-class UserMetadata(val userId:
+class UserMetadataEntity(val userId:
                    String, val height: Int,
                    val weight: Int, val gender:
                    String, val activityLevel: String,

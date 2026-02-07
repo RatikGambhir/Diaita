@@ -3,70 +3,70 @@ package com.nutrify.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class GeminiRequest(
-    val contents: List<GeminiContent>,
-    val generationConfig: GenerationConfig? = null,
-    val systemInstruction: SystemInstruction? = null
+data class GeminiRequestDto(
+    val contents: List<GeminiContentDto>,
+    val generationConfig: GenerationConfigDto? = null,
+    val systemInstruction: SystemInstructionDto? = null
 ) {
     companion object {
-        fun fromPrompt(prompt: String, config: GenerationConfig? = null, systemInstruction: String? = null): GeminiRequest {
-            return GeminiRequest(
+        fun fromPrompt(prompt: String, config: GenerationConfigDto? = null, systemInstruction: String? = null): GeminiRequestDto {
+            return GeminiRequestDto(
                 contents = listOf(
-                    GeminiContent(
-                        parts = listOf(GeminiPart(text = prompt))
+                    GeminiContentDto(
+                        parts = listOf(GeminiPartDto(text = prompt))
                     )
                 ),
                 generationConfig = config,
-                systemInstruction = systemInstruction?.let { SystemInstruction(parts = listOf(GeminiPart(text = it))) }
+                systemInstruction = systemInstruction?.let { SystemInstructionDto(parts = listOf(GeminiPartDto(text = it))) }
             )
         }
     }
 }
 
 @Serializable
-data class GenerationConfig(
+data class GenerationConfigDto(
     val temperature: Double? = null,
     val topK: Int? = null,
     val topP: Double? = null,
     val maxOutputTokens: Int? = null,
     val responseMimeType: String? = null,
-    val responseSchema: ResponseSchema? = null
+    val responseSchema: ResponseSchemaDto? = null
 )
 
 @Serializable
-data class ResponseSchema(
+data class ResponseSchemaDto(
     val type: String,
-    val properties: Map<String, SchemaProperty>? = null,
+    val properties: Map<String, SchemaPropertyDto>? = null,
     val required: List<String>? = null
 )
 
 @Serializable
-data class SchemaProperty(
+data class SchemaPropertyDto(
     val type: String,
     val description: String? = null
 )
 
 @Serializable
-data class SystemInstruction(
-    val parts: List<GeminiPart>
+data class SystemInstructionDto(
+    val parts: List<GeminiPartDto>
 )
 
 @Serializable
-data class GeminiContent(
-    val parts: List<GeminiPart>
+data class GeminiContentDto(
+    val parts: List<GeminiPartDto>
 )
 
 @Serializable
-data class GeminiPart(
+data class GeminiPartDto(
     val text: String
 )
 
 @Serializable
-data class GeminiResponse(
-    val candidates: List<GeminiCandidate>
+data class GeminiResponseDto(
+    val candidates: List<GeminiCandidateDto>
 )
 
 @Serializable
-data class GeminiCandidate(
-    val content: GeminiContent
+data class GeminiCandidateDto(
+    val content: GeminiContentDto
 )

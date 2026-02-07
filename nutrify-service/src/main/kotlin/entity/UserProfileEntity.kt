@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserProfileRow(
+data class UserProfileRowEntity(
     @SerialName("user_id")
     val userId: String,
     @SerialName("profile_id")
@@ -13,7 +13,7 @@ data class UserProfileRow(
 )
 
 @Serializable
-data class BasicDemographicsRow(
+data class BasicDemographicsRowEntity(
     @SerialName("user_id")
     val userId: String,
     val age: Int,
@@ -32,7 +32,7 @@ data class BasicDemographicsRow(
 )
 
 @Serializable
-data class ActivityLifestyleRow(
+data class ActivityLifestyleRowEntity(
     @SerialName("user_id")
     val userId: String,
     @SerialName("activity_level")
@@ -54,7 +54,7 @@ data class ActivityLifestyleRow(
 )
 
 @Serializable
-data class GoalsPrioritiesRow(
+data class GoalsPrioritiesRowEntity(
     @SerialName("user_id")
     val userId: String,
     @SerialName("primary_goal")
@@ -73,7 +73,7 @@ data class GoalsPrioritiesRow(
 )
 
 @Serializable
-data class TrainingBackgroundRow(
+data class TrainingBackgroundRowEntity(
     @SerialName("user_id")
     val userId: String,
     @SerialName("training_age")
@@ -95,7 +95,7 @@ data class TrainingBackgroundRow(
 )
 
 @Serializable
-data class MedicalHistoryRow(
+data class MedicalHistoryRowEntity(
     @SerialName("user_id")
     val userId: String,
     val injuries: List<String>? = null,
@@ -111,7 +111,7 @@ data class MedicalHistoryRow(
 )
 
 @Serializable
-data class NutritionHistoryRow(
+data class NutritionHistoryRowEntity(
     @SerialName("user_id")
     val userId: String,
     @SerialName("current_diet_pattern")
@@ -141,7 +141,7 @@ data class NutritionHistoryRow(
 )
 
 @Serializable
-data class BehavioralFactorsRow(
+data class BehavioralFactorsRowEntity(
     @SerialName("user_id")
     val userId: String,
     @SerialName("motivation_level")
@@ -163,7 +163,7 @@ data class BehavioralFactorsRow(
 )
 
 @Serializable
-data class MetricsTrackingRow(
+data class MetricsTrackingRowEntity(
     @SerialName("user_id")
     val userId: String,
     @SerialName("preferred_progress_metrics")

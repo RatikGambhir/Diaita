@@ -3,7 +3,7 @@ package com.nutrify.lib.mappings
 import com.nutrify.dto.*
 import com.nutrify.entity.*
 
-fun BasicDemographics.toEntity() = BasicDemographicsEntity(
+fun BasicDemographicsDto.toEntity() = BasicDemographicsEntity(
     age = age,
     sex = sex,
     gender = gender,
@@ -15,7 +15,7 @@ fun BasicDemographics.toEntity() = BasicDemographicsEntity(
     menstrualCycleInfo = menstrualCycleInfo
 )
 
-fun ActivityLevelLifestyle.toEntity() = ActivityLevelLifestyleEntity(
+fun ActivityLevelLifestyleDto.toEntity() = ActivityLevelLifestyleEntity(
     activityLevel = activityLevel,
     dailyStepCount = dailyStepCount,
     jobType = jobType,
@@ -26,7 +26,7 @@ fun ActivityLevelLifestyle.toEntity() = ActivityLevelLifestyleEntity(
     recoveryCapacity = recoveryCapacity
 )
 
-fun GoalsPriorities.toEntity() = GoalsPrioritiesEntity(
+fun GoalsPrioritiesDto.toEntity() = GoalsPrioritiesEntity(
     primaryGoal = primaryGoal,
     secondaryGoals = secondaryGoals,
     timeframe = timeframe,
@@ -36,7 +36,7 @@ fun GoalsPriorities.toEntity() = GoalsPrioritiesEntity(
     healthGoals = healthGoals
 )
 
-fun TrainingBackground.toEntity() = TrainingBackgroundEntity(
+fun TrainingBackgroundDto.toEntity() = TrainingBackgroundEntity(
     trainingAge = trainingAge,
     trainingHistory = trainingHistory,
     currentWorkoutRoutine = currentWorkoutRoutine,
@@ -47,7 +47,7 @@ fun TrainingBackground.toEntity() = TrainingBackgroundEntity(
     daysPerWeek = daysPerWeek
 )
 
-fun MedicalHistory.toEntity() = MedicalHistoryEntity(
+fun MedicalHistoryDto.toEntity() = MedicalHistoryEntity(
     injuries = injuries,
     chronicConditions = chronicConditions,
     painPatterns = painPatterns,
@@ -56,7 +56,7 @@ fun MedicalHistory.toEntity() = MedicalHistoryEntity(
     doctorRestrictions = doctorRestrictions
 )
 
-fun NutritionDietHistory.toEntity() = NutritionDietHistoryEntity(
+fun NutritionDietHistoryDto.toEntity() = NutritionDietHistoryEntity(
     currentDietPattern = currentDietPattern,
     calorieTrackingExperience = calorieTrackingExperience,
     macronutrientPreferences = macronutrientPreferences,
@@ -71,7 +71,7 @@ fun NutritionDietHistory.toEntity() = NutritionDietHistoryEntity(
     supplementUse = supplementUse
 )
 
-fun BehavioralFactors.toEntity() = BehavioralFactorsEntity(
+fun BehavioralFactorsDto.toEntity() = BehavioralFactorsEntity(
     motivationLevel = motivationLevel,
     consistencyHistory = consistencyHistory,
     accountabilityPreference = accountabilityPreference,
@@ -82,13 +82,13 @@ fun BehavioralFactors.toEntity() = BehavioralFactorsEntity(
     supportSystem = supportSystem
 )
 
-fun MetricsTracking.toEntity() = MetricsTrackingEntity(
+fun MetricsTrackingDto.toEntity() = MetricsTrackingEntity(
     preferredProgressMetrics = preferredProgressMetrics,
     trackingTools = trackingTools,
     checkinFrequency = checkinFrequency
 )
 
-fun RegisterUserProfileRequest.toEntity() = UserProfileEntity(
+fun RegisterUserProfileRequestDto.toEntity() = UserProfileEntity(
     id = id,
     userId = userId,
     basicDemographics = basicDemographics.toEntity(),

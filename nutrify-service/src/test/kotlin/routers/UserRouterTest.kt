@@ -51,7 +51,7 @@ class UserRouterTest {
         val repo = mockk<UserRepo>()
         val gemini = mockk<GeminiRestClient>()
         coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
-        coEvery { gemini.askQuestion(match { it.isNotBlank() }, any(), any()) } returns "recommendations"
+        coEvery { gemini.askQuestionStream(match { it.isNotBlank() }, any(), any()) } returns "recommendations"
 
         val service = UserService(repo, gemini)
         val controller = UserController(service)
@@ -68,7 +68,7 @@ class UserRouterTest {
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.bodyAsText().contains("\"status\":\"ok\""))
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
-        coVerify(exactly = 1) { gemini.askQuestion(match { it.isNotBlank() }, any(), any()) }
+        coVerify(exactly = 1) { gemini.askQuestionStream(match { it.isNotBlank() }, any(), any()) }
     }
 
     @Test
@@ -125,7 +125,7 @@ class UserRouterTest {
         val repo = mockk<UserRepo>()
         val gemini = mockk<GeminiRestClient>()
         coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
-        coEvery { gemini.askQuestion(match { it.isNotBlank() }, any(), any()) } returns "recommendations"
+        coEvery { gemini.askQuestionStream(match { it.isNotBlank() }, any(), any()) } returns "recommendations"
 
         val service = UserService(repo, gemini)
         val controller = UserController(service)
@@ -142,7 +142,7 @@ class UserRouterTest {
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.bodyAsText().contains("\"status\":\"ok\""))
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
-        coVerify(exactly = 1) { gemini.askQuestion(match { it.isNotBlank() }, any(), any()) }
+        coVerify(exactly = 1) { gemini.askQuestionStream(match { it.isNotBlank() }, any(), any()) }
     }
 
     @Test
@@ -175,7 +175,7 @@ class UserRouterTest {
         val payload = UserProfileTestData.fullRequest()
 
         coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
-        coEvery { gemini.askQuestion(match { it.isNotBlank() }, any(), any()) } returns "recommendations"
+        coEvery { gemini.askQuestionStream(match { it.isNotBlank() }, any(), any()) } returns "recommendations"
 
         application {
             testModule(controller)
@@ -188,7 +188,7 @@ class UserRouterTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
-        coVerify(exactly = 1) { gemini.askQuestion(match { it.isNotBlank() }, any(), any()) }
+        coVerify(exactly = 1) { gemini.askQuestionStream(match { it.isNotBlank() }, any(), any()) }
     }
 
     @Test
@@ -200,7 +200,7 @@ class UserRouterTest {
         val payload = UserProfileTestData.fullRequest()
 
         coEvery { repo.upsertFullProfile(payload) } returns "Mutation Failed"
-        coEvery { gemini.askQuestion(match { it.isNotBlank() }, any(), any()) } returns "recommendations"
+        coEvery { gemini.askQuestionStream(match { it.isNotBlank() }, any(), any()) } returns "recommendations"
 
         application {
             testModule(controller)

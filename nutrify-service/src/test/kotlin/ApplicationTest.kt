@@ -17,7 +17,8 @@ class Testing {
                 "postgres.url" to "https://example.supabase.co",
                 "postgres.secret_key" to "test-publishable-key",
                 "api.gemini" to "test-gemini-key",
-                "api.nutrition" to "test-nutrition-key"
+                "foodapi.apiKey" to "test-nutrition-key",
+                "foodapi.url" to "https://api.spoonacular.com"
             )
         }
 

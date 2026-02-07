@@ -1,8 +1,8 @@
 package com.nutrify.lib.clients
 
 
-import com.nutrify.dto.GeminiRequest
-import com.nutrify.dto.GeminiResponse
+import com.nutrify.dto.GeminiRequestDto
+import com.nutrify.dto.GeminiResponseDto
 import io.ktor.client.call.body
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
@@ -26,15 +26,15 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
 
     suspend fun askQuestion(
         prompt: String,
-        config: com.nutrify.dto.GenerationConfig? = null,
+        config: com.nutrify.dto.GenerationConfigDto? = null,
         systemInstruction: String? = null
     ): String? {
-        val request = GeminiRequest.fromPrompt(prompt, config, systemInstruction)
+        val request = GeminiRequestDto.fromPrompt(prompt, config, systemInstruction)
         try {
             return client.post {
                 contentType(ContentType.Application.Json)
                 setBody(request)
-            }.body<GeminiResponse>().candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
+            }.body<GeminiResponseDto>().candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
         } catch (e: Exception) {
             println("Error calling Gemini API: ${e.message}")
             return null
@@ -44,10 +44,10 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
     suspend fun askQuestionStream(
         prompt: String,
         systemInstruction: String? = null,
-        config: com.nutrify.dto.GenerationConfig? = null,
+        config: com.nutrify.dto.GenerationConfigDto? = null,
        // onChunk: suspend (String) -> Unit
     ): String? {
-        val request = GeminiRequest.fromPrompt(prompt, config, systemInstruction)
+        val request = GeminiRequestDto.fromPrompt(prompt, config, systemInstruction)
         val streamUrl = buildStreamUrl()
         val fullResponse = StringBuilder()
 

@@ -3,7 +3,7 @@ package com.nutrify.entity
 import kotlinx.serialization.Serializable
 import java.time.Instant
 
-enum class MealType {
+enum class MealTypeEntity {
     BREAKFAST,
     LUNCH,
     DINNER,
@@ -11,7 +11,7 @@ enum class MealType {
 }
 
 @Serializable
-data class Meal(
+data class MealEntity(
     val id: String,
     val userId: String,
     val mealItemId: List<String>? = null,
@@ -22,7 +22,7 @@ data class Meal(
 )
 
 @Serializable
-data class Food(
+data class FoodEntity(
     val id: String,
     val name: String,
     val brand: String? = null,
@@ -38,7 +38,7 @@ data class Food(
 )
 
 @Serializable
-data class MealItem(
+data class MealItemEntity(
     val id: String,
     val mealId: String,
     val foodId: String? = null,

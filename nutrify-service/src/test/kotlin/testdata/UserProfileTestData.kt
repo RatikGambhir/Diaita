@@ -1,23 +1,23 @@
 package com.nutrify.testdata
 
-import com.nutrify.dto.ActivityLevelLifestyle
-import com.nutrify.dto.BasicDemographics
-import com.nutrify.dto.BehavioralFactors
-import com.nutrify.dto.GoalsPriorities
-import com.nutrify.dto.MedicalHistory
-import com.nutrify.dto.MetricsTracking
-import com.nutrify.dto.NutritionDietHistory
-import com.nutrify.dto.RegisterUserProfileRequest
-import com.nutrify.dto.TrainingBackground
+import com.nutrify.dto.ActivityLevelLifestyleDto
+import com.nutrify.dto.BasicDemographicsDto
+import com.nutrify.dto.BehavioralFactorsDto
+import com.nutrify.dto.GoalsPrioritiesDto
+import com.nutrify.dto.MedicalHistoryDto
+import com.nutrify.dto.MetricsTrackingDto
+import com.nutrify.dto.NutritionDietHistoryDto
+import com.nutrify.dto.RegisterUserProfileRequestDto
+import com.nutrify.dto.TrainingBackgroundDto
 
 object UserProfileTestData {
     fun fullRequest(
         userId: String = "11111111-1111-1111-1111-111111111111"
-    ): RegisterUserProfileRequest {
-        return RegisterUserProfileRequest(
+    ): RegisterUserProfileRequestDto {
+        return RegisterUserProfileRequestDto(
             id = "22222222-2222-2222-2222-222222222222",
             userId = userId,
-            basicDemographics = BasicDemographics(
+            basicDemographics = BasicDemographicsDto(
                 age = 28,
                 sex = "male",
                 gender = "male",
@@ -28,7 +28,7 @@ object UserProfileTestData {
                 biologicalConsiderations = "none",
                 menstrualCycleInfo = "n/a"
             ),
-            activityLifestyle = ActivityLevelLifestyle(
+            activityLifestyle = ActivityLevelLifestyleDto(
                 activityLevel = "moderately_active",
                 dailyStepCount = 8500,
                 jobType = "desk",
@@ -38,7 +38,7 @@ object UserProfileTestData {
                 stressLevel = "moderate",
                 recoveryCapacity = "good"
             ),
-            goals = GoalsPriorities(
+            goals = GoalsPrioritiesDto(
                 primaryGoal = "muscle_gain",
                 secondaryGoals = listOf("strength", "fat_loss"),
                 timeframe = "12_weeks",
@@ -47,7 +47,7 @@ object UserProfileTestData {
                 aestheticGoals = "lean physique",
                 healthGoals = listOf("better_sleep", "lower_stress")
             ),
-            trainingBackground = TrainingBackground(
+            trainingBackground = TrainingBackgroundDto(
                 trainingAge = "2_years",
                 trainingHistory = "regular gym training",
                 currentWorkoutRoutine = "push_pull_legs",
@@ -57,7 +57,7 @@ object UserProfileTestData {
                 timePerSession = 75,
                 daysPerWeek = 5
             ),
-            medicalHistory = MedicalHistory(
+            medicalHistory = MedicalHistoryDto(
                 injuries = listOf("minor_ankle_sprain_2023"),
                 chronicConditions = listOf("none"),
                 painPatterns = "none",
@@ -65,7 +65,7 @@ object UserProfileTestData {
                 medications = listOf("none"),
                 doctorRestrictions = "none"
             ),
-            nutritionHistory = NutritionDietHistory(
+            nutritionHistory = NutritionDietHistoryDto(
                 currentDietPattern = "high_protein",
                 calorieTrackingExperience = true,
                 macronutrientPreferences = "high_protein_moderate_carb",
@@ -79,7 +79,7 @@ object UserProfileTestData {
                 alcoholIntake = "occasional",
                 supplementUse = listOf("whey", "creatine")
             ),
-            behavioralFactors = BehavioralFactors(
+            behavioralFactors = BehavioralFactorsDto(
                 motivationLevel = "high",
                 consistencyHistory = "mostly_consistent",
                 accountabilityPreference = "app_tracking",
@@ -89,7 +89,7 @@ object UserProfileTestData {
                 stressEatingTendencies = "low",
                 supportSystem = "friends_family"
             ),
-            metricsTracking = MetricsTracking(
+            metricsTracking = MetricsTrackingDto(
                 preferredProgressMetrics = listOf("weight", "photos", "strength"),
                 trackingTools = listOf("apple_watch", "myfitnesspal"),
                 checkinFrequency = "weekly"

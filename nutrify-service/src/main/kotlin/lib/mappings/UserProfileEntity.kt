@@ -3,14 +3,14 @@ package com.nutrify.lib.mappings
 import com.nutrify.dto.*
 import com.nutrify.entity.*
 
-fun RegisterUserProfileRequest.toUserProfileRow(userId: String) = UserProfileRow(
+fun RegisterUserProfileRequestDto.toUserProfileRow(userId: String) = UserProfileRowEntity(
     userId = userId,
     profileId = id,
     notes = notes
 )
 
-fun RegisterUserProfileRequest.toBasicDemographicsRow(userId: String) =
-    BasicDemographicsRow(
+fun RegisterUserProfileRequestDto.toBasicDemographicsRow(userId: String) =
+    BasicDemographicsRowEntity(
         userId = userId,
         age = basicDemographics.age,
         sex = basicDemographics.sex,
@@ -23,8 +23,8 @@ fun RegisterUserProfileRequest.toBasicDemographicsRow(userId: String) =
         menstrualCycleInfo = basicDemographics.menstrualCycleInfo
     )
 
-fun RegisterUserProfileRequest.toActivityLifestyleRow(userId: String) =
-    ActivityLifestyleRow(
+fun RegisterUserProfileRequestDto.toActivityLifestyleRow(userId: String) =
+    ActivityLifestyleRowEntity(
         userId = userId,
         activityLevel = activityLifestyle.activityLevel,
         dailyStepCount = activityLifestyle.dailyStepCount,
@@ -36,8 +36,8 @@ fun RegisterUserProfileRequest.toActivityLifestyleRow(userId: String) =
         recoveryCapacity = activityLifestyle.recoveryCapacity
     )
 
-fun RegisterUserProfileRequest.toGoalsPrioritiesRow(userId: String) =
-    GoalsPrioritiesRow(
+fun RegisterUserProfileRequestDto.toGoalsPrioritiesRow(userId: String) =
+    GoalsPrioritiesRowEntity(
         userId = userId,
         primaryGoal = goals.primaryGoal,
         secondaryGoals = goals.secondaryGoals,
@@ -48,8 +48,8 @@ fun RegisterUserProfileRequest.toGoalsPrioritiesRow(userId: String) =
         healthGoals = goals.healthGoals
     )
 
-fun TrainingBackground.toTrainingBackgroundRow(userId: String) =
-    TrainingBackgroundRow(
+fun TrainingBackgroundDto.toTrainingBackgroundRow(userId: String) =
+    TrainingBackgroundRowEntity(
         userId = userId,
         trainingAge = trainingAge,
         trainingHistory = trainingHistory,
@@ -61,8 +61,8 @@ fun TrainingBackground.toTrainingBackgroundRow(userId: String) =
         daysPerWeek = daysPerWeek
     )
 
-fun MedicalHistory.toMedicalHistoryRow(userId: String) =
-    MedicalHistoryRow(
+fun MedicalHistoryDto.toMedicalHistoryRow(userId: String) =
+    MedicalHistoryRowEntity(
         userId = userId,
         injuries = injuries,
         chronicConditions = chronicConditions,
@@ -72,8 +72,8 @@ fun MedicalHistory.toMedicalHistoryRow(userId: String) =
         doctorRestrictions = doctorRestrictions
     )
 
-fun NutritionDietHistory.toNutritionHistoryRow(userId: String) =
-    NutritionHistoryRow(
+fun NutritionDietHistoryDto.toNutritionHistoryRow(userId: String) =
+    NutritionHistoryRowEntity(
         userId = userId,
         currentDietPattern = currentDietPattern,
         calorieTrackingExperience = calorieTrackingExperience,
@@ -89,8 +89,8 @@ fun NutritionDietHistory.toNutritionHistoryRow(userId: String) =
         supplementUse = supplementUse
     )
 
-fun BehavioralFactors.toBehavioralFactorsRow(userId: String) =
-    BehavioralFactorsRow(
+fun BehavioralFactorsDto.toBehavioralFactorsRow(userId: String) =
+    BehavioralFactorsRowEntity(
         userId = userId,
         motivationLevel = motivationLevel,
         consistencyHistory = consistencyHistory,
@@ -102,8 +102,8 @@ fun BehavioralFactors.toBehavioralFactorsRow(userId: String) =
         supportSystem = supportSystem
     )
 
-fun MetricsTracking.toMetricsTrackingRow(userId: String) =
-    MetricsTrackingRow(
+fun MetricsTrackingDto.toMetricsTrackingRow(userId: String) =
+    MetricsTrackingRowEntity(
         userId = userId,
         preferredProgressMetrics = preferredProgressMetrics,
         trackingTools = trackingTools,
