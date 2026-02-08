@@ -112,7 +112,7 @@ async function onContinue(): Promise<void> {
   )
     console.log("Verifying code:", verificationCode);
 
-
+console.log("ERROR: ", error)
   if(error) {
     toast.add({
       title: "Error! Please try again",

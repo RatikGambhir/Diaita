@@ -9,13 +9,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
 console.log("SESSION", session)
   // Redirect unauthenticated users away from protected routes
   if (!isPublicRoute && !session) {
-    const intendedPath = to.fullPath !== '/' ? to.fullPath : undefined
-
-    return navigateTo({
-      path: '/login',
-      query: intendedPath ? { redirect: intendedPath } : {},
-    })
+  //  const intendedPath = to.fullPath !== '/' ? to.fullPath : undefined
+if (to.fullPath !== '/landing') {
+  return navigateTo({
+    path: '/landing',
+  })
+}
   }
+
 
   // Redirect authenticated users away from auth pages (except landing)
   if (isPublicRoute && session && to.path !== '/landing') {
@@ -23,7 +24,7 @@ console.log("SESSION", session)
   }
 
   // Check profile completion for authenticated users on protected routes
-  if (!isPublicRoute && session && to.path !== '/') {
+  if (!isPublicRoute && session) {
     console.log("HAS SESSION AND NON PUBLIC ROUTE")
     const userStore = useUserStore()
 
@@ -32,16 +33,6 @@ console.log("SESSION", session)
       userStore.addUserSession(session.user, session)
     }
 
-    if (!userStore.hasCompletedProfile) {
-      const { fetchProfile } = useUserProfile()
-      const profile = await fetchProfile()
 
-      if (!profile) {
-        console.log("HAS SESSION AND NON PUBLIC ROUTE BUT NO PROFILE")
-        return navigateTo({
-          path: '/setup-profile',
-        })
-      }
-    }
   }
 })
