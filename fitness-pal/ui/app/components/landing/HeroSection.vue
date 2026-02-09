@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, CheckCircle2, Dumbbell, Play, Sparkles, Utensils } from 'lucide-vue-next'
+import { ArrowRight, CheckCircle2, Dumbbell, Lightbulb, Sparkles, Utensils } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 import Card from '~/components/ui/card/Card.vue'
 
@@ -70,8 +70,8 @@ const goToFeatures = () => {
           :style="showClass(300).style"
         >
           <Button variant="outline" class="rounded-full px-6" @click="goToFeatures">
-            <Play class="h-4 w-4" />
-            Watch Demo
+            <Lightbulb class="h-4 w-4" />
+            Learn More
           </Button>
           <Button class="rounded-full px-6" @click="goToLogin">
             Get Started
