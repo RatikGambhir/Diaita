@@ -62,16 +62,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-screen bg-background">
+  <div class="flex h-full bg-sidebar">
     <!-- Sidebar -->
     <aside
-      class="flex flex-col border-r bg-[#dddfe2] transition-all duration-300"
+      class="flex flex-col h-screen border-r bg-sidebar text-sidebar-foreground transition-all duration-300"
       :class="sidebarCollapsed ? 'w-16' : 'w-64'"
     >
       <!-- Header -->
       <div class="flex h-16 items-center border-b px-4">
         <NuxtLink to="/" class="flex items-center gap-2">
-          <span v-if="!sidebarCollapsed" class="text-lg font-bold text-foreground">Nutrify</span>
+          <span v-if="!sidebarCollapsed" class="text-lg font-bold text-sidebar-foreground">Nutrify</span>
         </NuxtLink>
       </div>
 
@@ -79,7 +79,7 @@ onMounted(async () => {
       <div class="p-2">
         <Button
           variant="outline"
-          class="bg-background hover:bg-white"
+          class="bg-sidebar hover:bg-background text-sidebar-foreground hover:text-sidebar-accent-foreground"
           :class="sidebarCollapsed ? 'w-full justify-center' : 'w-full justify-start'"
         >
           <Search class="h-4 w-4" />
@@ -93,9 +93,9 @@ onMounted(async () => {
           v-for="item in mainNavItems"
           :key="item.to"
           :to="item.to"
-          class="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground transition-colors hover:bg-white hover:text-foreground"
+          class="flex items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           :class="{
-            'bg-primary text-foreground': route.path === item.to || (item.to !== '/' && route.path.startsWith(item.to)),
+            'bg-sidebar-primary text-sidebar-primary-foreground': route.path === item.to || (item.to !== '/' && route.path.startsWith(item.to)),
             'justify-center': sidebarCollapsed
           }"
         >
@@ -105,14 +105,14 @@ onMounted(async () => {
       </nav>
 
       <!-- Secondary Navigation -->
-      <div class="border-t p-2">
+      <div class="border-t border-sidebar-border p-2">
         <a
           v-for="item in secondaryNavItems"
           :key="item.to"
           :href="item.to"
           target="_blank"
           rel="noopener noreferrer"
-          class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          class="flex items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           :class="{ 'justify-center': sidebarCollapsed }"
         >
           <component :is="item.icon" class="h-5 w-5 shrink-0" />
@@ -120,7 +120,7 @@ onMounted(async () => {
         </a>
         <button
           type="button"
-          class="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          class="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           :class="{ 'justify-center': sidebarCollapsed }"
           @click="signOut"
         >
@@ -130,10 +130,11 @@ onMounted(async () => {
       </div>
 
       <!-- Collapse Toggle -->
-      <div class="border-t p-2">
+      <div class="border-t border-sidebar-border p-2">
         <Button
           variant="ghost"
           size="sm"
+          class="font-sans text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           :class="sidebarCollapsed ? 'w-full justify-center' : 'w-full justify-start'"
           @click="toggleSidebar"
         >
@@ -144,9 +145,11 @@ onMounted(async () => {
       </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 overflow-auto">
-      <slot />
-    </main>
+    <div class="flex-1 pb-3 pr-3 pt-4">
+      <!-- Main Content -->
+      <main class="relative z-10 h-full overflow-auto rounded-2xl bg-background shadow-lg">
+        <slot />
+      </main>
+    </div>
   </div>
 </template>

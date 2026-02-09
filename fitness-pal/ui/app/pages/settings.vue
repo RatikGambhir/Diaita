@@ -161,7 +161,7 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
 </script>
 
 <template>
-    <div class="flex-1 flex flex-col h-full bg-[#e9ecef]">
+    <div class="flex-1 flex flex-col h-full bg-background">
         <header class="flex h-16 items-center justify-between px-8 shrink-0">
             <h1 class="text-xl font-semibold text-slate-700">Settings</h1>
         </header>
