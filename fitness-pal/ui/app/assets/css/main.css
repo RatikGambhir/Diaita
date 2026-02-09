@@ -1,6 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Glegoo:wght@400;700&display=swap');
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
+.snap-container::-webkit-scrollbar {
+  display: none;
+}
+
+.snap-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 
 
 :root {

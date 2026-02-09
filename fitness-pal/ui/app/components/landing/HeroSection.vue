@@ -1,146 +1,138 @@
 <script setup lang="ts">
+import { ArrowRight, CheckCircle2, Dumbbell, Play, Sparkles, Utensils } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
-import { ArrowRight } from 'lucide-vue-next'
+import Card from '~/components/ui/card/Card.vue'
 
 const mounted = ref(false)
 
+const bulletPoints = [
+  'AI-powered nutrition tracking that adapts to your goals',
+  'Personalized workout plans for strength, mobility, and endurance',
+  'Daily insight cards for calories, macros, and recovery trends',
+]
+
 onMounted(() => {
-  setTimeout(() => {
+  requestAnimationFrame(() => {
     mounted.value = true
-  }, 100)
+  })
 })
 
-const getStarted = () => {
+const showClass = (delay: number) => {
+  return {
+    class: mounted.value ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0',
+    style: { transitionDelay: `${delay}ms` },
+  }
+}
+
+const goToLogin = () => {
   navigateTo('/login')
 }
 
-const learnMore = () => {
-  // TODO: Scroll to features or navigate to about page
-  console.log('Learn More clicked')
+const goToFeatures = () => {
+  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
-
-const barHeights = [40, 65, 50, 80, 60, 90, 70, 85, 55, 75, 95, 65]
 </script>
 
 <template>
-  <div class="relative">
-    <div class="absolute top-43.75 right-0 z-0 flex items-end justify-end pr-8 pointer-events-none overflow-hidden">
-      <div class="flex items-end gap-3 h-150 opacity-80">
+  <section id="hero" class="h-screen snap-start overflow-hidden bg-background">
+    <div class="mx-auto grid h-full max-w-7xl grid-cols-1 items-center gap-10 px-6 pt-28 pb-10 lg:grid-cols-2 lg:px-12">
+      <div class="space-y-6">
         <div
-          v-for="(height, index) in barHeights"
-          :key="index"
-          class="bar-graph transition-all duration-1000 ease-out"
-          :class="{
-            'opacity-0 translate-y-8': !mounted,
-            'opacity-100 translate-y-0': mounted,
-          }"
-          :style="{
-            height: mounted ? `${height}%` : '0%',
-            transitionDelay: `${600 + index * 80}ms`,
-            width: '40px',
-            background: `linear-gradient(to top,
-              rgba(34, 197, 94, 0.9),
-              rgba(74, 222, 128, 0.7),
-              rgba(134, 239, 172, 0.4))`,
-            borderRadius: '8px 8px 0 0',
-            boxShadow: '0 4px 20px rgba(34, 197, 94, 0.2)',
-          }"
-        />
-      </div>
-    </div>
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-24 sm:py-32">
-      <div class="flex flex-col items-start max-w-3xl space-y-8">
-        <div
-          class="transition-all duration-800 ease-out"
-          :class="{
-            'opacity-0 -translate-x-4': !mounted,
-            'opacity-100 translate-x-0': mounted,
-          }"
+          class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm text-muted-foreground transition-all duration-700"
+          :class="showClass(0).class"
+          :style="showClass(0).style"
         >
-          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-            <div class="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            <span class="text-sm font-medium text-foreground/80">Track smarter, achieve faster</span>
-          </div>
+          <Sparkles class="h-4 w-4 text-primary" />
+          Built for consistent fitness progress
         </div>
+
         <h1
-          class="text-6xl sm:text-7xl md:text-8xl font-black text-foreground leading-tight tracking-tight transition-all duration-1000 ease-out delay-100"
-          :class="{
-            'opacity-0 -translate-x-8': !mounted,
-            'opacity-100 translate-x-0': mounted,
-          }"
+          class="text-balance text-5xl font-black leading-tight text-foreground transition-all duration-700 md:text-6xl lg:text-7xl"
+          :class="showClass(100).class"
+          :style="showClass(100).style"
         >
-          Your Nutrition & Fitness,
+          Your Fitness Tracking,
           <br>
-          <span class="bg-linear-to-r from-green-600 via-emerald-500 to-green-400 bg-clip-text text-transparent">
-            Simplified
-          </span>
+          Meal Plans, and Insights in One Place.
         </h1>
 
         <p
-          class="text-xl sm:text-2xl text-muted-foreground max-w-2xl font-medium transition-all duration-1000 ease-out delay-200"
-          :class="{
-            'opacity-0 -translate-x-8': !mounted,
-            'opacity-100 translate-x-0': mounted,
-          }"
+          class="max-w-xl text-lg text-muted-foreground transition-all duration-700"
+          :class="showClass(200).class"
+          :style="showClass(200).style"
         >
-          Nutrify transforms how you track calories, macros, and workouts with intelligent insights that keep you on track to crush your goals.
+          Log workouts, track macros, and follow smarter meal plans with a single dashboard designed to help you build momentum every week.
         </p>
 
         <div
-          class="flex flex-row items-center gap-4 w-full sm:w-auto transition-all duration-1000 ease-out delay-300"
-          :class="{
-            'opacity-0 -translate-x-8': !mounted,
-            'opacity-100 translate-x-0': mounted,
-          }"
+          class="flex flex-wrap items-center gap-3 transition-all duration-700"
+          :class="showClass(300).class"
+          :style="showClass(300).style"
         >
-          <Button
-            size="lg"
-            class="px-8 py-4 h-auto text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 rounded-2xl"
-            @click="getStarted"
-          >
-            <span class="flex items-center gap-2">
-              Get Started
-              <ArrowRight class="w-5 h-5" />
-            </span>
+          <Button variant="outline" class="rounded-full px-6" @click="goToFeatures">
+            <Play class="h-4 w-4" />
+            Watch Demo
           </Button>
-
-          <Button
-            size="lg"
-            variant="outline"
-            class="px-8 py-4 h-auto text-lg font-semibold border-2 border-border hover:border-primary/50 text-foreground hover:bg-accent hover:scale-105 transition-all duration-300 rounded-2xl"
-            @click="learnMore"
-          >
-            <span class="flex items-center gap-2">
-              Learn More
-            </span>
+          <Button class="rounded-full px-6" @click="goToLogin">
+            Get Started
+            <ArrowRight class="h-4 w-4" />
           </Button>
         </div>
+
+        <ul
+          class="space-y-2 transition-all duration-700"
+          :class="showClass(400).class"
+          :style="showClass(400).style"
+        >
+          <li v-for="point in bulletPoints" :key="point" class="flex items-start gap-2 text-sm text-muted-foreground md:text-base">
+            <CheckCircle2 class="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+            <span>{{ point }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div
+        class="relative transition-all duration-700"
+        :class="mounted ? 'scale-100 opacity-100' : 'scale-95 opacity-0'"
+        style="transition-delay: 500ms"
+      >
+        <Card class="relative h-[470px] rounded-3xl border-border bg-card p-6 shadow-xl md:h-[510px]">
+          <div class="rounded-2xl border border-border bg-muted/50 p-5">
+            <div class="flex items-center justify-between">
+              <p class="text-sm text-muted-foreground">Today Overview</p>
+              <Sparkles class="h-5 w-5 text-primary" />
+            </div>
+            <p class="mt-2 text-3xl font-bold text-foreground">1,980 kcal</p>
+            <p class="text-sm text-muted-foreground">Remaining target: 320 kcal</p>
+          </div>
+
+          <div class="mt-5 grid gap-4 md:grid-cols-2">
+            <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Utensils class="h-4 w-4 text-primary" />
+                Calorie Tracking
+              </div>
+              <p class="text-xs text-muted-foreground">Breakfast, lunch, and dinner logged with macro split and hydration score.</p>
+            </div>
+
+            <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Dumbbell class="h-4 w-4 text-primary" />
+                Workout Plans
+              </div>
+              <p class="text-xs text-muted-foreground">Push/Pull/Legs progression with volume targets and weekly load trends.</p>
+            </div>
+          </div>
+
+          <div class="mt-5 rounded-xl border border-border bg-accent/50 p-4">
+            <p class="text-sm font-semibold text-foreground">Enhanced Insights</p>
+            <p class="mt-1 text-xs text-muted-foreground">Recovery is trending up 14%. Suggested: increase lower-body volume by 1 set this week.</p>
+          </div>
+
+          <div class="pointer-events-none absolute -right-3 -top-3 h-20 w-20 rounded-full bg-primary/20 blur-xl" />
+          <div class="pointer-events-none absolute -left-4 bottom-6 h-24 w-24 rounded-full bg-accent/50 blur-2xl" />
+        </Card>
       </div>
     </div>
-  </div>
+  </section>
 </template>
-
-<style scoped>
-@keyframes growHeight {
-  from {
-    height: 0%;
-  }
-}
-
-.bar-graph {
-  animation: growHeight 1.2s ease-out;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-</style>
