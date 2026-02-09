@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, ArrowRight, Dumbbell, Plus, TrendingUp, Utensils } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, Plus } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 import Card from '~/components/ui/card/Card.vue'
 
@@ -10,36 +10,31 @@ const currentPage = ref(0)
 const featurePages = [
   [
     {
-      title: 'Smart Calorie Tracking',
-      icon: Utensils,
-      description: 'Scan meals, log macros, and see daily targets update in real time.',
+      title: 'Smart Fitness Tracking',
+      image: '/assets/ropeworkout-landiing.jpg',
+      description: 'Quickly add workouts and excercises, track performance improvements, measure consistency',
     },
     {
-      title: 'Workout Logging',
-      icon: Dumbbell,
-      description: 'Track sets, reps, intensity, and training consistency from one timeline.',
+      title: 'Nutrition tracking',
+      image: '/assets/cuttingfood-landing.png',
+      description: 'Search and Add foods from most groceries stores and restaurants, track calroies and macros, and gain insights to eating patterns over time',
     },
     {
-      title: 'Progress Analytics',
-      icon: TrendingUp,
-      description: 'Understand trends in weight, performance, and recovery with clear metrics.',
+      title: 'Workout planning',
+      image: '/assets/img.png',
+      description: 'Escaping the boring by generating workout plans based on your current starting point and goals, easily share save and share workout plans, and easily find workouts with video instructions',
     },
   ],
   [
     {
-      title: 'Meal Plan Builder',
-      icon: Utensils,
-      description: 'Build weekly meal plans around calories, protein goals, and food preferences.',
+      title: 'Meal planning',
+      image: '/assets/preportionedhealthyfood.jpg',
+      description: 'Get day by day meal plans with prioritized foods, save and share recipes, and get enhance performance metrics with each plan',
     },
     {
-      title: 'Adaptive Workouts',
-      icon: Dumbbell,
-      description: 'Plans auto-adjust from your recent sessions, missed days, and recovery load.',
-    },
-    {
-      title: 'Weekly Insights',
-      icon: TrendingUp,
-      description: 'Get concise action items that help improve nutrition and training outcomes.',
+      title: 'Smart Watch Integrations',
+      image: '/assets/smart-watch-landing.jpg',
+      description: 'easily sync with your favorite smart health devices, at no cost!',
     },
   ],
 ]
@@ -75,7 +70,7 @@ const prevPage = () => {
         </p>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-3 md:gap-6">
+      <div class="grid gap-4 md:gap-6" :class="visibleCards.length === 2 ? 'md:mx-auto md:max-w-5xl md:grid-cols-2' : 'md:grid-cols-3'">
         <Card
           v-for="(feature, index) in visibleCards"
           :key="`${feature.title}-${currentPage}`"
@@ -83,8 +78,12 @@ const prevPage = () => {
           :class="isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'"
           :style="{ transitionDelay: `${200 + index * 150}ms` }"
         >
-          <div class="m-4 flex h-44 items-center justify-center rounded-xl bg-muted/50 md:h-52">
-            <component :is="feature.icon" class="h-20 w-20 text-primary/90" />
+          <div class="m-4 h-44 overflow-hidden rounded-xl bg-muted/50 md:h-52">
+            <img
+              :src="feature.image"
+              :alt="feature.title"
+              class="h-full w-full object-cover object-center"
+            >
           </div>
           <div class="flex items-center justify-between px-6 pb-6 pt-1">
             <div>

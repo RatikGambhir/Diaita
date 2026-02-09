@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, Quote, UserRound } from 'lucide-vue-next'
+import { ArrowRight, Quote } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 import Card from '~/components/ui/card/Card.vue'
 
@@ -7,24 +7,19 @@ const { sectionRef, isVisible } = useScrollAnimation(0.25)
 
 const testimonials = [
   {
-    quote: 'Nutrify helped me lose 30 pounds in 3 months with a plan I could actually stick to.',
-    name: 'Sarah M.',
-    role: 'Fitness Enthusiast',
+    description: 'This platform not only helped me with everything in fitness, it also keep me happy and engaged!',
+    name: 'Ratik Gambhir',
+    image: '/assets/ratik-testimonial.jpg',
   },
   {
-    quote: 'The macro tracking is the best I have ever used. My clients finally stay consistent.',
-    name: 'James K.',
-    role: 'Personal Trainer',
+    description: 'With Law school and leading many yoga classes per week, this platform saved me so much time and gave me so much insight along the way. don\'t know what I would\'ve done without it!',
+    name: 'Amanda Go',
+    image: '/assets/amanda-testimonial.jpg',
   },
   {
-    quote: 'Finally an app that makes calorie counting effortless and keeps me motivated each week.',
-    name: 'Maria L.',
-    role: 'Nutrition Coach',
-  },
-  {
-    quote: 'I have tried everything, and Nutrify is the one that stuck because insights are actionable.',
-    name: 'David R.',
-    role: 'Marathon Runner',
+    description: 'Getting ready for my wedding was a grueling process, but this platform made sure I was consistent and actually gave me good ideas on what to do better!',
+    name: 'Tyler Simons',
+    image: '/assets/tyler2.jpg',
   },
 ]
 </script>
@@ -57,26 +52,29 @@ const testimonials = [
         </Button>
       </div>
 
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mx-auto grid w-full max-w-[1200px] gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <Card
           v-for="(item, index) in testimonials"
           :key="item.name"
-          class="rounded-xl border-border bg-card transition-all duration-700"
+          class="rounded-xl border-border bg-card transition-all duration-700 w-full"
           :class="isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'"
           :style="{ transitionDelay: `${250 + index * 150}ms` }"
         >
-          <div class="m-3 aspect-[3/4] rounded-lg bg-gradient-to-br from-muted to-accent/40 p-4">
-            <div class="flex h-full items-start justify-between">
-              <UserRound class="h-6 w-6 text-muted-foreground" />
+          <div class="relative m-3 aspect-[4/4] overflow-hidden rounded-lg bg-muted/50">
+            <img
+              :src="item.image"
+              :alt="item.name"
+              class="h-full w-full object-cover object-center"
+            >
+            <div class="absolute inset-0 flex items-start justify-end bg-black/5 p-3">
               <Quote class="h-6 w-6 text-primary" />
             </div>
           </div>
           <div class="px-4 pt-1">
-            <p class="text-sm font-semibold leading-snug text-primary">"{{ item.quote }}"</p>
+            <p class="text-sm font-semibold leading-snug text-primary">"{{ item.description }}"</p>
           </div>
           <div class="mt-3 px-4 pb-4">
             <p class="text-sm font-bold text-foreground">{{ item.name }}</p>
-            <p class="text-xs text-muted-foreground">{{ item.role }}</p>
           </div>
         </Card>
       </div>
