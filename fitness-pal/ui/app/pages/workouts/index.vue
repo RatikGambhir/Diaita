@@ -211,49 +211,53 @@ const getCategoryPercent = (
         <!-- Header -->
         <header class="flex h-16 items-center justify-between border-b px-6 shrink-0">
             <h1 class="text-xl font-semibold">Workouts</h1>
-            <div class="flex items-center gap-3">
-                <ToggleGroup v-model="viewMode" type="single" variant="outline" size="sm">
-                    <ToggleGroupItem value="cards" aria-label="Card view">
-                        <LayoutGrid class="h-4 w-4" />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="table" aria-label="Table view">
-                        <Table2 class="h-4 w-4" />
-                    </ToggleGroupItem>
-                </ToggleGroup>
-
-                <Button @click="isAddWorkoutModalOpen = true">
-                    <Plus class="h-4 w-4 mr-2" />
-                    Add Workout
-                </Button>
-
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger as-child>
-                            <Button variant="ghost" size="icon" class="relative">
-                                <Bell class="h-5 w-5" />
-                                <Badge class="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]" variant="destructive">
-                                    3
-                                </Badge>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Notifications (N)</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            </div>
         </header>
 
         <!-- Body -->
         <div class="flex-1 overflow-auto p-6 space-y-6">
-            <div class="relative">
-                <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    v-model="searchQuery"
-                    placeholder="Search workouts..."
-                    class="pl-10 h-11"
-                />
+          <div class="flex gap-3">
+            <div class="relative w-1/4">
+              <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                  v-model="searchQuery"
+                  placeholder="Search workouts..."
+                  class="pl-10 h-11"
+              />
+
             </div>
+            <div class="flex items-center gap-3">
+              <ToggleGroup v-model="viewMode" type="single" variant="outline" size="sm">
+                <ToggleGroupItem value="cards" aria-label="Card view">
+                  <LayoutGrid class="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="table" aria-label="Table view">
+                  <Table2 class="h-4 w-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+
+              <Button @click="isAddWorkoutModalOpen = true">
+                <Plus class="h-4 w-4 mr-2" />
+                Add Workout
+              </Button>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button variant="ghost" size="icon" class="relative">
+                      <Bell class="h-5 w-5" />
+                      <Badge class="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]" variant="destructive">
+                        3
+                      </Badge>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Notifications (N)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+          </div>
 
             <div
                 v-if="filteredWorkouts.length === 0"
