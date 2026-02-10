@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import TabGroup from '~/components/TabGroup.vue'
-import TabPanel from '~/components/TabPanel.vue'
+import GenericTabGroup from '~/components/GenericTabGroup.vue'
+import GenericTabPanel from '~/components/GenericTabPanel.vue'
 import ProfileSettings from '~/components/settings/ProfileSettings.vue'
 import NutritionSettings from '~/components/settings/NutritionSettings.vue'
 import TrainingSettings from '~/components/settings/TrainingSettings.vue'
@@ -168,21 +168,20 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
 
         <div class="flex-1 overflow-auto px-8 pb-10">
             <div class="max-w-4xl mx-auto">
-                <TabGroup
+                <GenericTabGroup
                     v-model="activeTab"
                     :tabs="tabs"
-                    tabs-list-class="mb-6 w-full justify-start flex-wrap h-auto gap-3 bg-transparent p-0"
-                    tab-trigger-class="rounded-full px-4 py-1.5 text-xs font-semibold text-slate-500 data-[state=active]:bg-[#d96d54] data-[state=active]:text-white data-[state=active]:shadow-none"
+                    tab-trigger-class="text-base px-5 py-2"
                 >
-                    <TabPanel value="profile" class="space-y-6">
+                    <GenericTabPanel value="profile" class="space-y-6">
                         <ProfileSettings
                             :form-state="formState"
                             :form-defaults="formDefaults"
                             :placeholder-for="placeholderFor"
                         />
-                    </TabPanel>
+                    </GenericTabPanel>
 
-                    <TabPanel value="nutrition" class="space-y-6">
+                    <GenericTabPanel value="nutrition" class="space-y-6">
                         <NutritionSettings
                             :form-state="formState"
                             :form-defaults="formDefaults"
@@ -194,9 +193,9 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
                             :budget-options="budgetOptions"
                             :alcohol-options="alcoholOptions"
                         />
-                    </TabPanel>
+                    </GenericTabPanel>
 
-                    <TabPanel value="training" class="space-y-6">
+                    <GenericTabPanel value="training" class="space-y-6">
                         <TrainingSettings
                             :form-state="formState"
                             :form-defaults="formDefaults"
@@ -204,16 +203,16 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
                             :training-age-options="trainingAgeOptions"
                             :equipment-options="equipmentOptions"
                         />
-                    </TabPanel>
+                    </GenericTabPanel>
 
-                    <TabPanel value="goals" class="space-y-6">
+                    <GenericTabPanel value="goals" class="space-y-6">
                         <GoalsSettings
                             :form-state="formState"
                             :form-defaults="formDefaults"
                             :placeholder-for="placeholderFor"
                         />
-                    </TabPanel>
-                </TabGroup>
+                    </GenericTabPanel>
+                </GenericTabGroup>
             </div>
         </div>
     </div>
