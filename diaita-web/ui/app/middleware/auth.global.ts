@@ -10,14 +10,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
 console.log("SESSION", session)
   // Redirect unauthenticated users away from protected routes
   if (!isPublicRoute && !session) {
-  //  const intendedPath = to.fullPath !== '/' ? to.fullPath : undefined
 if (to.fullPath !== '/landing') {
   return navigateTo({
     path: '/landing',
   })
 }
   }
-
 
   // Redirect authenticated users away from auth pages (except landing)
   if (isPublicRoute && session && to.path !== '/landing') {
