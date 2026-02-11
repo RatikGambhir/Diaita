@@ -15,7 +15,7 @@ Thumbs.db
 .gradle/
 build/
 out/
-ktore-fitness-pal-service/src/main/resources/
+diaita-service/src/main/resources/
 **/build/
 **/out/
 # If using Maven anywhere:
