@@ -174,14 +174,14 @@ const isDropZoneActive = (category: WorkoutCategory, index: number) => {
     </div>
     <div class="flex flex-row gap-4">
 
-      <div v-for="group in groupedExercises" :key="group.category" class="mb-6 flex w-full">
-        <div flex="flex flex-col w-1/3">
+      <div v-for="group in groupedExercises" :key="group.category" class="mb-6 flex w-full bg-red-400">
+        <div class="flex flex-col min-w-1/3">
           <h3 class="mb-3 font-semibold text-primary">{{ group.category }}</h3>
 
-          <div class="space-y-2">
+          <div class="space-y-2 ">
             <template v-for="(item, index) in group.items" :key="item.id">
               <div
-                  class="h-1.5 rounded-full transition-all duration-150"
+                  class="h-1.5 rounded-full transition-all duration-150 "
                   :class="isDropZoneActive(group.category, index) ? 'bg-primary/30' : 'bg-transparent'"
                   @dragover="onDragOverDropZone(group.category, index, $event)"
                   @drop="onDropZoneDrop(group.category, index, $event)"

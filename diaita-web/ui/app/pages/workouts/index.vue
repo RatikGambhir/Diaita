@@ -220,9 +220,9 @@ const getCategoryPercent = (
         <!-- Body -->
         <div class="flex-1 overflow-auto p-6">
             <GenericTabGroup v-model="activeTab" :tabs="workoutTabs" tab-trigger-class="text-base px-5 py-2">
-                <GenericTabPanel value="home" class="mt-0 space-y-6">
-                    <div class="flex gap-3">
-                        <div class="relative w-1/4">
+                <template #leading>
+                    <div v-if="activeTab === 'home'" class="flex flex-1 gap-3">
+                        <div class="relative w-[24rem] max-w-full">
                             <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                                 v-model="searchQuery"
@@ -262,7 +262,8 @@ const getCategoryPercent = (
                             </TooltipProvider>
                         </div>
                     </div>
-
+                </template>
+                <GenericTabPanel value="home" class="mt-0 space-y-6">
                     <div
                         v-if="filteredWorkouts.length === 0"
                         class="text-center py-12 text-muted-foreground"
