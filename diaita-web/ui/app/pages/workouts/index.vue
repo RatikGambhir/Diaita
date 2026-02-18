@@ -290,7 +290,7 @@ const getCategoryPercent = (
                                 <div
                                     v-for="workout in column"
                                     :key="workout.id"
-                                    class="rounded-lg border bg-card text-card-foreground shadow-sm transition-[height] duration-300 cursor-pointer"
+                                    class="cursor-pointer overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-[height] duration-300"
                                     :class="selectedWorkoutId === workout.id ? 'h-[440px]' : 'h-[260px]'"
                                     role="button"
                                     tabindex="0"
@@ -331,7 +331,7 @@ const getCategoryPercent = (
                                             </div>
                                         </CardHeader>
 
-                                        <CardContent class="flex flex-1 flex-col">
+                                        <CardContent class="flex min-h-0 flex-1 flex-col">
                                             <div class="space-y-3">
                                                 <WorkoutCategorySummaryRow
                                                     label="Weightlifting"
@@ -348,50 +348,52 @@ const getCategoryPercent = (
                                             </div>
 
                                             <div
-                                                class="mt-4 overflow-hidden transition-[max-height,opacity] duration-300"
-                                                :class="selectedWorkoutId === workout.id ? 'max-h-[320px] opacity-100' : 'max-h-0 opacity-0'"
+                                                class="mt-4 min-h-0 overflow-hidden transition-[max-height,opacity] duration-300"
+                                                :class="selectedWorkoutId === workout.id ? 'max-h-[360px] opacity-100' : 'max-h-0 opacity-0'"
                                             >
-                                                <div class="border-t pt-4 space-y-4">
-                                                    <WorkoutCategorySection
-                                                        label="Weightlifting"
-                                                        :count="workout.categories.weightlifting.length"
-                                                        empty-text="No weightlifting exercises yet"
-                                                    >
-                                                        <WorkoutCategoryItemRow
-                                                            v-for="lift in workout.categories.weightlifting"
-                                                            :key="`lift-${lift.id}`"
-                                                            :name="lift.name"
-                                                            :detail="`${lift.sets} sets x ${lift.reps} reps`"
-                                                        />
-                                                    </WorkoutCategorySection>
+                                                <div class="flex h-full min-h-0 flex-col border-t pt-4">
+                                                    <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                                                        <WorkoutCategorySection
+                                                            label="Weightlifting"
+                                                            :count="workout.categories.weightlifting.length"
+                                                            empty-text="No weightlifting exercises yet"
+                                                        >
+                                                            <WorkoutCategoryItemRow
+                                                                v-for="lift in workout.categories.weightlifting"
+                                                                :key="`lift-${lift.id}`"
+                                                                :name="lift.name"
+                                                                :detail="`${lift.sets} sets x ${lift.reps} reps`"
+                                                            />
+                                                        </WorkoutCategorySection>
 
-                                                    <WorkoutCategorySection
-                                                        label="Cardio"
-                                                        :count="workout.categories.cardio.length"
-                                                        empty-text="No cardio sessions yet"
-                                                    >
-                                                        <WorkoutCategoryItemRow
-                                                            v-for="cardio in workout.categories.cardio"
-                                                            :key="`cardio-${cardio.id}`"
-                                                            :name="cardio.name"
-                                                            :detail="cardio.duration"
-                                                        />
-                                                    </WorkoutCategorySection>
+                                                        <WorkoutCategorySection
+                                                            label="Cardio"
+                                                            :count="workout.categories.cardio.length"
+                                                            empty-text="No cardio sessions yet"
+                                                        >
+                                                            <WorkoutCategoryItemRow
+                                                                v-for="cardio in workout.categories.cardio"
+                                                                :key="`cardio-${cardio.id}`"
+                                                                :name="cardio.name"
+                                                                :detail="cardio.duration"
+                                                            />
+                                                        </WorkoutCategorySection>
 
-                                                    <WorkoutCategorySection
-                                                        label="Dynamic"
-                                                        :count="workout.categories.dynamic.length"
-                                                        empty-text="No dynamic work yet"
-                                                    >
-                                                        <WorkoutCategoryItemRow
-                                                            v-for="dynamic in workout.categories.dynamic"
-                                                            :key="`dynamic-${dynamic.id}`"
-                                                            :name="dynamic.name"
-                                                            :detail="dynamic.frequency"
-                                                        />
-                                                    </WorkoutCategorySection>
+                                                        <WorkoutCategorySection
+                                                            label="Dynamic"
+                                                            :count="workout.categories.dynamic.length"
+                                                            empty-text="No dynamic work yet"
+                                                        >
+                                                            <WorkoutCategoryItemRow
+                                                                v-for="dynamic in workout.categories.dynamic"
+                                                                :key="`dynamic-${dynamic.id}`"
+                                                                :name="dynamic.name"
+                                                                :detail="dynamic.frequency"
+                                                            />
+                                                        </WorkoutCategorySection>
+                                                    </div>
 
-                                                    <div class="flex justify-end">
+                                                    <div class="mt-4 flex justify-end">
                                                         <Button size="sm" @click.stop="navigateTo(`/workouts/${workout.id}`)">
                                                             Open workout
                                                         </Button>
