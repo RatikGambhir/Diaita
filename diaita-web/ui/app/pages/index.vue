@@ -48,7 +48,6 @@ const range = shallowRef<Range>({
 
 <template>
   <div class="flex-1 flex flex-col overflow-hidden">
-    <!-- Header -->
     <header class="border-b bg-background">
       <div class="flex h-16 items-center justify-between px-6">
         <h1 class="text-xl font-semibold">Home</h1>
@@ -86,13 +85,11 @@ const range = shallowRef<Range>({
         </div>
       </div>
 
-      <!-- Toolbar -->
       <div class="flex items-center gap-4 px-6 py-3 border-t">
         <HomeDateRangePicker v-model="range" />
       </div>
     </header>
 
-    <!-- Body -->
     <div class="flex-1 overflow-auto p-6">
       <div class="mb-6">
         <ProfileSetupBanner />
@@ -100,17 +97,14 @@ const range = shallowRef<Range>({
       <DashboardStatsGrid />
       <DashboardVisitorsChart />
 
-      <!-- Stats Row (Calories, Steps, Sleep) -->
       <div class="mt-6">
         <StatsRow />
       </div>
 
-      <!-- Healthy Restaurants Card -->
       <div class="mt-6">
         <HealthyRestaurantsCard />
       </div>
 
-      <!-- Generator Card (Workout/Meal Plan) -->
       <div class="mt-6">
         <GeneratorCard />
       </div>

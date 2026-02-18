@@ -124,7 +124,6 @@ const resources = [
                     tab-trigger-class="text-xl sm:text-2xl"
                 >
                     <template #leading>
-                        <!-- Date Picker Popover -->
                         <Popover v-model:open="datePickerOpen">
                             <PopoverTrigger as-child>
                                 <Button

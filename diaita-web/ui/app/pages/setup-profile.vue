@@ -411,7 +411,6 @@ const handleSkip = () => {
 <template>
   <div class="min-h-screen border bg-background py-12 px-4">
     <div class="max-w-7xl mx-auto">
-      <!-- Header -->
       <div class="text-center mb-12">
         <Badge variant="outline" class="mb-4 px-4 py-1 bg-primary">
           Diaita
@@ -422,9 +421,7 @@ const handleSkip = () => {
         </p>
       </div>
 
-      <!-- Main Content -->
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <!-- Sidebar Navigation -->
         <div class="lg:col-span-1">
           <div class="bg-card rounded-lg border shadow-sm p-6 space-y-2">
             <button
@@ -464,52 +461,43 @@ const handleSkip = () => {
           </div>
         </div>
 
-        <!-- Form Content -->
         <div class="lg:col-span-3">
           <div class="bg-card rounded-lg border shadow-sm p-8 min-h-[600px]">
-            <!-- Step 1: Personal Info -->
             <PersonalInfoStep
               v-if="currentStep === 1"
               :form-data="basicDemographics"
               @update:form-data="(data) => basicDemographics = { ...basicDemographics, ...data }"
             />
-            <!-- Step 2: Lifestyle -->
             <LifestyleStep
               v-if="currentStep === 2"
               :form-data="activityLifestyle"
               @update:form-data="(data) => activityLifestyle = { ...activityLifestyle, ...data }"
             />
-            <!-- Step 3: Goals -->
             <GoalsStep
               v-if="currentStep === 3"
               :form-data="goals"
               @update:form-data="(data) => goals = { ...goals, ...data }"
             />
-            <!-- Step 4: Training -->
             <TrainingStep
               v-if="currentStep === 4"
               :form-data="trainingBackground"
               @update:form-data="(data) => trainingBackground = { ...trainingBackground, ...data }"
             />
-            <!-- Step 5: Nutrition -->
             <NutritionStep
               v-if="currentStep === 5"
               :form-data="nutritionHistory"
               @update:form-data="(data) => nutritionHistory = { ...nutritionHistory, ...data }"
             />
-            <!-- Step 6: Medical (Skippable) -->
             <MedicalStep
               v-if="currentStep === 6"
               :form-data="medicalHistory"
               @update:form-data="(data) => medicalHistory = { ...medicalHistory, ...data }"
             />
-            <!-- Step 7: Behavioral (Skippable) -->
             <BehavioralStep
               v-if="currentStep === 7"
               :form-data="behavioralFactors"
               @update:form-data="(data) => behavioralFactors = { ...behavioralFactors, ...data }"
             />
-            <!-- Step 8: Metrics (Skippable) -->
             <MetricsStep
               v-if="currentStep === 8"
               :form-data="metricsTracking"
@@ -517,7 +505,6 @@ const handleSkip = () => {
               @update:form-data="(data) => metricsTracking = { ...metricsTracking, ...data }"
               @update:notes="(val) => notes = val"
             />
-            <!-- Step 9: Review -->
             <ReviewStep
               v-if="currentStep === 9"
               :basic-demographics="basicDemographics"
@@ -531,7 +518,6 @@ const handleSkip = () => {
               :notes="notes"
             />
 
-            <!-- Navigation Buttons -->
             <div class="flex items-center justify-between mt-12 pt-8 border-t border-border">
               <Button
                 variant="ghost"
