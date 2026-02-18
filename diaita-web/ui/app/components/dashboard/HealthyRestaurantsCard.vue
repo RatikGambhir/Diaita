@@ -38,7 +38,7 @@ const prevPage = () => {
           <UtensilsCrossed class="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
         </div>
         <div>
-          <h3 class="text-base font-semibold text-foreground">Healthy Restaurants</h3>
+          <h3 class="text-base font-semibold text-foreground">Find Restaurants Near You</h3>
           <p class="text-sm text-muted-foreground">{{ restaurants.length }} locations in your area</p>
         </div>
       </div>

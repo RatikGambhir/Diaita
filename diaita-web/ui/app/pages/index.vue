@@ -18,7 +18,7 @@ import {
 import DashboardStatsGrid from '~/components/dashboard/DashboardStatsGrid.vue'
 import DashboardVisitorsChart from '~/components/dashboard/DashboardVisitorsChart.vue'
 import StatsRow from '~/components/dashboard/StatsRow.vue'
-import HealthyRestaurantsCard from '~/components/dashboard/HealthyRestaurantsCard.vue'
+import WorkoutPerformanceCarousel from '~/components/dashboard/WorkoutPerformanceCarousel.vue'
 import GeneratorCard from '~/components/generator/GeneratorCard.vue'
 
 const items = [
@@ -102,7 +102,7 @@ const range = shallowRef<Range>({
       </div>
 
       <div class="mt-6">
-        <HealthyRestaurantsCard />
+        <WorkoutPerformanceCarousel />
       </div>
 
       <div class="mt-6">

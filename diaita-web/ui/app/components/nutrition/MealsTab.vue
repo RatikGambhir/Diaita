@@ -3,12 +3,40 @@ import Card from "~/components/ui/card/Card.vue"
 import CardContent from "~/components/ui/card/CardContent.vue"
 import CardHeader from "~/components/ui/card/CardHeader.vue"
 import CardTitle from "~/components/ui/card/CardTitle.vue"
-import { UtensilsCrossed, Plus } from "lucide-vue-next"
+import { Search, UtensilsCrossed, Plus } from "lucide-vue-next"
 import Button from "~/components/ui/button/Button.vue"
+import Input from "~/components/ui/input/Input.vue"
+import HealthyRestaurantsCard from "~/components/dashboard/HealthyRestaurantsCard.vue"
 </script>
 
 <template>
     <div class="space-y-6">
+        <Card>
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2">
+                    <Search class="h-5 w-5 text-primary" />
+                    Search Meals
+                </CardTitle>
+                <p class="text-sm text-muted-foreground">
+                    Find meal ideas, nearby healthy options, or specific menu items.
+                </p>
+            </CardHeader>
+            <CardContent>
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <Input
+                        placeholder="Search meals, ingredients, or restaurants..."
+                        class="sm:flex-1"
+                    />
+                    <Button class="sm:min-w-28">
+                        <Search class="mr-2 h-4 w-4" />
+                        Search
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+
+        <HealthyRestaurantsCard />
+
         <Card>
             <CardHeader>
                 <div class="flex items-center justify-between">
@@ -17,16 +45,16 @@ import Button from "~/components/ui/button/Button.vue"
                         Saved Meals
                     </CardTitle>
                     <Button size="sm">
-                        <Plus class="h-4 w-4 mr-2" />
+                        <Plus class="mr-2 h-4 w-4" />
                         Create Meal
                     </Button>
                 </div>
             </CardHeader>
             <CardContent>
-                <div class="text-center py-12 text-muted-foreground">
-                    <UtensilsCrossed class="h-16 w-16 mx-auto mb-4 opacity-20" />
+                <div class="py-12 text-center text-muted-foreground">
+                    <UtensilsCrossed class="mx-auto mb-4 h-16 w-16 opacity-20" />
                     <p class="text-lg font-medium">Meal Templates Coming Soon</p>
-                    <p class="text-sm mt-2">Save your favorite meals for quick logging</p>
+                    <p class="mt-2 text-sm">Save your favorite meals for quick logging</p>
                 </div>
             </CardContent>
         </Card>
