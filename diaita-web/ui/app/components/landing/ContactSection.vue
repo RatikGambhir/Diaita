@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CornerDownRight, Instagram, Linkedin, Mail } from 'lucide-vue-next'
+import { useScrollAnimation } from '~/composables/useScrollAnimation'
 
 const { sectionRef, isVisible } = useScrollAnimation(0.25)
 </script>

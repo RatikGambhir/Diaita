@@ -62,10 +62,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-full bg-sidebar">
+  <div class="flex min-h-screen bg-sidebar">
     <!-- Sidebar -->
     <aside
-      class="flex flex-col h-screen border-r bg-sidebar text-sidebar-foreground transition-all duration-300"
+      class="sticky top-0 flex h-screen shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground transition-all duration-300"
       :class="sidebarCollapsed ? 'w-16' : 'w-64'"
     >
       <!-- Header -->
@@ -145,9 +145,9 @@ onMounted(async () => {
       </div>
     </aside>
 
-    <div class="flex-1 pb-3 pr-3 pt-4">
+    <div class="flex-1 pr-3 pt-4">
       <!-- Main Content -->
-      <main class="relative z-10 h-full overflow-auto rounded-2xl bg-background shadow-lg">
+      <main class="relative z-10 h-[calc(100vh-1rem)] overflow-auto rounded-2xl bg-background shadow-lg">
         <slot />
       </main>
     </div>

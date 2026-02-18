@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { ArrowLeft, ArrowRight, Plus } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 import Card from '~/components/ui/card/Card.vue'
+import { useScrollAnimation } from '~/composables/useScrollAnimation'
 
 const { sectionRef, isVisible } = useScrollAnimation(0.25)
 

@@ -15,18 +15,22 @@ import TooltipTrigger from '~/components/ui/tooltip/TooltipTrigger.vue'
 import Badge from '~/components/ui/badge/Badge.vue'
 import ToggleGroup from '~/components/ui/toggle-group/ToggleGroup.vue'
 import ToggleGroupItem from '~/components/ui/toggle-group/ToggleGroupItem.vue'
-import Table from '~/components/ui/table/Table.vue'
-import TableHeader from '~/components/ui/table/TableHeader.vue'
-import TableBody from '~/components/ui/table/TableBody.vue'
-import TableRow from '~/components/ui/table/TableRow.vue'
-import TableHead from '~/components/ui/table/TableHead.vue'
-import TableCell from '~/components/ui/table/TableCell.vue'
+import GenericTabGroup from '~/components/GenericTabGroup.vue'
+import GenericTabPanel from '~/components/GenericTabPanel.vue'
+import WorkoutTable from '~/components/workouts/WorkoutTable.vue'
 import { Plus, Bell, MoreHorizontal, Search, ChevronDown, Clock, LayoutGrid, Table2 } from 'lucide-vue-next'
 
 const isAddWorkoutModalOpen = ref(false);
+const activeTab = ref('home');
 const searchQuery = ref("");
 const selectedWorkoutId = ref<number | null>(null);
 const viewMode = ref<'cards' | 'table'>('cards');
+
+const workoutTabs = [
+    { value: "home", label: "Home" },
+    { value: "exercises", label: "Exercises" },
+    { value: "performance", label: "Performance" },
+];
 
 watch(viewMode, (val) => {
     if (!val) {
@@ -214,244 +218,225 @@ const getCategoryPercent = (
         </header>
 
         <!-- Body -->
-        <div class="flex-1 overflow-auto p-6 space-y-6">
-          <div class="flex gap-3">
-            <div class="relative w-1/4">
-              <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                  v-model="searchQuery"
-                  placeholder="Search workouts..."
-                  class="pl-10 h-11"
-              />
+        <div class="flex-1 overflow-auto p-6">
+            <GenericTabGroup v-model="activeTab" :tabs="workoutTabs" tab-trigger-class="text-base px-5 py-2">
+                <template #leading>
+                    <div v-if="activeTab === 'home'" class="flex flex-1 gap-3">
+                        <div class="relative w-[24rem] max-w-full">
+                            <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                v-model="searchQuery"
+                                placeholder="Search workouts..."
+                                class="pl-10 h-11"
+                            />
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <ToggleGroup v-model="viewMode" type="single" variant="outline" size="sm">
+                                <ToggleGroupItem value="cards" aria-label="Card view">
+                                    <LayoutGrid class="h-4 w-4" />
+                                </ToggleGroupItem>
+                                <ToggleGroupItem value="table" aria-label="Table view">
+                                    <Table2 class="h-4 w-4" />
+                                </ToggleGroupItem>
+                            </ToggleGroup>
 
-            </div>
-            <div class="flex items-center gap-3">
-              <ToggleGroup v-model="viewMode" type="single" variant="outline" size="sm">
-                <ToggleGroupItem value="cards" aria-label="Card view">
-                  <LayoutGrid class="h-4 w-4" />
-                </ToggleGroupItem>
-                <ToggleGroupItem value="table" aria-label="Table view">
-                  <Table2 class="h-4 w-4" />
-                </ToggleGroupItem>
-              </ToggleGroup>
+                            <Button @click="isAddWorkoutModalOpen = true">
+                                <Plus class="h-4 w-4 mr-2" />
+                                Add Workout
+                            </Button>
 
-              <Button @click="isAddWorkoutModalOpen = true">
-                <Plus class="h-4 w-4 mr-2" />
-                Add Workout
-              </Button>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <Button variant="ghost" size="icon" class="relative">
-                      <Bell class="h-5 w-5" />
-                      <Badge class="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]" variant="destructive">
-                        3
-                      </Badge>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Notifications (N)</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-          </div>
-
-            <div
-                v-if="filteredWorkouts.length === 0"
-                class="text-center py-12 text-muted-foreground"
-            >
-                No workouts found
-            </div>
-
-            <Transition
-                v-else
-                mode="out-in"
-                enter-active-class="transition-all duration-300 ease-out"
-                enter-from-class="opacity-0 scale-[0.97]"
-                enter-to-class="opacity-100 scale-100"
-                leave-active-class="transition-all duration-300 ease-in"
-                leave-from-class="opacity-100 scale-100"
-                leave-to-class="opacity-0 scale-[0.97]"
-            >
-                <div v-if="viewMode === 'cards'" key="cards" class="flex flex-col md:flex-row gap-6">
-                    <div
-                        v-for="(column, columnIndex) in columnedWorkouts"
-                        :key="`column-${columnIndex}`"
-                        class="flex flex-col gap-6 flex-1"
-                    >
-                        <div
-                            v-for="workout in column"
-                            :key="workout.id"
-                            class="rounded-lg border bg-card text-card-foreground shadow-sm transition-[height] duration-300 cursor-pointer"
-                            :class="selectedWorkoutId === workout.id ? 'h-[440px]' : 'h-[260px]'"
-                            role="button"
-                            tabindex="0"
-                            :aria-expanded="selectedWorkoutId === workout.id"
-                            @click="toggleWorkout(workout.id)"
-                            @keydown.enter.prevent="toggleWorkout(workout.id)"
-                            @keydown.space.prevent="toggleWorkout(workout.id)"
-                        >
-                            <Card class="border-0 shadow-none h-full flex flex-col">
-                                <CardHeader class="pb-2">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <h3 class="text-lg font-semibold">
-                                                {{ workout.name }}
-                                            </h3>
-                                            <div class="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                                <Badge variant="secondary">{{ workout.date }}</Badge>
-                                                <span class="flex items-center gap-1">
-                                                    <Clock class="h-3 w-3" />
-                                                    {{ workout.duration }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                class="h-8 w-8"
-                                                @click.stop
-                                            >
-                                                <MoreHorizontal class="h-4 w-4" />
-                                            </Button>
-                                            <ChevronDown
-                                                class="h-4 w-4 text-muted-foreground transition-transform duration-200"
-                                                :class="selectedWorkoutId === workout.id ? 'rotate-180' : ''"
-                                            />
-                                        </div>
-                                    </div>
-                                </CardHeader>
-
-                                <CardContent class="flex flex-1 flex-col">
-                                    <div class="space-y-3">
-                                        <WorkoutCategorySummaryRow
-                                            label="Weightlifting"
-                                            :percentage="getCategoryPercent(workout, 'weightlifting')"
-                                        />
-                                        <WorkoutCategorySummaryRow
-                                            label="Cardio"
-                                            :percentage="getCategoryPercent(workout, 'cardio')"
-                                        />
-                                        <WorkoutCategorySummaryRow
-                                            label="Dynamic"
-                                            :percentage="getCategoryPercent(workout, 'dynamic')"
-                                        />
-                                    </div>
-
-                                    <div
-                                        class="mt-4 overflow-hidden transition-[max-height,opacity] duration-300"
-                                        :class="selectedWorkoutId === workout.id ? 'max-h-[320px] opacity-100' : 'max-h-0 opacity-0'"
-                                    >
-                                        <div class="border-t pt-4 space-y-4">
-                                            <WorkoutCategorySection
-                                                label="Weightlifting"
-                                                :count="workout.categories.weightlifting.length"
-                                                empty-text="No weightlifting exercises yet"
-                                            >
-                                                <WorkoutCategoryItemRow
-                                                    v-for="lift in workout.categories.weightlifting"
-                                                    :key="`lift-${lift.id}`"
-                                                    :name="lift.name"
-                                                    :detail="`${lift.sets} sets x ${lift.reps} reps`"
-                                                />
-                                            </WorkoutCategorySection>
-
-                                            <WorkoutCategorySection
-                                                label="Cardio"
-                                                :count="workout.categories.cardio.length"
-                                                empty-text="No cardio sessions yet"
-                                            >
-                                                <WorkoutCategoryItemRow
-                                                    v-for="cardio in workout.categories.cardio"
-                                                    :key="`cardio-${cardio.id}`"
-                                                    :name="cardio.name"
-                                                    :detail="cardio.duration"
-                                                />
-                                            </WorkoutCategorySection>
-
-                                            <WorkoutCategorySection
-                                                label="Dynamic"
-                                                :count="workout.categories.dynamic.length"
-                                                empty-text="No dynamic work yet"
-                                            >
-                                                <WorkoutCategoryItemRow
-                                                    v-for="dynamic in workout.categories.dynamic"
-                                                    :key="`dynamic-${dynamic.id}`"
-                                                    :name="dynamic.name"
-                                                    :detail="dynamic.frequency"
-                                                />
-                                            </WorkoutCategorySection>
-
-                                            <div class="flex justify-end">
-                                                <Button size="sm" @click.stop="navigateTo(`/workouts/${workout.id}`)">
-                                                    Open workout
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <Button variant="ghost" size="icon" class="relative">
+                                            <Bell class="h-5 w-5" />
+                                            <Badge class="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]" variant="destructive">
+                                                3
+                                            </Badge>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Notifications (N)</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
                     </div>
-                </div>
+                </template>
+                <GenericTabPanel value="home" class="mt-0 space-y-6">
+                    <div
+                        v-if="filteredWorkouts.length === 0"
+                        class="text-center py-12 text-muted-foreground"
+                    >
+                        No workouts found
+                    </div>
 
-                <div v-else key="table" class="rounded-lg border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow class="bg-muted/50">
-                                <TableHead>Name</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Duration</TableHead>
-                                <TableHead class="text-center">Weightlifting</TableHead>
-                                <TableHead class="text-center">Cardio</TableHead>
-                                <TableHead class="text-center">Dynamic</TableHead>
-                                <TableHead class="text-center">Total</TableHead>
-                                <TableHead class="w-[50px]" />
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow
-                                v-for="workout in filteredWorkouts"
-                                :key="workout.id"
-                                class="cursor-pointer"
-                                @click="navigateTo(`/workouts/${workout.id}`)"
+                    <Transition
+                        v-else
+                        mode="out-in"
+                        enter-active-class="transition-all duration-300 ease-out"
+                        enter-from-class="opacity-0 scale-[0.97]"
+                        enter-to-class="opacity-100 scale-100"
+                        leave-active-class="transition-all duration-300 ease-in"
+                        leave-from-class="opacity-100 scale-100"
+                        leave-to-class="opacity-0 scale-[0.97]"
+                    >
+                        <div v-if="viewMode === 'cards'" key="cards" class="flex flex-col md:flex-row gap-6">
+                            <div
+                                v-for="(column, columnIndex) in columnedWorkouts"
+                                :key="`column-${columnIndex}`"
+                                class="flex flex-col gap-6 flex-1"
                             >
-                                <TableCell class="font-medium">{{ workout.name }}</TableCell>
-                                <TableCell>
-                                    <Badge variant="secondary">{{ workout.date }}</Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <span class="flex items-center gap-1">
-                                        <Clock class="h-3 w-3" />
-                                        {{ workout.duration }}
-                                    </span>
-                                </TableCell>
-                                <TableCell class="text-center">
-                                    {{ workout.categories.weightlifting.length }}
-                                </TableCell>
-                                <TableCell class="text-center">
-                                    {{ workout.categories.cardio.length }}
-                                </TableCell>
-                                <TableCell class="text-center">
-                                    {{ workout.categories.dynamic.length }}
-                                </TableCell>
-                                <TableCell class="text-center font-medium">
-                                    {{ getCategoryCount(workout) }}
-                                </TableCell>
-                                <TableCell>
-                                    <Button variant="ghost" size="icon" class="h-8 w-8" @click.stop>
-                                        <MoreHorizontal class="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
-            </Transition>
+                                <div
+                                    v-for="workout in column"
+                                    :key="workout.id"
+                                    class="cursor-pointer overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-[height] duration-300"
+                                    :class="selectedWorkoutId === workout.id ? 'h-[440px]' : 'h-[260px]'"
+                                    role="button"
+                                    tabindex="0"
+                                    :aria-expanded="selectedWorkoutId === workout.id"
+                                    @click="toggleWorkout(workout.id)"
+                                    @keydown.enter.prevent="toggleWorkout(workout.id)"
+                                    @keydown.space.prevent="toggleWorkout(workout.id)"
+                                >
+                                    <Card class="border-0 shadow-none h-full flex flex-col">
+                                        <CardHeader class="pb-2">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <h3 class="text-lg font-semibold">
+                                                        {{ workout.name }}
+                                                    </h3>
+                                                    <div class="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                                        <Badge variant="secondary">{{ workout.date }}</Badge>
+                                                        <span class="flex items-center gap-1">
+                                                            <Clock class="h-3 w-3" />
+                                                            {{ workout.duration }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        class="h-8 w-8"
+                                                        @click.stop
+                                                    >
+                                                        <MoreHorizontal class="h-4 w-4" />
+                                                    </Button>
+                                                    <ChevronDown
+                                                        class="h-4 w-4 text-muted-foreground transition-transform duration-200"
+                                                        :class="selectedWorkoutId === workout.id ? 'rotate-180' : ''"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </CardHeader>
+
+                                        <CardContent class="flex min-h-0 flex-1 flex-col">
+                                            <div class="space-y-3">
+                                                <WorkoutCategorySummaryRow
+                                                    label="Weightlifting"
+                                                    :percentage="getCategoryPercent(workout, 'weightlifting')"
+                                                />
+                                                <WorkoutCategorySummaryRow
+                                                    label="Cardio"
+                                                    :percentage="getCategoryPercent(workout, 'cardio')"
+                                                />
+                                                <WorkoutCategorySummaryRow
+                                                    label="Dynamic"
+                                                    :percentage="getCategoryPercent(workout, 'dynamic')"
+                                                />
+                                            </div>
+
+                                            <div
+                                                class="mt-4 min-h-0 overflow-hidden transition-[max-height,opacity] duration-300"
+                                                :class="selectedWorkoutId === workout.id ? 'max-h-[360px] opacity-100' : 'max-h-0 opacity-0'"
+                                            >
+                                                <div class="flex h-full min-h-0 flex-col border-t pt-4">
+                                                    <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                                                        <WorkoutCategorySection
+                                                            label="Weightlifting"
+                                                            :count="workout.categories.weightlifting.length"
+                                                            empty-text="No weightlifting exercises yet"
+                                                        >
+                                                            <WorkoutCategoryItemRow
+                                                                v-for="lift in workout.categories.weightlifting"
+                                                                :key="`lift-${lift.id}`"
+                                                                :name="lift.name"
+                                                                :detail="`${lift.sets} sets x ${lift.reps} reps`"
+                                                            />
+                                                        </WorkoutCategorySection>
+
+                                                        <WorkoutCategorySection
+                                                            label="Cardio"
+                                                            :count="workout.categories.cardio.length"
+                                                            empty-text="No cardio sessions yet"
+                                                        >
+                                                            <WorkoutCategoryItemRow
+                                                                v-for="cardio in workout.categories.cardio"
+                                                                :key="`cardio-${cardio.id}`"
+                                                                :name="cardio.name"
+                                                                :detail="cardio.duration"
+                                                            />
+                                                        </WorkoutCategorySection>
+
+                                                        <WorkoutCategorySection
+                                                            label="Dynamic"
+                                                            :count="workout.categories.dynamic.length"
+                                                            empty-text="No dynamic work yet"
+                                                        >
+                                                            <WorkoutCategoryItemRow
+                                                                v-for="dynamic in workout.categories.dynamic"
+                                                                :key="`dynamic-${dynamic.id}`"
+                                                                :name="dynamic.name"
+                                                                :detail="dynamic.frequency"
+                                                            />
+                                                        </WorkoutCategorySection>
+                                                    </div>
+
+                                                    <div class="mt-4 flex justify-end">
+                                                        <Button size="sm" @click.stop="navigateTo(`/workouts/${workout.id}`)">
+                                                            Open workout
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
+                        </div>
+
+                        <WorkoutTable
+                            v-else
+                            key="table"
+                            :workouts="filteredWorkouts"
+                            @open-workout="navigateTo(`/workouts/${$event}`)"
+                        />
+                    </Transition>
+                </GenericTabPanel>
+
+                <GenericTabPanel value="exercises" class="mt-0">
+                    <Card>
+                        <CardHeader>
+                            <h2 class="text-lg font-semibold">Exercises</h2>
+                        </CardHeader>
+                        <CardContent class="text-sm text-muted-foreground">
+                            Browse and manage your exercise library from this tab.
+                        </CardContent>
+                    </Card>
+                </GenericTabPanel>
+
+                <GenericTabPanel value="performance" class="mt-0">
+                    <Card>
+                        <CardHeader>
+                            <h2 class="text-lg font-semibold">Performance</h2>
+                        </CardHeader>
+                        <CardContent class="text-sm text-muted-foreground">
+                            Track trends like volume, consistency, and strength progression here.
+                        </CardContent>
+                    </Card>
+                </GenericTabPanel>
+            </GenericTabGroup>
         </div>
 
         <WorkoutAddModal v-model="isAddWorkoutModalOpen" @create="createWorkout" />

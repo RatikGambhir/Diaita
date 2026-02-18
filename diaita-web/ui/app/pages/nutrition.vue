@@ -6,7 +6,8 @@ import MacroDistributionCard from "~/components/nutrition/MacroDistributionCard.
 import MealCard from "~/components/nutrition/MealCard.vue"
 import NutritionResourcesCard from "~/components/nutrition/NutritionResourcesCard.vue"
 import { CalendarDays, FileText, Lightbulb, Plus, Sun, Moon } from "lucide-vue-next"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
+import GenericTabGroup from "~/components/GenericTabGroup.vue"
+import GenericTabPanel from "~/components/GenericTabPanel.vue"
 import { Popover, PopoverTrigger, PopoverContent } from "~/components/ui/popover"
 import { Calendar } from "~/components/ui/calendar"
 import FoodsTab from "~/components/nutrition/FoodsTab.vue"
@@ -112,56 +113,38 @@ const resources = [
     <div class="flex-1 flex flex-col h-full bg-background">
         <div class="flex-1 overflow-auto p-6">
             <div class="max-w-6xl mx-auto space-y-6">
-                <Tabs v-model="activeTab" class="w-full space-y-6">
-                    <div class="space-y-4">
-                        <h1 class="text-2xl font-semibold text-foreground">Nutrition Tracker</h1>
-
-                        <!-- Date Picker and Tabs Row -->
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <!-- Date Picker Popover -->
-                            <Popover v-model:open="datePickerOpen">
-                                <PopoverTrigger as-child>
-                                    <Button
-                                        variant="outline"
-                                        class="h-9 justify-start gap-2 text-sm font-normal text-muted-foreground hover:text-foreground"
-                                    >
-                                        <CalendarDays class="h-4 w-4" />
-                                        {{ displayDate }}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent align="start" class="w-auto p-0">
-                                    <Calendar
-                                        :model-value="selectedDate"
-                                        @select="onDateSelect"
-                                    />
-                                </PopoverContent>
-                            </Popover>
-
-                            <!-- Tabs Navigation -->
-                            <TabsList class="inline-flex h-9 items-center justify-center rounded-full bg-muted p-1">
-                                <TabsTrigger
-                                    value="today"
-                                    class="rounded-full px-4 py-1.5 text-sm font-medium transition-all data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=inactive]:text-muted-foreground hover:text-foreground"
+                <h1 class="text-2xl font-semibold text-foreground">Nutrition Tracker</h1>
+                <GenericTabGroup
+                    v-model="activeTab"
+                    :tabs="[
+                        { value: 'today', label: 'Today' },
+                        { value: 'foods', label: 'Foods' },
+                        { value: 'meals', label: 'Meals' },
+                    ]"
+                    tab-trigger-class="text-xl sm:text-2xl"
+                >
+                    <template #leading>
+                        <!-- Date Picker Popover -->
+                        <Popover v-model:open="datePickerOpen">
+                            <PopoverTrigger as-child>
+                                <Button
+                                    variant="outline"
+                                    class="h-9 justify-start gap-2 text-sm font-normal text-muted-foreground hover:text-foreground"
                                 >
-                                    Today
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="foods"
-                                    class="rounded-full px-4 py-1.5 text-sm font-medium transition-all data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=inactive]:text-muted-foreground hover:text-foreground"
-                                >
-                                    Foods
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="meals"
-                                    class="rounded-full px-4 py-1.5 text-sm font-medium transition-all data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=inactive]:text-muted-foreground hover:text-foreground"
-                                >
-                                    Meals
-                                </TabsTrigger>
-                            </TabsList>
-                        </div>
-                    </div>
+                                    <CalendarDays class="h-4 w-4" />
+                                    {{ displayDate }}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent align="start" class="w-auto p-0">
+                                <Calendar
+                                    :model-value="selectedDate"
+                                    @select="onDateSelect"
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </template>
 
-                    <TabsContent value="today" class="mt-0 space-y-6">
+                    <GenericTabPanel value="today" class="mt-0 space-y-6">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <NutritionSummaryCard
                                 v-for="card in summaryCards"
@@ -181,16 +164,16 @@ const resources = [
                         </div>
 
                         <NutritionResourcesCard :resources="resources" />
-                    </TabsContent>
+                    </GenericTabPanel>
 
-                    <TabsContent value="foods" class="mt-0">
+                    <GenericTabPanel value="foods" class="mt-0">
                         <FoodsTab />
-                    </TabsContent>
+                    </GenericTabPanel>
 
-                    <TabsContent value="meals" class="mt-0">
+                    <GenericTabPanel value="meals" class="mt-0">
                         <MealsTab />
-                    </TabsContent>
-                </Tabs>
+                    </GenericTabPanel>
+                </GenericTabGroup>
             </div>
         </div>
     </div>

@@ -12,6 +12,7 @@ html {
 .snap-container {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  scroll-snap-type: x mandatory;
 }
 
 
