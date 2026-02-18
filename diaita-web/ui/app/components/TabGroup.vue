@@ -26,17 +26,14 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
-// Internal active tab state
 const internalActiveTab = ref(props.modelValue || props.tabs[0]?.value || '')
 
-// Watch for external changes to modelValue
 watch(() => props.modelValue, (newValue) => {
   if (newValue !== undefined) {
     internalActiveTab.value = newValue
   }
 })
 
-// Emit changes when internal state changes
 watch(internalActiveTab, (newValue) => {
   emit('update:modelValue', newValue)
 })

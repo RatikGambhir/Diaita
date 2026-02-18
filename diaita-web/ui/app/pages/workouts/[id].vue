@@ -138,14 +138,14 @@ const workout = computed(() => {
 const exercises = ref<WorkoutExercise[]>([])
 
 watch(workout, (newWorkout) => {
-  exercises.value = newWorkout.exercises.map((exercise) => ({ ...exercise }))
+  exercises.value = newWorkout?.exercises.map((exercise) => ({ ...exercise })) ?? []
 }, { immediate: true })
 
 const statCards = computed(() => [
-  { icon: TrendingUp, label: 'Total Volume', value: workout.value.stats.totalVolume, change: workout.value.stats.totalVolumeChange },
+  { icon: TrendingUp, label: 'Total Volume', value: workout?.value?.stats.totalVolume, change: workout?.value?.stats.totalVolumeChange },
   { icon: Dumbbell, label: 'Exercises', value: String(exercises.value.length), change: '+2' },
-  { icon: Zap, label: 'Calories Burned', value: workout.value.stats.caloriesBurned, change: workout.value.stats.caloriesChange },
-  { icon: Target, label: 'Duration', value: workout.value.duration, change: workout.value.stats.durationChange },
+  { icon: Zap, label: 'Calories Burned', value: workout?.value?.stats.caloriesBurned, change: workout?.value?.stats.caloriesChange },
+  { icon: Target, label: 'Duration', value: workout?.value?.duration, change: workout?.value?.stats.durationChange },
 ])
 </script>
 
@@ -156,7 +156,7 @@ const statCards = computed(() => [
         <Button variant="ghost" size="icon" @click="navigateTo('/workouts')">
           <ArrowLeft class="h-5 w-5" />
         </Button>
-        <h1 class="text-xl font-semibold text-foreground">{{ workout.name }}</h1>
+        <h1 class="text-xl font-semibold text-foreground">{{ workout?.name }}</h1>
       </div>
       <Button variant="ghost" size="icon">
         <MoreHorizontal class="h-5 w-5" />
@@ -167,18 +167,18 @@ const statCards = computed(() => [
       <div class="flex items-center gap-6 text-muted-foreground">
         <div class="flex items-center gap-2">
           <Calendar class="h-5 w-5" />
-          <span>{{ workout.date }}</span>
+          <span>{{ workout?.date }}</span>
         </div>
         <div class="flex items-center gap-2">
           <Clock class="h-5 w-5" />
-          <span>{{ workout.duration }}</span>
+          <span>{{ workout?.duration }}</span>
         </div>
       </div>
 
       <WorkoutSummaryCard
-        :progress="workout.summary.progress"
-        :intensity="workout.summary.intensity"
-        :achievement="workout.summary.achievement"
+        :progress="workout?.summary.progress"
+        :intensity="workout?.summary.intensity"
+        :achievement="workout?.summary.achievement"
       />
 
       <section>

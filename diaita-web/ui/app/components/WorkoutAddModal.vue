@@ -7,7 +7,6 @@ import DialogTitle from '~/components/ui/dialog/DialogTitle.vue'
 import DialogFooter from '~/components/ui/dialog/DialogFooter.vue'
 import Button from '~/components/ui/button/Button.vue'
 import Input from '~/components/ui/input/Input.vue'
-import { X } from 'lucide-vue-next'
 
 const props = defineProps<{
     modelValue: boolean;
