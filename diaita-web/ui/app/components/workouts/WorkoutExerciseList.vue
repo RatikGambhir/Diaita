@@ -165,75 +165,70 @@ const isDropZoneActive = (category: WorkoutCategory, index: number) => {
 </script>
 
 <template>
-  <div class="flex">
-
-  <div class="flex flex-col">
-    <div class="flex flex-col">
+  <div>
+    <div>
       <h2 class="mb-2 text-lg font-semibold text-foreground">Exercise Plan</h2>
       <p class="mb-4 text-sm text-muted-foreground">Hold and drag to reorder exercises</p>
     </div>
-    <div class="flex flex-row gap-4">
-
-      <div v-for="group in groupedExercises" :key="group.category" class="mb-6 flex w-full bg-red-400">
-        <div class="flex flex-col min-w-1/3">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div v-for="group in groupedExercises" :key="group.category" class="mb-6 min-w-0">
+        <div class="flex min-w-0 flex-col">
           <h3 class="mb-3 font-semibold text-primary">{{ group.category }}</h3>
 
-          <div class="space-y-2 ">
+          <div class="space-y-2">
             <template v-for="(item, index) in group.items" :key="item.id">
               <div
-                  class="h-1.5 rounded-full transition-all duration-150 "
-                  :class="isDropZoneActive(group.category, index) ? 'bg-primary/30' : 'bg-transparent'"
-                  @dragover="onDragOverDropZone(group.category, index, $event)"
-                  @drop="onDropZoneDrop(group.category, index, $event)"
+                class="h-1.5 rounded-full transition-all duration-150"
+                :class="isDropZoneActive(group.category, index) ? 'bg-primary/30' : 'bg-transparent'"
+                @dragover="onDragOverDropZone(group.category, index, $event)"
+                @drop="onDropZoneDrop(group.category, index, $event)"
               />
 
               <WorkoutExerciseItem
-                  :exercise="item"
-                  :col2-label="getCol2Label(group.category)"
-                  :col3-label="getCol3Label(group.category)"
-                  :draggable="true"
-                  @drag-start="onDragStart(item.id, group.category, $event)"
-                  @drag-end="clearDragState"
+                :exercise="item"
+                :col2-label="getCol2Label(group.category)"
+                :col3-label="getCol3Label(group.category)"
+                :draggable="true"
+                @drag-start="onDragStart(item.id, group.category, $event)"
+                @drag-end="clearDragState"
               />
             </template>
 
             <div
-                class="h-1.5 rounded-full transition-all duration-150"
-                :class="isDropZoneActive(group.category, group.items.length) ? 'bg-primary/30' : 'bg-transparent'"
-                @dragover="onDragOverDropZone(group.category, group.items.length, $event)"
-                @drop="onDropZoneDrop(group.category, group.items.length, $event)"
+              class="h-1.5 rounded-full transition-all duration-150"
+              :class="isDropZoneActive(group.category, group.items.length) ? 'bg-primary/30' : 'bg-transparent'"
+              @dragover="onDragOverDropZone(group.category, group.items.length, $event)"
+              @drop="onDropZoneDrop(group.category, group.items.length, $event)"
             />
 
             <Transition name="morph" mode="out-in">
               <button
-                  v-if="creatingCategory !== group.category"
-                  :key="`add-${group.category}`"
-                  type="button"
-                  class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-3 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
-                  @click="startCreating(group.category)"
+                v-if="creatingCategory !== group.category"
+                :key="`add-${group.category}`"
+                type="button"
+                class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-3 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+                @click="startCreating(group.category)"
               >
                 <Plus class="h-4 w-4" />
                 Add exercise
               </button>
 
               <WorkoutExerciseItem
-                  v-else
-                  :key="`draft-${group.category}`"
-                  :exercise="draftByCategory[group.category]"
-                  :col2-label="getCol2Label(group.category)"
-                  :col3-label="getCol3Label(group.category)"
-                  editable
-                  @update:exercise="draftByCategory[group.category] = $event"
-                  @save="saveDraft(group.category)"
-                  @cancel="cancelCreating"
+                v-else
+                :key="`draft-${group.category}`"
+                :exercise="draftByCategory[group.category]"
+                :col2-label="getCol2Label(group.category)"
+                :col3-label="getCol3Label(group.category)"
+                editable
+                @update:exercise="draftByCategory[group.category] = $event"
+                @save="saveDraft(group.category)"
+                @cancel="cancelCreating"
               />
             </Transition>
           </div>
         </div>
-
       </div>
     </div>
-  </div>
   </div>
 </template>
 

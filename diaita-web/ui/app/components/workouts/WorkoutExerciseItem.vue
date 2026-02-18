@@ -44,7 +44,7 @@ const updateField = (field: 'name' | 'col2Value' | 'col3Value', value: string) =
 
 <template>
   <div
-    class="select-none rounded-xl p-4 shadow-sm transition-all duration-200"
+    class="select-none rounded-xl p-4 shadow-sm transition-all duration-200 bg-card"
     :draggable="draggable && !editable"
     @dragstart="emit('drag-start', $event)"
     @dragend="emit('drag-end')"

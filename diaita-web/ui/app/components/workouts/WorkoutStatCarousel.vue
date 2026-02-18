@@ -14,11 +14,11 @@ defineProps<{
 </script>
 
 <template>
-  <div class="snap-container flex gap-4 overflow-x-auto px-1 pb-2">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <div
       v-for="(stat, i) in stats"
       :key="i"
-      class="min-w-[200px] shrink-0 snap-start rounded-xl bg-card p-4 shadow-sm"
+      class="h-full rounded-xl bg-card p-4 shadow-sm"
     >
       <div class="mb-3 flex items-center gap-3">
         <div class="rounded-lg bg-primary/10 p-2">
