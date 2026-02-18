@@ -16,7 +16,7 @@ import {
   TooltipTrigger
 } from '~/components/ui/tooltip'
 import DashboardStatsGrid from '~/components/dashboard/DashboardStatsGrid.vue'
-import DashboardVisitorsChart from '~/components/dashboard/DashboardVisitorsChart.vue'
+import DashboardNutritionCarousel from '~/components/dashboard/DashboardNutritionCarousel.vue'
 import StatsRow from '~/components/dashboard/StatsRow.vue'
 import WorkoutPerformanceCarousel from '~/components/dashboard/WorkoutPerformanceCarousel.vue'
 import GeneratorCard from '~/components/generator/GeneratorCard.vue'
@@ -95,7 +95,7 @@ const range = shallowRef<Range>({
         <ProfileSetupBanner />
       </div>
       <DashboardStatsGrid />
-      <DashboardVisitorsChart />
+      <DashboardNutritionCarousel />
 
       <div class="mt-6">
         <StatsRow />
