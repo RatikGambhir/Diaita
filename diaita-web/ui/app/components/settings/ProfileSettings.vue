@@ -33,13 +33,50 @@ defineProps<{
 
                 <Separator />
 
-                <div class="grid gap-6 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <div class="space-y-2">
                         <Label>Age</Label>
                         <p class="text-xs text-muted-foreground">Your current age.</p>
                         <Input
                             v-model="formState.profile.age"
                             :placeholder="placeholderFor(formDefaults.profile.age, 'e.g., 28')"
+                        />
+                    </div>
+                    <div class="space-y-2">
+                        <Label>Height</Label>
+                        <p class="text-xs text-muted-foreground">Your height in centimeters.</p>
+                        <Input
+                            v-model="formState.profile.height"
+                            :placeholder="placeholderFor(formDefaults.profile.height, 'e.g., 175')"
+                        />
+                    </div>
+                    <div class="space-y-2">
+                        <Label>Weight</Label>
+                        <p class="text-xs text-muted-foreground">Your weight in kilograms.</p>
+                        <Input
+                            v-model="formState.profile.weight"
+                            :placeholder="placeholderFor(formDefaults.profile.weight, 'e.g., 70')"
+                        />
+                    </div>
+                    <div class="space-y-2">
+                        <Label>Body Fat Percentage</Label>
+                        <p class="text-xs text-muted-foreground">Your body fat percentage (optional).</p>
+                        <Input
+                            v-model="formState.profile.bodyFat"
+                            :placeholder="placeholderFor(formDefaults.profile.bodyFat, 'e.g., 18.5')"
+                        />
+                    </div>
+                </div>
+
+                <Separator />
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="space-y-2">
+                        <Label>Lean Mass</Label>
+                        <p class="text-xs text-muted-foreground">Your lean body mass in kg (optional).</p>
+                        <Input
+                            v-model="formState.profile.leanMass"
+                            :placeholder="placeholderFor(formDefaults.profile.leanMass, 'e.g., 57.0')"
                         />
                     </div>
                     <div class="space-y-2">
@@ -60,85 +97,43 @@ defineProps<{
 
                 <Separator />
 
-                <div class="grid gap-4 md:grid-cols-[220px,1fr]">
-                    <div>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="space-y-2 md:col-span-2">
                         <Label>Gender</Label>
                         <p class="text-xs text-muted-foreground">Your gender identity.</p>
-                    </div>
-                    <Input
-                        v-model="formState.profile.gender"
-                        :placeholder="placeholderFor(formDefaults.profile.gender, 'e.g., Woman, Man, Non-binary, etc.')"
-                    />
-                </div>
-
-                <Separator />
-
-                <div class="grid gap-6 md:grid-cols-2">
-                    <div class="space-y-2">
-                        <Label>Height</Label>
-                        <p class="text-xs text-muted-foreground">Your height in centimeters.</p>
                         <Input
-                            v-model="formState.profile.height"
-                            :placeholder="placeholderFor(formDefaults.profile.height, 'e.g., 175')"
-                        />
-                    </div>
-                    <div class="space-y-2">
-                        <Label>Weight</Label>
-                        <p class="text-xs text-muted-foreground">Your weight in kilograms.</p>
-                        <Input
-                            v-model="formState.profile.weight"
-                            :placeholder="placeholderFor(formDefaults.profile.weight, 'e.g., 70')"
+                            v-model="formState.profile.gender"
+                            :placeholder="placeholderFor(formDefaults.profile.gender, 'e.g., Woman, Man, Non-binary, etc.')"
                         />
                     </div>
                 </div>
 
                 <Separator />
 
-                <div class="grid gap-6 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4">
                     <div class="space-y-2">
-                        <Label>Body Fat Percentage</Label>
-                        <p class="text-xs text-muted-foreground">Your body fat percentage (optional).</p>
-                        <Input
-                            v-model="formState.profile.bodyFat"
-                            :placeholder="placeholderFor(formDefaults.profile.bodyFat, 'e.g., 18.5')"
-                        />
-                    </div>
-                    <div class="space-y-2">
-                        <Label>Lean Mass</Label>
-                        <p class="text-xs text-muted-foreground">Your lean body mass in kg (optional).</p>
-                        <Input
-                            v-model="formState.profile.leanMass"
-                            :placeholder="placeholderFor(formDefaults.profile.leanMass, 'e.g., 57.0')"
-                        />
-                    </div>
-                </div>
-
-                <Separator />
-
-                <div class="grid gap-4 md:grid-cols-[220px,1fr] items-start">
-                    <div>
                         <Label>Biological Considerations</Label>
                         <p class="text-xs text-muted-foreground">Any factors that may affect training or nutrition.</p>
+                        <Textarea
+                            v-model="formState.profile.biological"
+                            :rows="3"
+                            :placeholder="placeholderFor(formDefaults.profile.biological, 'e.g., Post-pregnancy, recovering from injury, thyroid condition...')"
+                        />
                     </div>
-                    <Textarea
-                        v-model="formState.profile.biological"
-                        :rows="3"
-                        :placeholder="placeholderFor(formDefaults.profile.biological, 'e.g., Post-pregnancy, recovering from injury, thyroid condition...')"
-                    />
                 </div>
 
                 <Separator />
 
-                <div class="grid gap-4 md:grid-cols-[220px,1fr] items-start">
-                    <div>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="space-y-2">
                         <Label>Menstrual Cycle Info</Label>
                         <p class="text-xs text-muted-foreground">Information about your menstrual cycle if applicable.</p>
+                        <Textarea
+                            v-model="formState.profile.menstrual"
+                            :rows="3"
+                            :placeholder="placeholderFor(formDefaults.profile.menstrual, 'e.g., Regular 28-day cycle, tracking symptoms for training adjustments...')"
+                        />
                     </div>
-                    <Textarea
-                        v-model="formState.profile.menstrual"
-                        :rows="3"
-                        :placeholder="placeholderFor(formDefaults.profile.menstrual, 'e.g., Regular 28-day cycle, tracking symptoms for training adjustments...')"
-                    />
                 </div>
             </CardContent>
         </Card>

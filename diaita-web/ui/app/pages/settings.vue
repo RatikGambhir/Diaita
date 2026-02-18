@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import GenericTabGroup from '~/components/GenericTabGroup.vue'
-import GenericTabPanel from '~/components/GenericTabPanel.vue'
 import ProfileSettings from '~/components/settings/ProfileSettings.vue'
+import AccountSettings from '~/components/settings/AccountSettings.vue'
 import NutritionSettings from '~/components/settings/NutritionSettings.vue'
 import TrainingSettings from '~/components/settings/TrainingSettings.vue'
 import GoalsSettings from '~/components/settings/GoalsSettings.vue'
@@ -10,6 +10,7 @@ const activeTab = ref('profile');
 
 const tabs = [
     { value: "profile", label: "Profile" },
+    { value: "account", label: "Account" },
     { value: "nutrition", label: "Nutrition" },
     { value: "training", label: "Training" },
     { value: "goals", label: "Goals" },
@@ -71,6 +72,12 @@ const formDefaults = reactive({
         biological: "Post-pregnancy, thyroid condition",
         menstrual: "Regular 28-day cycle, tracking symptoms",
     },
+    account: {
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane.doe@example.com",
+        workoutsToTrackOnHomepage: "6",
+    },
     nutrition: {
         dietPattern: "Mediterranean",
         calorieTracking: "yes",
@@ -114,6 +121,12 @@ const formState = reactive({
         leanMass: "",
         biological: "",
         menstrual: "",
+    },
+    account: {
+        firstName: "",
+        lastName: "",
+        email: "",
+        workoutsToTrackOnHomepage: "",
     },
     nutrition: {
         dietPattern: "",
@@ -162,58 +175,92 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
 
 <template>
     <div class="flex-1 flex flex-col h-full bg-background">
-        <header class="flex h-16 items-center justify-between px-8 shrink-0">
-            <h1 class="text-xl font-semibold text-slate-700">Settings</h1>
-        </header>
-
-        <div class="flex-1 overflow-auto px-8 pb-10">
-            <div class="max-w-4xl mx-auto">
+        <div class="flex-1 overflow-auto px-4 pb-10 pt-4 sm:px-6 sm:pt-5 lg:px-8">
+            <div class="w-full">
                 <GenericTabGroup
                     v-model="activeTab"
                     :tabs="tabs"
-                    tab-trigger-class="text-base px-5 py-2"
+                    tabs-list-class="h-11 px-1 py-1"
+                    tab-trigger-class="px-4 py-1.5 text-sm"
                 >
-                    <GenericTabPanel value="profile" class="space-y-6">
-                        <ProfileSettings
-                            :form-state="formState"
-                            :form-defaults="formDefaults"
-                            :placeholder-for="placeholderFor"
-                        />
-                    </GenericTabPanel>
+                    <template #leading>
+                        <h1 class="text-xl font-semibold text-slate-700">Settings</h1>
+                    </template>
 
-                    <GenericTabPanel value="nutrition" class="space-y-6">
-                        <NutritionSettings
-                            :form-state="formState"
-                            :form-defaults="formDefaults"
-                            :placeholder-for="placeholderFor"
-                            :is-selected="isSelected"
-                            :yes-no-options="yesNoOptions"
-                            :diet-patterns="dietPatterns"
-                            :skill-levels="skillLevels"
-                            :budget-options="budgetOptions"
-                            :alcohol-options="alcoholOptions"
-                        />
-                    </GenericTabPanel>
+                    <div class="relative overflow-hidden">
+                        <Transition name="settings-slide" mode="out-in">
+                            <div :key="activeTab">
+                                <ProfileSettings
+                                    v-if="activeTab === 'profile'"
+                                    :form-state="formState"
+                                    :form-defaults="formDefaults"
+                                    :placeholder-for="placeholderFor"
+                                />
 
-                    <GenericTabPanel value="training" class="space-y-6">
-                        <TrainingSettings
-                            :form-state="formState"
-                            :form-defaults="formDefaults"
-                            :placeholder-for="placeholderFor"
-                            :training-age-options="trainingAgeOptions"
-                            :equipment-options="equipmentOptions"
-                        />
-                    </GenericTabPanel>
+                                <AccountSettings
+                                    v-else-if="activeTab === 'account'"
+                                    :form-state="formState"
+                                    :form-defaults="formDefaults"
+                                    :placeholder-for="placeholderFor"
+                                />
 
-                    <GenericTabPanel value="goals" class="space-y-6">
-                        <GoalsSettings
-                            :form-state="formState"
-                            :form-defaults="formDefaults"
-                            :placeholder-for="placeholderFor"
-                        />
-                    </GenericTabPanel>
+                                <NutritionSettings
+                                    v-else-if="activeTab === 'nutrition'"
+                                    :form-state="formState"
+                                    :form-defaults="formDefaults"
+                                    :placeholder-for="placeholderFor"
+                                    :is-selected="isSelected"
+                                    :yes-no-options="yesNoOptions"
+                                    :diet-patterns="dietPatterns"
+                                    :skill-levels="skillLevels"
+                                    :budget-options="budgetOptions"
+                                    :alcohol-options="alcoholOptions"
+                                />
+
+                                <TrainingSettings
+                                    v-else-if="activeTab === 'training'"
+                                    :form-state="formState"
+                                    :form-defaults="formDefaults"
+                                    :placeholder-for="placeholderFor"
+                                    :training-age-options="trainingAgeOptions"
+                                    :equipment-options="equipmentOptions"
+                                />
+
+                                <GoalsSettings
+                                    v-else
+                                    :form-state="formState"
+                                    :form-defaults="formDefaults"
+                                    :placeholder-for="placeholderFor"
+                                />
+                            </div>
+                        </Transition>
+                    </div>
                 </GenericTabGroup>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+.settings-slide-enter-active,
+.settings-slide-leave-active {
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
+    will-change: transform, opacity;
+}
+
+.settings-slide-enter-from {
+    opacity: 0;
+    transform: translateX(28px);
+}
+
+.settings-slide-leave-to {
+    opacity: 0;
+    transform: translateX(-28px);
+}
+
+.settings-slide-enter-to,
+.settings-slide-leave-from {
+    opacity: 1;
+    transform: translateX(0);
+}
+</style>

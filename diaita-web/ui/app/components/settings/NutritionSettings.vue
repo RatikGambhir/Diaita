@@ -39,26 +39,73 @@ defineProps<{
 
                 <Separator />
 
-                <div class="grid gap-4 md:grid-cols-[220px,1fr]">
-                    <div>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="space-y-2">
                         <Label>Current Diet Pattern</Label>
                         <p class="text-xs text-muted-foreground">What dietary pattern do you currently follow?</p>
+                        <Select v-model="formState.nutrition.dietPattern">
+                            <SelectTrigger>
+                                <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.dietPattern, 'Select a diet pattern')" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="option in dietPatterns" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <Select v-model="formState.nutrition.dietPattern">
-                        <SelectTrigger>
-                            <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.dietPattern, 'Select a diet pattern')" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem v-for="option in dietPatterns" :key="option.value" :value="option.value">
-                                {{ option.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div class="space-y-2">
+                        <Label>Cooking Skill Level</Label>
+                        <p class="text-xs text-muted-foreground">How would you rate your cooking skills?</p>
+                        <Select v-model="formState.nutrition.cookingSkill">
+                            <SelectTrigger>
+                                <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.cookingSkill, 'Select skill level')" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="option in skillLevels" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 <Separator />
 
-                <div class="grid gap-6 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="space-y-2">
+                        <Label>Food Budget</Label>
+                        <p class="text-xs text-muted-foreground">Your weekly/monthly food budget.</p>
+                        <Select v-model="formState.nutrition.foodBudget">
+                            <SelectTrigger>
+                                <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.foodBudget, 'Select budget range')" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="option in budgetOptions" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div class="space-y-2">
+                        <Label>Alcohol Intake</Label>
+                        <p class="text-xs text-muted-foreground">How often do you consume alcohol?</p>
+                        <Select v-model="formState.nutrition.alcoholIntake">
+                            <SelectTrigger>
+                                <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.alcoholIntake, 'Select frequency')" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="option in alcoholOptions" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <Separator />
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div class="space-y-2">
                         <Label>Calorie Tracking Experience</Label>
                         <p class="text-xs text-muted-foreground">Have you tracked calories before?</p>
@@ -82,110 +129,48 @@ defineProps<{
                         </div>
                     </div>
                     <div class="space-y-2">
-                        <Label>Cooking Skill Level</Label>
-                        <p class="text-xs text-muted-foreground">How would you rate your cooking skills?</p>
-                        <Select v-model="formState.nutrition.cookingSkill">
-                            <SelectTrigger>
-                                <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.cookingSkill, 'Select skill level')" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem v-for="option in skillLevels" :key="option.value" :value="option.value">
-                                    {{ option.label }}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-
-                <Separator />
-
-                <div class="grid gap-4 md:grid-cols-[220px,1fr] items-start">
-                    <div>
-                        <Label>Macronutrient Preferences</Label>
-                        <p class="text-xs text-muted-foreground">Any specific preferences for protein, carbs, or fats?</p>
-                    </div>
-                    <Textarea
-                        v-model="formState.nutrition.macroPreferences"
-                        :placeholder="placeholderFor(formDefaults.nutrition.macroPreferences, 'e.g., High protein, moderate carbs, low fat')"
-                        :rows="2"
-                    />
-                </div>
-
-                <Separator />
-
-                <div class="grid gap-4 md:grid-cols-[220px,1fr]">
-                    <div>
-                        <Label>Food Allergies</Label>
-                        <p class="text-xs text-muted-foreground">List any food allergies you have.</p>
-                    </div>
-                    <Input
-                        v-model="formState.nutrition.allergies"
-                        :placeholder="placeholderFor(formDefaults.nutrition.allergies, 'Add a food allergy...')"
-                    />
-                </div>
-
-                <Separator />
-
-                <div class="grid gap-4 md:grid-cols-[220px,1fr]">
-                    <div>
-                        <Label>Dietary Restrictions</Label>
-                        <p class="text-xs text-muted-foreground">Any dietary restrictions or foods you avoid?</p>
-                    </div>
-                    <Input
-                        v-model="formState.nutrition.dietaryRestrictions"
-                        :placeholder="placeholderFor(formDefaults.nutrition.dietaryRestrictions, 'Add a dietary restriction...')"
-                    />
-                </div>
-
-                <Separator />
-
-                <div class="grid gap-4 md:grid-cols-[220px,1fr]">
-                    <div>
                         <Label>Cultural Food Preferences</Label>
                         <p class="text-xs text-muted-foreground">Any cultural or regional food preferences?</p>
+                        <Input
+                            v-model="formState.nutrition.culturalPreferences"
+                            :placeholder="placeholderFor(formDefaults.nutrition.culturalPreferences, 'e.g., Mediterranean, Asian, Indian')"
+                        />
                     </div>
-                    <Input
-                        v-model="formState.nutrition.culturalPreferences"
-                        :placeholder="placeholderFor(formDefaults.nutrition.culturalPreferences, 'e.g., Mediterranean, Asian, Indian')"
-                    />
                 </div>
 
                 <Separator />
 
-                <div class="grid gap-4 md:grid-cols-[220px,1fr]">
-                    <div>
-                        <Label>Food Budget</Label>
-                        <p class="text-xs text-muted-foreground">Your weekly/monthly food budget.</p>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="space-y-2">
+                        <Label>Food Allergies</Label>
+                        <p class="text-xs text-muted-foreground">List any food allergies you have.</p>
+                        <Input
+                            v-model="formState.nutrition.allergies"
+                            :placeholder="placeholderFor(formDefaults.nutrition.allergies, 'Add a food allergy...')"
+                        />
                     </div>
-                    <Select v-model="formState.nutrition.foodBudget">
-                        <SelectTrigger>
-                            <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.foodBudget, 'Select budget range')" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem v-for="option in budgetOptions" :key="option.value" :value="option.value">
-                                {{ option.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div class="space-y-2">
+                        <Label>Dietary Restrictions</Label>
+                        <p class="text-xs text-muted-foreground">Any dietary restrictions or foods you avoid?</p>
+                        <Input
+                            v-model="formState.nutrition.dietaryRestrictions"
+                            :placeholder="placeholderFor(formDefaults.nutrition.dietaryRestrictions, 'Add a dietary restriction...')"
+                        />
+                    </div>
                 </div>
 
                 <Separator />
 
-                <div class="grid gap-4 md:grid-cols-[220px,1fr]">
-                    <div>
-                        <Label>Alcohol Intake</Label>
-                        <p class="text-xs text-muted-foreground">How often do you consume alcohol?</p>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="space-y-2">
+                        <Label>Macronutrient Preferences</Label>
+                        <p class="text-xs text-muted-foreground">Any specific preferences for protein, carbs, or fats?</p>
+                        <Textarea
+                            v-model="formState.nutrition.macroPreferences"
+                            :placeholder="placeholderFor(formDefaults.nutrition.macroPreferences, 'e.g., High protein, moderate carbs, low fat')"
+                            :rows="3"
+                        />
                     </div>
-                    <Select v-model="formState.nutrition.alcoholIntake">
-                        <SelectTrigger>
-                            <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.alcoholIntake, 'Select frequency')" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem v-for="option in alcoholOptions" :key="option.value" :value="option.value">
-                                {{ option.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
                 </div>
             </CardContent>
         </Card>
