@@ -2,6 +2,7 @@ package com.diaita.lib.mappings
 
 import com.diaita.dto.IngredientInformationDto
 import com.diaita.dto.FoodDto
+import com.diaita.dto.MenuItemInformationDto
 import com.diaita.dto.ProductInformationDto
 import com.diaita.dto.SpoonacularNutrientDto
 
@@ -39,6 +40,24 @@ fun ProductInformationDto.toFoodDto(): FoodDto {
         category = "product",
         servingSize = servingSize,
         servingUnit = servingUnit,
+        caloriesPerServingSize = nutrients.valueOf("Calories"),
+        proteinGPerServingSize = nutrients.valueOf("Protein"),
+        carbGPerServingSize = nutrients.valueOf("Carbohydrates", "Carbs"),
+        fatGPerServingSize = nutrients.valueOf("Fat"),
+        createdAt = null
+    )
+}
+
+fun MenuItemInformationDto.toFoodDto(): FoodDto {
+    val nutrients = nutrition?.nutrients ?: emptyList()
+
+    return FoodDto(
+        id = id.toString(),
+        name = title,
+        brand = restaurantChain,
+        category = "menuItem",
+        servingSize = null,
+        servingUnit = null,
         caloriesPerServingSize = nutrients.valueOf("Calories"),
         proteinGPerServingSize = nutrients.valueOf("Protein"),
         carbGPerServingSize = nutrients.valueOf("Carbohydrates", "Carbs"),

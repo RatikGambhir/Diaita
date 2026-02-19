@@ -5,7 +5,6 @@ class PromptFactory {
         private val promptMock: Map<String, String?> by lazy {
             mapOf(
                 "registerUserMetadata" to loadPrompt("/prompts/register_user_metadata_prompt.md"),
-                "Test" to loadPrompt("/prompts/prompt-pamphlet.md")
             )
         }
         fun getPrompt(name: String): String? {
@@ -32,7 +31,6 @@ class PromptFactory {
     private val prompts: Map<String, String?> by lazy {
         mapOf(
             "registerUserMetadata" to loadPrompt("/prompts/register_user_metadata_prompt.md"),
-            "Test" to loadPrompt("/prompts/prompt-pamphlet.md")
         )
     }
 
