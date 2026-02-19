@@ -13,6 +13,30 @@ import { Calendar } from "~/components/ui/calendar"
 import FoodsTab from "~/components/nutrition/FoodsTab.vue"
 import MealsTab from "~/components/nutrition/MealsTab.vue"
 
+type MealItem = {
+  name: string;
+  calories: number;
+  carbs: number;
+  protein: number;
+  fat: number;
+};
+
+type Meal = {
+  name: string;
+  icon: any;
+  totals: { calories: number; carbs: number; protein: number; fat: number };
+  items: MealItem[];
+};
+
+type IngredientSelection = {
+  name: string;
+  calories: number;
+  carbs: number;
+  protein: number;
+  fat: number;
+  servingSize: string;
+};
+
 const selectedDate = ref(new Date());
 const datePickerOpen = ref(false);
 
@@ -70,7 +94,7 @@ const pieGradient = computed(() => {
     return `conic-gradient(${carb.color} 0 ${carbStop}%, ${protein.color} ${carbStop}% ${proteinStop}%, ${fat.color} ${proteinStop}% 100%)`;
 });
 
-const meals = [
+const meals = ref<Meal[]>([
     {
         name: "Breakfast",
         icon: Sun,
@@ -99,7 +123,31 @@ const meals = [
             { name: "Mixed Green Salad", calories: 350, carbs: 38, protein: 21, fat: 15 },
         ],
     },
-];
+]);
+
+const roundNutritionValue = (value: number) => Math.round(value * 10) / 10;
+
+const handleAddFoods = (mealName: string, ingredients: IngredientSelection[]) => {
+    const meal = meals.value.find((mealOption) => mealOption.name === mealName);
+    if (!meal) {
+        return;
+    }
+
+    for (const ingredient of ingredients) {
+        meal.items.push({
+            name: `${ingredient.name} (${ingredient.servingSize})`,
+            calories: ingredient.calories,
+            carbs: ingredient.carbs,
+            protein: ingredient.protein,
+            fat: ingredient.fat,
+        });
+
+        meal.totals.calories = roundNutritionValue(meal.totals.calories + ingredient.calories);
+        meal.totals.carbs = roundNutritionValue(meal.totals.carbs + ingredient.carbs);
+        meal.totals.protein = roundNutritionValue(meal.totals.protein + ingredient.protein);
+        meal.totals.fat = roundNutritionValue(meal.totals.fat + ingredient.fat);
+    }
+};
 
 const resources = [
             { label: "Meal Plans", value: 12, icon: FileText, iconBg: "bg-primary/10", iconColor: "text-primary" },
@@ -159,7 +207,12 @@ const resources = [
                         <MacroDistributionCard :gradient="pieGradient" :macros="macros" />
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <MealCard v-for="meal in meals" :key="meal.name" :meal="meal" />
+                            <MealCard
+                                v-for="meal in meals"
+                                :key="meal.name"
+                                :meal="meal"
+                                @add-foods="(ingredients) => handleAddFoods(meal.name, ingredients)"
+                            />
                         </div>
 
                         <NutritionResourcesCard :resources="resources" />

@@ -1,8 +1,19 @@
 <script setup lang="ts">
+import { ref } from "vue"
 import Button from "~/components/ui/button/Button.vue"
 import Card from "~/components/ui/card/Card.vue"
 import CardContent from "~/components/ui/card/CardContent.vue"
+import AddFoodModal from "~/components/nutrition/AddFoodModal.vue"
 import { Pencil, Plus, Trash2 } from "lucide-vue-next"
+
+type Ingredient = {
+    name: string;
+    calories: number;
+    carbs: number;
+    protein: number;
+    fat: number;
+    servingSize: string;
+};
 
 defineProps<{
     meal: {
@@ -12,6 +23,16 @@ defineProps<{
         items: Array<{ name: string; calories: number; carbs: number; protein: number; fat: number }>;
     };
 }>();
+
+const emit = defineEmits<{
+    (e: "add-foods", ingredients: Ingredient[]): void;
+}>();
+
+const addFoodOpen = ref(false);
+
+const handleSaveFoods = (ingredients: Ingredient[]) => {
+    emit("add-foods", ingredients);
+};
 </script>
 
 <template>
@@ -22,7 +43,7 @@ defineProps<{
                     <component :is="meal.icon" class="h-4 w-4 text-primary" />
                     {{ meal.name }}
                 </div>
-                <Button size="sm" variant="secondary" class="h-7 px-3 text-xs">
+                <Button size="sm" variant="secondary" class="h-7 px-3 text-xs" @click="addFoodOpen = true">
                     <Plus class="h-3 w-3 mr-1" />
                     Add Food
                 </Button>
@@ -49,8 +70,8 @@ defineProps<{
 
             <div class="mt-4 space-y-3">
                 <div
-                    v-for="item in meal.items"
-                    :key="item.name"
+                    v-for="(item, index) in meal.items"
+                    :key="`${item.name}-${index}`"
                     class="bg-muted rounded-lg px-4 py-3 flex items-center justify-between"
                 >
                     <div class="space-y-1">
@@ -82,4 +103,10 @@ defineProps<{
             </div>
         </CardContent>
     </Card>
+
+    <AddFoodModal
+        v-model:open="addFoodOpen"
+        :meal-name="meal.name"
+        @save-foods="handleSaveFoods"
+    />
 </template>
