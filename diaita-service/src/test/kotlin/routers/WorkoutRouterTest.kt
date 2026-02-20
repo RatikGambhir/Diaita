@@ -1,5 +1,6 @@
 package com.diaita.routers
 
+import com.diaita.Container
 import com.diaita.controllers.WorkoutController
 import com.diaita.dto.ExerciseDto
 import com.diaita.dto.PaginationMetadataDto
@@ -29,8 +30,13 @@ import kotlin.test.assertTrue
 class WorkoutRouterTest {
 
     private val json = Json
+    private val service = mockk<WorkoutService>()
+    private val container = Container().apply {
+        bind<WorkoutService>(service)
+    }
+    private val controller = container.get<WorkoutController>()
 
-    private fun Application.testModule(controller: WorkoutController) {
+    private fun Application.testModule() {
         install(ContentNegotiation) {
             json()
         }
@@ -39,8 +45,6 @@ class WorkoutRouterTest {
 
     @Test
     fun search_returns_200_and_response_body_on_success() = testApplication {
-        val service = mockk<WorkoutService>()
-        val controller = WorkoutController(service)
         val request = WorkoutSearchRequestDto(exerciseType = "Cardio")
 
         coEvery { service.searchWorkouts(request) } returns WorkoutSearchResponseDto(
@@ -62,7 +66,7 @@ class WorkoutRouterTest {
             )
         )
 
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.post("/workouts/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -75,9 +79,7 @@ class WorkoutRouterTest {
 
     @Test
     fun search_returns_400_for_invalid_payload() = testApplication {
-        val service = mockk<WorkoutService>()
-        val controller = WorkoutController(service)
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.post("/workouts/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -90,9 +92,7 @@ class WorkoutRouterTest {
 
     @Test
     fun search_returns_400_for_validation_error() = testApplication {
-        val service = mockk<WorkoutService>()
-        val controller = WorkoutController(service)
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.post("/workouts/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -105,13 +105,11 @@ class WorkoutRouterTest {
 
     @Test
     fun search_returns_500_when_service_returns_null() = testApplication {
-        val service = mockk<WorkoutService>()
-        val controller = WorkoutController(service)
         val request = WorkoutSearchRequestDto(exerciseType = "Cardio")
 
         coEvery { service.searchWorkouts(request) } returns null
 
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.post("/workouts/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())

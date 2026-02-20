@@ -1,5 +1,6 @@
 package com.diaita.routers
 
+import com.diaita.Container
 import com.diaita.controllers.NutritionController
 import com.diaita.dto.IngredientInformationDto
 import com.diaita.dto.IngredientSearchFiltersDto
@@ -40,8 +41,14 @@ import kotlin.test.assertTrue
 class NutritionRouterTest {
 
     private val json = Json
+    private val fakeClient = FakeNutritionClient()
+    private val container = Container().apply {
+        bind<NutritionRepo>(mockk(relaxed = true))
+        bind<NutritionRestClient>(fakeClient)
+    }
+    private val controller = container.get<NutritionController>()
 
-    private fun Application.testModule(controller: NutritionController) {
+    private fun Application.testModule() {
         install(ContentNegotiation) {
             json()
         }
@@ -50,7 +57,7 @@ class NutritionRouterTest {
 
     @Test
     fun ingredient_search_returns_200_with_mapped_foods() = testApplication {
-        val fakeClient = FakeNutritionClient().apply {
+        fakeClient.apply {
             ingredientSearchResponse = IngredientSearchResponseDto(
                 results = listOf(IngredientSearchResultDto(id = 1, name = "Chicken")),
                 totalResults = 1,
@@ -71,9 +78,7 @@ class NutritionRouterTest {
             )
         }
 
-        val controller = NutritionController(NutritionService(mockk<NutritionRepo>(relaxed = true), fakeClient))
-
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.post("/nutrition/search/ingredients") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -86,8 +91,7 @@ class NutritionRouterTest {
 
     @Test
     fun ingredient_search_rejects_blank_query() = testApplication {
-        val controller = NutritionController(NutritionService(mockk<NutritionRepo>(relaxed = true), FakeNutritionClient()))
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.post("/nutrition/search/ingredients") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -100,8 +104,7 @@ class NutritionRouterTest {
 
     @Test
     fun product_search_rejects_malformed_payload() = testApplication {
-        val controller = NutritionController(NutritionService(mockk<NutritionRepo>(relaxed = true), FakeNutritionClient()))
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.post("/nutrition/search/products") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -114,8 +117,7 @@ class NutritionRouterTest {
 
     @Test
     fun get_ingredient_rejects_non_numeric_id() = testApplication {
-        val controller = NutritionController(NutritionService(mockk<NutritionRepo>(relaxed = true), FakeNutritionClient()))
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.get("/nutrition/ingredient/abc")
 
@@ -124,8 +126,7 @@ class NutritionRouterTest {
 
     @Test
     fun get_product_returns_not_found_when_no_product_exists() = testApplication {
-        val controller = NutritionController(NutritionService(mockk<NutritionRepo>(relaxed = true), FakeNutritionClient()))
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.get("/nutrition/product/999")
 
@@ -134,7 +135,7 @@ class NutritionRouterTest {
 
     @Test
     fun menu_item_search_returns_200_with_mapped_foods() = testApplication {
-        val fakeClient = FakeNutritionClient().apply {
+        fakeClient.apply {
             menuItemSearchResponse = MenuItemSearchResponseDto(
                 menuItems = listOf(MenuItemSearchResultDto(id = 11, title = "Bacon King Burger")),
                 totalMenuItems = 1,
@@ -154,9 +155,7 @@ class NutritionRouterTest {
             )
         }
 
-        val controller = NutritionController(NutritionService(mockk<NutritionRepo>(relaxed = true), fakeClient))
-
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.post("/nutrition/search/menuItems") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -169,8 +168,7 @@ class NutritionRouterTest {
 
     @Test
     fun menu_item_search_rejects_blank_query() = testApplication {
-        val controller = NutritionController(NutritionService(mockk<NutritionRepo>(relaxed = true), FakeNutritionClient()))
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.post("/nutrition/search/menuItems") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -183,8 +181,7 @@ class NutritionRouterTest {
 
     @Test
     fun get_menu_item_returns_not_found_when_no_item_exists() = testApplication {
-        val controller = NutritionController(NutritionService(mockk<NutritionRepo>(relaxed = true), FakeNutritionClient()))
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.get("/nutrition/menuItem/999")
 
@@ -193,8 +190,7 @@ class NutritionRouterTest {
 
     @Test
     fun get_menu_item_rejects_non_numeric_id() = testApplication {
-        val controller = NutritionController(NutritionService(mockk<NutritionRepo>(relaxed = true), FakeNutritionClient()))
-        application { testModule(controller) }
+        application { testModule() }
 
         val response = client.get("/nutrition/menuItem/abc")
 

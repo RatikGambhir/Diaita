@@ -1,5 +1,6 @@
 package com.diaita.service
 
+import com.diaita.Container
 import com.diaita.dto.WorkoutSearchRequestDto
 import com.diaita.entity.ExerciseEntity
 import com.diaita.lib.factories.PaginatedResult
@@ -16,10 +17,14 @@ import kotlin.test.assertTrue
 
 class WorkoutServiceTest {
 
+    private val repo = mockk<WorkoutRepo>()
+    private val container = Container().apply {
+        bind<WorkoutRepo>(repo)
+    }
+    private val service = container.get<WorkoutService>()
+
     @Test
     fun searchWorkouts_maps_paginated_result_to_response() = runBlocking {
-        val repo = mockk<WorkoutRepo>()
-        val service = WorkoutService(repo)
         val request = WorkoutSearchRequestDto(exerciseType = "Cardio", page = 1, pageSize = 2)
 
         coEvery { repo.searchExercises(request) } returns Result(
@@ -59,8 +64,6 @@ class WorkoutServiceTest {
 
     @Test
     fun searchWorkouts_returns_null_when_repo_fails() = runBlocking {
-        val repo = mockk<WorkoutRepo>()
-        val service = WorkoutService(repo)
         val request = WorkoutSearchRequestDto(exerciseType = "Cardio")
 
         coEvery { repo.searchExercises(request) } returns Result(

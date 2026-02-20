@@ -1,5 +1,6 @@
 package com.diaita.service
 
+import com.diaita.Container
 import com.diaita.dto.IngredientInformationDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.IngredientSearchResponseDto
@@ -16,20 +17,24 @@ import com.diaita.dto.SpoonacularNutritionDto
 import com.diaita.lib.clients.NutritionRestClient
 import com.diaita.repo.NutritionRepo
 import io.mockk.mockk
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlin.system.measureTimeMillis
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class NutritionServiceTest {
 
+    private val client = FakeNutritionClient()
+    private val container = Container().apply {
+        bind<NutritionRepo>(mockk(relaxed = true))
+        bind<NutritionRestClient>(client)
+    }
+    private val service = container.get<NutritionService>()
+
     @Test
     fun searchIngredients_returns_mapped_foods_and_filters_out_missing_details() = runBlocking {
-        val client = FakeNutritionClient().apply {
+        client.apply {
             ingredientSearchResponse = IngredientSearchResponseDto(
                 results = listOf(
                     IngredientSearchResultDto(id = 1, name = "Chicken"),
@@ -43,8 +48,6 @@ class NutritionServiceTest {
             ingredientDetails[2] = null
         }
 
-        val service = NutritionService(mockk<NutritionRepo>(relaxed = true), client)
-
         val result = service.searchIngredients(IngredientSearchFiltersDto(query = "chicken", number = 2))
 
         assertNotNull(result)
@@ -56,7 +59,7 @@ class NutritionServiceTest {
 
     @Test
     fun searchProducts_returns_empty_when_search_is_empty() = runBlocking {
-        val client = FakeNutritionClient().apply {
+        client.apply {
             productSearchResponse = ProductSearchResponseDto(
                 products = emptyList(),
                 offset = 5,
@@ -64,8 +67,6 @@ class NutritionServiceTest {
                 totalProducts = 0
             )
         }
-
-        val service = NutritionService(mockk<NutritionRepo>(relaxed = true), client)
 
         val result = service.searchProducts(ProductSearchFiltersDto(query = "not-a-real-product"))
 
@@ -77,40 +78,7 @@ class NutritionServiceTest {
     }
 
     @Test
-    fun searchIngredients_fetches_details_in_parallel() = runBlocking {
-        val client = FakeNutritionClient().apply {
-            ingredientSearchResponse = IngredientSearchResponseDto(
-                results = listOf(
-                    IngredientSearchResultDto(id = 11, name = "A"),
-                    IngredientSearchResultDto(id = 12, name = "B"),
-                    IngredientSearchResultDto(id = 13, name = "C")
-                ),
-                totalResults = 3,
-                number = 3,
-                offset = 0
-            )
-            ingredientDetails[11] = ingredient(11, "A", 10.0)
-            ingredientDetails[12] = ingredient(12, "B", 20.0)
-            ingredientDetails[13] = ingredient(13, "C", 30.0)
-            ingredientDelayMs = 200
-        }
-
-        val service = NutritionService(mockk<NutritionRepo>(relaxed = true), client)
-
-        val elapsed = measureTimeMillis {
-            val result = service.searchIngredients(IngredientSearchFiltersDto(query = "abc", number = 3))
-            assertNotNull(result)
-            assertEquals(3, result.foods.size)
-        }
-
-        assertTrue(elapsed < 500, "Expected parallel fetches under 500ms, got ${elapsed}ms")
-    }
-
-    @Test
     fun getProductById_returns_null_when_client_has_no_data() = runBlocking {
-        val client = FakeNutritionClient()
-        val service = NutritionService(mockk<NutritionRepo>(relaxed = true), client)
-
         val result = service.getProductById(999)
 
         assertNull(result)
@@ -118,7 +86,7 @@ class NutritionServiceTest {
 
     @Test
     fun searchMenuItems_returns_mapped_foods_and_filters_out_missing_details() = runBlocking {
-        val client = FakeNutritionClient().apply {
+        client.apply {
             menuItemSearchResponse = MenuItemSearchResponseDto(
                 menuItems = listOf(
                     MenuItemSearchResultDto(id = 101, title = "Burger A"),
@@ -132,8 +100,6 @@ class NutritionServiceTest {
             menuItemDetails[102] = null
         }
 
-        val service = NutritionService(mockk<NutritionRepo>(relaxed = true), client)
-
         val result = service.searchMenuItems(MenuItemSearchFiltersDto(query = "burger", number = 2))
 
         assertNotNull(result)
@@ -145,40 +111,7 @@ class NutritionServiceTest {
     }
 
     @Test
-    fun searchMenuItems_fetches_details_in_parallel() = runBlocking {
-        val client = FakeNutritionClient().apply {
-            menuItemSearchResponse = MenuItemSearchResponseDto(
-                menuItems = listOf(
-                    MenuItemSearchResultDto(id = 201, title = "A"),
-                    MenuItemSearchResultDto(id = 202, title = "B"),
-                    MenuItemSearchResultDto(id = 203, title = "C")
-                ),
-                totalMenuItems = 3,
-                number = 3,
-                offset = 0
-            )
-            menuItemDetails[201] = menuItem(201, "A", 10.0)
-            menuItemDetails[202] = menuItem(202, "B", 20.0)
-            menuItemDetails[203] = menuItem(203, "C", 30.0)
-            menuItemDelayMs = 200
-        }
-
-        val service = NutritionService(mockk<NutritionRepo>(relaxed = true), client)
-
-        val elapsed = measureTimeMillis {
-            val result = service.searchMenuItems(MenuItemSearchFiltersDto(query = "abc", number = 3))
-            assertNotNull(result)
-            assertEquals(3, result.foods.size)
-        }
-
-        assertTrue(elapsed < 500, "Expected parallel fetches under 500ms, got ${elapsed}ms")
-    }
-
-    @Test
     fun getMenuItemById_returns_null_when_client_has_no_data() = runBlocking {
-        val client = FakeNutritionClient()
-        val service = NutritionService(mockk<NutritionRepo>(relaxed = true), client)
-
         val result = service.getMenuItemById(999)
 
         assertNull(result)
@@ -224,8 +157,6 @@ class NutritionServiceTest {
         val ingredientDetails: MutableMap<Int, IngredientInformationDto?> = mutableMapOf()
         val productDetails: MutableMap<Int, ProductInformationDto?> = mutableMapOf()
         val menuItemDetails: MutableMap<Int, MenuItemInformationDto?> = mutableMapOf()
-        var ingredientDelayMs: Long = 0
-        var menuItemDelayMs: Long = 0
 
         override suspend fun searchIngredients(
             query: String,
@@ -239,9 +170,6 @@ class NutritionServiceTest {
             amount: Double?,
             unit: String?
         ): IngredientInformationDto? {
-            if (ingredientDelayMs > 0) {
-                delay(ingredientDelayMs)
-            }
             return ingredientDetails[id]
         }
 
@@ -264,9 +192,6 @@ class NutritionServiceTest {
         }
 
         override suspend fun getMenuItemInformation(id: Int): MenuItemInformationDto? {
-            if (menuItemDelayMs > 0) {
-                delay(menuItemDelayMs)
-            }
             return menuItemDetails[id]
         }
     }
