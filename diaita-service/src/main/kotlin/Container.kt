@@ -53,6 +53,15 @@ class Container {
         }
     }
 
+    // Binds an instance under a specified type — used for testing with mocks
+    fun bind(type: KClass<*>, instance: Any) {
+        beans[type]?.let { return } ?: run { beans[type] = instance }
+    }
+
+    inline fun <reified T: Any> bind(instance: T) {
+        bind(T::class, instance)
+    }
+
     inline fun <reified T: Any> get(): T {
         return get(T::class)
     }

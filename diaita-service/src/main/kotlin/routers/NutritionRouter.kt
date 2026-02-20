@@ -2,9 +2,11 @@ package com.diaita.routers
 
 import com.diaita.controllers.NutritionController
 import com.diaita.dto.IngredientSearchFiltersDto
+import com.diaita.dto.MenuItemSearchFiltersDto
 import com.diaita.dto.ProductSearchFiltersDto
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -12,78 +14,98 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 
+private suspend inline fun <reified T : Any> ApplicationCall.handleSearchRequest(
+    searchFailureMessage: String,
+    querySelector: (T) -> String,
+    search: suspend (T) -> Any?
+) {
+    val filters = try {
+        receive<T>()
+    } catch (e: Exception) {
+        respondText("Invalid request payload", status = HttpStatusCode.BadRequest)
+        return
+    }
+
+    if (querySelector(filters).isBlank()) {
+        respondText("Invalid request: 'query' field is required", status = HttpStatusCode.BadRequest)
+        return
+    }
+
+    val result = search(filters)
+    if (result != null) {
+        respond(HttpStatusCode.OK, result)
+    } else {
+        respondText(searchFailureMessage, status = HttpStatusCode.InternalServerError)
+    }
+}
+
+private suspend fun ApplicationCall.handleGetByIdRequest(
+    invalidIdMessage: String,
+    notFoundMessage: String,
+    getById: suspend (Int) -> Any?
+) {
+    val id = parameters["id"]?.toIntOrNull()
+    if (id == null) {
+        respondText(invalidIdMessage, status = HttpStatusCode.BadRequest)
+        return
+    }
+
+    val food = getById(id)
+    if (food != null) {
+        respond(HttpStatusCode.OK, food)
+    } else {
+        respondText(notFoundMessage, status = HttpStatusCode.NotFound)
+    }
+}
+
 fun Application.configureNutritionRoutes(nutritionController: NutritionController) {
     routing {
         post("/nutrition/search/ingredients") {
-            val filters = try {
-                call.receive<IngredientSearchFiltersDto>()
-            } catch (e: Exception) {
-                call.respondText("Invalid request payload", status = HttpStatusCode.BadRequest)
-                return@post
-            }
-
-            if (filters.query.isBlank()) {
-                call.respondText("Invalid request: 'query' field is required", status = HttpStatusCode.BadRequest)
-                return@post
-            }
-
-            val result = nutritionController.searchIngredients(filters)
-            if (result != null) {
-                call.respond(HttpStatusCode.OK, result)
-            } else {
-                call.respondText("Failed to search ingredients", status = HttpStatusCode.InternalServerError)
-            }
+            call.handleSearchRequest<IngredientSearchFiltersDto>(
+                searchFailureMessage = "Failed to search ingredients",
+                querySelector = { it.query },
+                search = { nutritionController.searchIngredients(it) }
+            )
         }
 
         post("/nutrition/search/products") {
-            val filters = try {
-                call.receive<ProductSearchFiltersDto>()
-            } catch (e: Exception) {
-                call.respondText("Invalid request payload", status = HttpStatusCode.BadRequest)
-                return@post
-            }
+            call.handleSearchRequest<ProductSearchFiltersDto>(
+                searchFailureMessage = "Failed to search products",
+                querySelector = { it.query },
+                search = { nutritionController.searchProducts(it) }
+            )
+        }
 
-            if (filters.query.isBlank()) {
-                call.respondText("Invalid request: 'query' field is required", status = HttpStatusCode.BadRequest)
-                return@post
-            }
-
-            val result = nutritionController.searchProducts(filters)
-            if (result != null) {
-                call.respond(HttpStatusCode.OK, result)
-            } else {
-                call.respondText("Failed to search products", status = HttpStatusCode.InternalServerError)
-            }
+        post("/nutrition/search/menuItems") {
+            call.handleSearchRequest<MenuItemSearchFiltersDto>(
+                searchFailureMessage = "Failed to search menu items",
+                querySelector = { it.query },
+                search = { nutritionController.searchMenuItems(it) }
+            )
         }
 
         get("/nutrition/ingredient/{id}") {
-            val id = call.parameters["id"]?.toIntOrNull()
-            if (id == null) {
-                call.respondText("Invalid ingredient id", status = HttpStatusCode.BadRequest)
-                return@get
-            }
-
-            val food = nutritionController.getIngredientById(id)
-            if (food != null) {
-                call.respond(HttpStatusCode.OK, food)
-            } else {
-                call.respondText("Ingredient not found", status = HttpStatusCode.NotFound)
-            }
+            call.handleGetByIdRequest(
+                invalidIdMessage = "Invalid ingredient id",
+                notFoundMessage = "Ingredient not found",
+                getById = { nutritionController.getIngredientById(it) }
+            )
         }
 
         get("/nutrition/product/{id}") {
-            val id = call.parameters["id"]?.toIntOrNull()
-            if (id == null) {
-                call.respondText("Invalid product id", status = HttpStatusCode.BadRequest)
-                return@get
-            }
+            call.handleGetByIdRequest(
+                invalidIdMessage = "Invalid product id",
+                notFoundMessage = "Product not found",
+                getById = { nutritionController.getProductById(it) }
+            )
+        }
 
-            val food = nutritionController.getProductById(id)
-            if (food != null) {
-                call.respond(HttpStatusCode.OK, food)
-            } else {
-                call.respondText("Product not found", status = HttpStatusCode.NotFound)
-            }
+        get("/nutrition/menuItem/{id}") {
+            call.handleGetByIdRequest(
+                invalidIdMessage = "Invalid menu item id",
+                notFoundMessage = "Menu item not found",
+                getById = { nutritionController.getMenuItemById(it) }
+            )
         }
     }
 }

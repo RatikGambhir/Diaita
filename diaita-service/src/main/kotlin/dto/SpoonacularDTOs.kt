@@ -33,6 +33,13 @@ data class ProductSearchFiltersDto(
 )
 
 @Serializable
+data class MenuItemSearchFiltersDto(
+    val query: String,
+    val offset: Int = 0,
+    val number: Int = 10
+)
+
+@Serializable
 data class FoodSearchResponseDto(
     val foods: List<FoodDto>,
     val totalResults: Int,
@@ -74,6 +81,22 @@ data class ProductSearchResultDto(
 )
 
 @Serializable
+data class MenuItemSearchResponseDto(
+    val menuItems: List<MenuItemSearchResultDto> = emptyList(),
+    val totalMenuItems: Int = 0,
+    val offset: Int = 0,
+    val number: Int = 0
+)
+
+@Serializable
+data class MenuItemSearchResultDto(
+    val id: Int,
+    val title: String,
+    val restaurantChain: String? = null,
+    val image: String? = null
+)
+
+@Serializable
 data class IngredientInformationDto(
     val id: Int,
     val name: String,
@@ -92,6 +115,14 @@ data class ProductInformationDto(
     val servingSize: Double? = null,
     @SerialName("serving_unit")
     val servingUnit: String? = null,
+    val nutrition: SpoonacularNutritionDto? = null
+)
+
+@Serializable
+data class MenuItemInformationDto(
+    val id: Int,
+    val title: String,
+    val restaurantChain: String? = null,
     val nutrition: SpoonacularNutritionDto? = null
 )
 

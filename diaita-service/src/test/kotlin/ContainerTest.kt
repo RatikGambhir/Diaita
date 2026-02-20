@@ -81,4 +81,16 @@ class ContainerTest {
         assertNotNull(leaf)
         assertSame(leaf, created.leaf)
     }
+
+    @Test
+    fun bind_registers_instance_under_specified_type() {
+        val container = Container()
+        val leaf = mockk<LeafDependency>(relaxed = true)
+
+        container.bind<LeafDependency>(leaf)
+
+        val resolved = container.get<NeedsDependency>()
+        assertNotNull(resolved)
+        assertSame(leaf, resolved.leaf)
+    }
 }

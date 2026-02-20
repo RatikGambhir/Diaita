@@ -3,6 +3,9 @@ package com.diaita.lib.clients
 import com.diaita.dto.IngredientInformationDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.IngredientSearchResponseDto
+import com.diaita.dto.MenuItemInformationDto
+import com.diaita.dto.MenuItemSearchFiltersDto
+import com.diaita.dto.MenuItemSearchResponseDto
 import com.diaita.dto.ProductInformationDto
 import com.diaita.dto.ProductSearchFiltersDto
 import com.diaita.dto.ProductSearchResponseDto
@@ -93,6 +96,34 @@ open class NutritionRestClient(
             }.body<ProductInformationDto>()
         } catch (e: Exception) {
             println("Error getting product information: ${e.message}")
+            null
+        }
+    }
+
+    open suspend fun searchMenuItems(
+        query: String,
+        filters: MenuItemSearchFiltersDto
+    ): MenuItemSearchResponseDto? {
+        return try {
+            client.get("/food/menuItems/search") {
+                parameter("apiKey", apiKey)
+                parameter("query", query)
+                parameter("offset", filters.offset)
+                parameter("number", filters.number)
+            }.body<MenuItemSearchResponseDto>()
+        } catch (e: Exception) {
+            println("Error searching menu items: ${e.message}")
+            null
+        }
+    }
+
+    open suspend fun getMenuItemInformation(id: Int): MenuItemInformationDto? {
+        return try {
+            client.get("/food/menuItems/$id") {
+                parameter("apiKey", apiKey)
+            }.body<MenuItemInformationDto>()
+        } catch (e: Exception) {
+            println("Error getting menu item information: ${e.message}")
             null
         }
     }

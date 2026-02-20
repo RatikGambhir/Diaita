@@ -2,6 +2,7 @@ package com.diaita.service
 
 import com.diaita.dto.FoodSearchResponseDto
 import com.diaita.dto.IngredientSearchFiltersDto
+import com.diaita.dto.MenuItemSearchFiltersDto
 import com.diaita.dto.ProductSearchFiltersDto
 import com.diaita.dto.FoodDto
 import com.diaita.lib.clients.NutritionRestClient
@@ -16,33 +17,50 @@ class NutritionService(
     private val nutritionClient: NutritionRestClient
 ) {
 
+    private suspend fun <T> buildSearchResponse(
+        items: List<T>,
+        totalResults: Int,
+        offset: Int,
+        number: Int,
+        fetchFood: suspend (T) -> FoodDto?
+    ): FoodSearchResponseDto {
+        if (items.isEmpty()) {
+            return FoodSearchResponseDto(
+                foods = emptyList(),
+                totalResults = totalResults,
+                offset = offset,
+                number = number
+            )
+        }
+
+        val foods = coroutineScope {
+            items.map { item ->
+                async {
+                    fetchFood(item)
+                }
+            }.awaitAll().filterNotNull()
+        }
+
+        return FoodSearchResponseDto(
+            foods = foods,
+            totalResults = totalResults,
+            offset = offset,
+            number = number
+        )
+    }
+
     suspend fun searchIngredients(filters: IngredientSearchFiltersDto): FoodSearchResponseDto? {
         return try {
             val searchResponse = nutritionClient.searchIngredients(filters.query, filters) ?: return null
 
-            if (searchResponse.results.isEmpty()) {
-                return FoodSearchResponseDto(
-                    foods = emptyList(),
-                    totalResults = searchResponse.totalResults,
-                    offset = searchResponse.offset,
-                    number = searchResponse.number
-                )
-            }
-
-            val foods = coroutineScope {
-                searchResponse.results.map { result ->
-                    async {
-                        nutritionClient.getIngredientInformation(result.id)?.toFoodDto()
-                    }
-                }.awaitAll().filterNotNull()
-            }
-
-            FoodSearchResponseDto(
-                foods = foods,
+            buildSearchResponse(
+                items = searchResponse.results,
                 totalResults = searchResponse.totalResults,
                 offset = searchResponse.offset,
                 number = searchResponse.number
-            )
+            ) { result ->
+                nutritionClient.getIngredientInformation(result.id)?.toFoodDto()
+            }
         } catch (e: Exception) {
             println("Error searching ingredients in service: ${e.message}")
             null
@@ -53,31 +71,34 @@ class NutritionService(
         return try {
             val searchResponse = nutritionClient.searchProducts(filters.query, filters) ?: return null
 
-            if (searchResponse.products.isEmpty()) {
-                return FoodSearchResponseDto(
-                    foods = emptyList(),
-                    totalResults = searchResponse.totalProducts,
-                    offset = searchResponse.offset,
-                    number = searchResponse.number
-                )
-            }
-
-            val foods = coroutineScope {
-                searchResponse.products.map { result ->
-                    async {
-                        nutritionClient.getProductInformation(result.id)?.toFoodDto()
-                    }
-                }.awaitAll().filterNotNull()
-            }
-
-            FoodSearchResponseDto(
-                foods = foods,
+            buildSearchResponse(
+                items = searchResponse.products,
                 totalResults = searchResponse.totalProducts,
                 offset = searchResponse.offset,
                 number = searchResponse.number
-            )
+            ) { result ->
+                nutritionClient.getProductInformation(result.id)?.toFoodDto()
+            }
         } catch (e: Exception) {
             println("Error searching products in service: ${e.message}")
+            null
+        }
+    }
+
+    suspend fun searchMenuItems(filters: MenuItemSearchFiltersDto): FoodSearchResponseDto? {
+        return try {
+            val searchResponse = nutritionClient.searchMenuItems(filters.query, filters) ?: return null
+
+            buildSearchResponse(
+                items = searchResponse.menuItems,
+                totalResults = searchResponse.totalMenuItems,
+                offset = searchResponse.offset,
+                number = searchResponse.number
+            ) { result ->
+                nutritionClient.getMenuItemInformation(result.id)?.toFoodDto()
+            }
+        } catch (e: Exception) {
+            println("Error searching menu items in service: ${e.message}")
             null
         }
     }
@@ -88,5 +109,9 @@ class NutritionService(
 
     suspend fun getProductById(id: Int): FoodDto? {
         return nutritionClient.getProductInformation(id)?.toFoodDto()
+    }
+
+    suspend fun getMenuItemById(id: Int): FoodDto? {
+        return nutritionClient.getMenuItemInformation(id)?.toFoodDto()
     }
 }

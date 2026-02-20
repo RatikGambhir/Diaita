@@ -1,5 +1,6 @@
 package com.diaita.service
 
+import com.diaita.Container
 import com.diaita.lib.clients.GeminiRestClient
 import com.diaita.lib.mappings.toEntity
 import com.diaita.repo.UserRepo
@@ -17,12 +18,17 @@ import kotlin.test.assertTrue
 
 class UserServiceTest {
 
+    private val repo = mockk<UserRepo>()
+    private val gemini = mockk<GeminiRestClient>(relaxed = true)
+    private val container = Container().apply {
+        bind<UserRepo>(repo)
+        bind<GeminiRestClient>(gemini)
+    }
+    private val service = container.get<UserService>()
+
     @Test
     fun registerUserProfile_returns_success_when_upsert_and_recommendations_succeed() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
-        val repo = mockk<UserRepo>()
-        val gemini = mockk<GeminiRestClient>()
-        val service = UserService(repo, gemini)
 
         coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
         coEvery {
@@ -41,9 +47,6 @@ class UserServiceTest {
     @Test
     fun registerUserProfile_returns_null_and_skips_recommendations_when_upsert_fails() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
-        val repo = mockk<UserRepo>()
-        val gemini = mockk<GeminiRestClient>()
-        val service = UserService(repo, gemini)
 
         coEvery { repo.upsertFullProfile(payload) } returns "Mutation Failed"
 
@@ -57,9 +60,6 @@ class UserServiceTest {
     @Test
     fun registerUserProfile_returns_null_when_recommendation_generation_fails() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
-        val repo = mockk<UserRepo>()
-        val gemini = mockk<GeminiRestClient>()
-        val service = UserService(repo, gemini)
 
         coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
         coEvery { gemini.askQuestionStream(match { it.isNotBlank() }, any(), any()) } returns null
@@ -75,8 +75,6 @@ class UserServiceTest {
     fun settings_basic_demographics_crud_success() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
         val row = payload.basicDemographics.toEntity(userId)
 
         coEvery { repo.getBasicDemographics(userId) } returns row
@@ -92,8 +90,6 @@ class UserServiceTest {
     fun settings_basic_demographics_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
 
         coEvery { repo.getBasicDemographics(userId) } returns null
         coEvery { repo.updateBasicDemographics(userId, any()) } returns null
@@ -108,8 +104,6 @@ class UserServiceTest {
     fun settings_activity_lifestyle_crud_success() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
         val row = payload.activityLifestyle.toEntity(userId)
 
         coEvery { repo.getActivityLifestyle(userId) } returns row
@@ -125,8 +119,6 @@ class UserServiceTest {
     fun settings_activity_lifestyle_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
 
         coEvery { repo.getActivityLifestyle(userId) } returns null
         coEvery { repo.updateActivityLifestyle(userId, any()) } returns null
@@ -141,8 +133,6 @@ class UserServiceTest {
     fun settings_goals_priorities_crud_success() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
         val row = payload.goals.toEntity(userId)
 
         coEvery { repo.getGoalsPriorities(userId) } returns row
@@ -158,8 +148,6 @@ class UserServiceTest {
     fun settings_goals_priorities_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
 
         coEvery { repo.getGoalsPriorities(userId) } returns null
         coEvery { repo.updateGoalsPriorities(userId, any()) } returns null
@@ -174,8 +162,6 @@ class UserServiceTest {
     fun settings_training_background_crud_success() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
         val row = payload.trainingBackground!!.toEntity(userId)
 
         coEvery { repo.getTrainingBackground(userId) } returns row
@@ -191,8 +177,6 @@ class UserServiceTest {
     fun settings_training_background_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
 
         coEvery { repo.getTrainingBackground(userId) } returns null
         coEvery { repo.updateTrainingBackground(userId, any()) } returns null
@@ -207,8 +191,6 @@ class UserServiceTest {
     fun settings_medical_history_crud_success() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
         val row = payload.medicalHistory!!.toEntity(userId)
 
         coEvery { repo.getMedicalHistory(userId) } returns row
@@ -224,8 +206,6 @@ class UserServiceTest {
     fun settings_medical_history_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
 
         coEvery { repo.getMedicalHistory(userId) } returns null
         coEvery { repo.updateMedicalHistory(userId, any()) } returns null
@@ -240,8 +220,6 @@ class UserServiceTest {
     fun settings_nutrition_history_crud_success() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
         val row = payload.nutritionHistory!!.toEntity(userId)
 
         coEvery { repo.getNutritionHistory(userId) } returns row
@@ -257,8 +235,6 @@ class UserServiceTest {
     fun settings_nutrition_history_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
 
         coEvery { repo.getNutritionHistory(userId) } returns null
         coEvery { repo.updateNutritionHistory(userId, any()) } returns null
@@ -273,8 +249,6 @@ class UserServiceTest {
     fun settings_behavioral_factors_crud_success() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
         val row = payload.behavioralFactors!!.toEntity(userId)
 
         coEvery { repo.getBehavioralFactors(userId) } returns row
@@ -290,8 +264,6 @@ class UserServiceTest {
     fun settings_behavioral_factors_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
 
         coEvery { repo.getBehavioralFactors(userId) } returns null
         coEvery { repo.updateBehavioralFactors(userId, any()) } returns null
@@ -306,8 +278,6 @@ class UserServiceTest {
     fun settings_metrics_tracking_crud_success() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
         val row = payload.metricsTracking!!.toEntity(userId)
 
         coEvery { repo.getMetricsTracking(userId) } returns row
@@ -323,8 +293,6 @@ class UserServiceTest {
     fun settings_metrics_tracking_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
-        val repo = mockk<UserRepo>()
-        val service = UserService(repo, mockk(relaxed = true))
 
         coEvery { repo.getMetricsTracking(userId) } returns null
         coEvery { repo.updateMetricsTracking(userId, any()) } returns null
