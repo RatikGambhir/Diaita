@@ -1,8 +1,10 @@
 package com.diaita.routers
 
 import com.diaita.controllers.NutritionController
+import com.diaita.dto.IngredientAutocompleteFiltersDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.MenuItemSearchFiltersDto
+import com.diaita.dto.ProductSuggestFiltersDto
 import com.diaita.dto.ProductSearchFiltersDto
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -39,6 +41,53 @@ private suspend inline fun <reified T : Any> ApplicationCall.handleSearchRequest
     }
 }
 
+private suspend fun ApplicationCall.requiredQueryParam(name: String): String? {
+    val value = request.queryParameters[name]?.trim()
+    if (value.isNullOrEmpty()) {
+        respondText("Invalid request: '$name' query parameter is required", status = HttpStatusCode.BadRequest)
+        return null
+    }
+    return value
+}
+
+private suspend fun ApplicationCall.intQueryParam(
+    name: String,
+    defaultValue: Int,
+    validRange: IntRange
+): Int? {
+    val rawValue = request.queryParameters[name] ?: return defaultValue
+    val parsedValue = rawValue.toIntOrNull()
+
+    if (parsedValue == null || parsedValue !in validRange) {
+        respondText(
+            "Invalid request: '$name' must be between ${validRange.first} and ${validRange.last}",
+            status = HttpStatusCode.BadRequest
+        )
+        return null
+    }
+
+    return parsedValue
+}
+
+private suspend fun ApplicationCall.booleanQueryParam(
+    name: String,
+    defaultValue: Boolean
+): Boolean? {
+    val rawValue = request.queryParameters[name] ?: return defaultValue
+
+    return when (rawValue.lowercase()) {
+        "true" -> true
+        "false" -> false
+        else -> {
+            respondText(
+                "Invalid request: '$name' must be 'true' or 'false'",
+                status = HttpStatusCode.BadRequest
+            )
+            null
+        }
+    }
+}
+
 private suspend fun ApplicationCall.handleGetByIdRequest(
     invalidIdMessage: String,
     notFoundMessage: String,
@@ -60,6 +109,60 @@ private suspend fun ApplicationCall.handleGetByIdRequest(
 
 fun Application.configureNutritionRoutes(nutritionController: NutritionController) {
     routing {
+        get("/nutrition/autocomplete/ingredients") {
+            val query = call.requiredQueryParam("query") ?: return@get
+            val number = call.intQueryParam("number", defaultValue = 10, validRange = 1..100) ?: return@get
+            val language = call.request.queryParameters["language"]?.trim().orEmpty().ifEmpty { "en" }
+            val metaInformation = call.booleanQueryParam("metaInformation", defaultValue = false) ?: return@get
+            val intolerances = call.request.queryParameters["intolerances"]
+                ?.split(",")
+                ?.map(String::trim)
+                ?.filter(String::isNotEmpty)
+                ?.takeIf { it.isNotEmpty() }
+
+            if (language !in setOf("en", "de")) {
+                call.respondText(
+                    "Invalid request: 'language' must be 'en' or 'de'",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+
+            val result = nutritionController.autocompleteIngredients(
+                IngredientAutocompleteFiltersDto(
+                    query = query,
+                    number = number,
+                    language = language,
+                    metaInformation = metaInformation,
+                    intolerances = intolerances
+                )
+            )
+
+            if (result != null) {
+                call.respond(HttpStatusCode.OK, result)
+            } else {
+                call.respondText("Failed to autocomplete ingredients", status = HttpStatusCode.InternalServerError)
+            }
+        }
+
+        get("/nutrition/autocomplete/products") {
+            val query = call.requiredQueryParam("query") ?: return@get
+            val number = call.intQueryParam("number", defaultValue = 10, validRange = 1..25) ?: return@get
+
+            val result = nutritionController.autocompleteProducts(
+                ProductSuggestFiltersDto(
+                    query = query,
+                    number = number
+                )
+            )
+
+            if (result != null) {
+                call.respond(HttpStatusCode.OK, result)
+            } else {
+                call.respondText("Failed to autocomplete products", status = HttpStatusCode.InternalServerError)
+            }
+        }
+
         post("/nutrition/search/ingredients") {
             call.handleSearchRequest<IngredientSearchFiltersDto>(
                 searchFailureMessage = "Failed to search ingredients",

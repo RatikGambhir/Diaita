@@ -13,13 +13,6 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 
 
-//class GeminiClient(val client: Client) {
-//
-//}
-
-
-
-
 fun Application.configureRestClient(): List<RestClient> {
         val geminiKey = environment.config.property("api.gemini").getString()
         val nutritionAPIKey = environment.config.property("foodapi.apiKey").getString()

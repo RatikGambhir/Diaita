@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import type { FunctionalComponent } from "vue";
+import type { LucideProps } from "lucide-vue-next";
 import { computed, ref } from "vue";
+import type { NutritionFood } from "~/types/nutrition";
 import Button from "~/components/ui/button/Button.vue"
 import NutritionSummaryCard from "~/components/nutrition/NutritionSummaryCard.vue"
 import MacroDistributionCard from "~/components/nutrition/MacroDistributionCard.vue"
@@ -21,20 +24,18 @@ type MealItem = {
   fat: number;
 };
 
-type Meal = {
-  name: string;
-  icon: any;
-  totals: { calories: number; carbs: number; protein: number; fat: number };
-  items: MealItem[];
-};
-
-type IngredientSelection = {
-  name: string;
+type NutritionTotals = {
   calories: number;
   carbs: number;
   protein: number;
   fat: number;
-  servingSize: string;
+};
+
+type Meal = {
+  name: string;
+  icon: FunctionalComponent<LucideProps>;
+  totals: NutritionTotals;
+  items: MealItem[];
 };
 
 const selectedDate = ref(new Date());
@@ -56,43 +57,13 @@ function onDateSelect(date: Date) {
 
 const activeTab = ref("today");
 
-const summaryCards = [
-    { label: "Total Calories", value: "2450", unit: "kcal", valueClass: "text-chart-4", dotClass: "bg-chart-4" },
-    { label: "Carbs", value: "271", unit: "g", valueClass: "text-chart-1", dotClass: "bg-chart-1" },
-    { label: "Protein", value: "165", unit: "g", valueClass: "text-chart-3", dotClass: "bg-chart-3" },
-    { label: "Fat", value: "85", unit: "g", valueClass: "text-chart-2", dotClass: "bg-chart-2" },
-];
-
-    const macros = [
-        {
-            name: "Carbs",
-            percent: 43,
-            color: "var(--chart-1)",
-            labelColor: "text-chart-1",
-            labelClass: "-top-6 left-1/2 -translate-x-1/2",
-        },
-        {
-            name: "Protein",
-            percent: 26,
-            color: "var(--chart-3)",
-            labelColor: "text-chart-3",
-            labelClass: "left-0 bottom-4 -translate-x-6",
-        },
-        {
-            name: "Fat",
-            percent: 30,
-            color: "var(--chart-2)",
-            labelColor: "text-chart-2",
-            labelClass: "right-0 bottom-6 translate-x-6",
-        },
-    ];
-
-const pieGradient = computed(() => {
-    const [carb, protein, fat] = macros;
-    const carbStop = carb.percent;
-    const proteinStop = carbStop + protein.percent;
-    return `conic-gradient(${carb.color} 0 ${carbStop}%, ${protein.color} ${carbStop}% ${proteinStop}%, ${fat.color} ${proteinStop}% 100%)`;
-});
+type Macro = {
+  name: string;
+  percent: number;
+  color: string;
+  labelColor: string;
+  labelClass: string;
+};
 
 const meals = ref<Meal[]>([
     {
@@ -127,7 +98,80 @@ const meals = ref<Meal[]>([
 
 const roundNutritionValue = (value: number) => Math.round(value * 10) / 10;
 
-const handleAddFoods = (mealName: string, ingredients: IngredientSelection[]) => {
+const formatNutritionValue = (value: number) => {
+    const roundedValue = roundNutritionValue(value);
+    return Number.isInteger(roundedValue) ? `${roundedValue}` : `${roundedValue}`;
+};
+
+const createNutritionTotals = (): NutritionTotals => ({
+    calories: 0,
+    carbs: 0,
+    protein: 0,
+    fat: 0,
+});
+
+const nutritionTotals = computed(() => {
+    const totals = createNutritionTotals();
+
+    for (const meal of meals.value) {
+        totals.calories = roundNutritionValue(totals.calories + meal.totals.calories);
+        totals.carbs = roundNutritionValue(totals.carbs + meal.totals.carbs);
+        totals.protein = roundNutritionValue(totals.protein + meal.totals.protein);
+        totals.fat = roundNutritionValue(totals.fat + meal.totals.fat);
+    }
+
+    return totals;
+});
+
+const summaryCards = computed(() => [
+    { label: "Total Calories", value: formatNutritionValue(nutritionTotals.value.calories), unit: "kcal", valueClass: "text-chart-4", dotClass: "bg-chart-4" },
+    { label: "Carbs", value: formatNutritionValue(nutritionTotals.value.carbs), unit: "g", valueClass: "text-chart-1", dotClass: "bg-chart-1" },
+    { label: "Protein", value: formatNutritionValue(nutritionTotals.value.protein), unit: "g", valueClass: "text-chart-3", dotClass: "bg-chart-3" },
+    { label: "Fat", value: formatNutritionValue(nutritionTotals.value.fat), unit: "g", valueClass: "text-chart-2", dotClass: "bg-chart-2" },
+]);
+
+const macros = computed<[Macro, Macro, Macro]>(() => {
+    const carbCalories = nutritionTotals.value.carbs * 4;
+    const proteinCalories = nutritionTotals.value.protein * 4;
+    const fatCalories = nutritionTotals.value.fat * 9;
+    const totalMacroCalories = carbCalories + proteinCalories + fatCalories;
+    const toPercent = (macroCalories: number) => totalMacroCalories === 0
+        ? 0
+        : roundNutritionValue((macroCalories / totalMacroCalories) * 100);
+
+    return [
+        {
+            name: "Carbs",
+            percent: toPercent(carbCalories),
+            color: "var(--chart-1)",
+            labelColor: "text-chart-1",
+            labelClass: "-top-6 left-1/2 -translate-x-1/2",
+        },
+        {
+            name: "Protein",
+            percent: toPercent(proteinCalories),
+            color: "var(--chart-3)",
+            labelColor: "text-chart-3",
+            labelClass: "left-0 bottom-4 -translate-x-6",
+        },
+        {
+            name: "Fat",
+            percent: toPercent(fatCalories),
+            color: "var(--chart-2)",
+            labelColor: "text-chart-2",
+            labelClass: "right-0 bottom-6 translate-x-6",
+        },
+    ];
+});
+
+const pieGradient = computed(() => {
+    const [carb, protein, fat] = macros.value;
+    const carbStop = carb.percent;
+    const proteinStop = carbStop + protein.percent;
+    return `conic-gradient(${carb.color} 0 ${carbStop}%, ${protein.color} ${carbStop}% ${proteinStop}%, ${fat.color} ${proteinStop}% 100%)`;
+});
+
+const handleAddFoods = (mealName: string, ingredients: NutritionFood[]) => {
     const meal = meals.value.find((mealOption) => mealOption.name === mealName);
     if (!meal) {
         return;
@@ -154,7 +198,13 @@ const resources = [
             { label: "Add Specific Food", value: 156, icon: Plus, iconBg: "bg-destructive/10", iconColor: "text-destructive" },
             { label: "Recipes", value: 48, icon: FileText, iconBg: "bg-accent", iconColor: "text-accent-foreground" },
             { label: "Nutrition Recommendations", value: 8, icon: Lightbulb, iconBg: "bg-secondary", iconColor: "text-secondary-foreground" },
-    ];
+    ] satisfies Array<{
+        label: string;
+        value: number;
+        icon: FunctionalComponent<LucideProps>;
+        iconBg: string;
+        iconColor: string;
+    }>;
 </script>
 
 <template>

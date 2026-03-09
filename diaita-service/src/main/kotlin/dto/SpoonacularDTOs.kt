@@ -18,6 +18,15 @@ data class IngredientSearchFiltersDto(
 )
 
 @Serializable
+data class IngredientAutocompleteFiltersDto(
+    val query: String,
+    val number: Int = 10,
+    val language: String = "en",
+    val metaInformation: Boolean = false,
+    val intolerances: List<String>? = null
+)
+
+@Serializable
 data class ProductSearchFiltersDto(
     val query: String,
     val minCalories: Double? = null,
@@ -29,6 +38,12 @@ data class ProductSearchFiltersDto(
     val minFat: Double? = null,
     val maxFat: Double? = null,
     val offset: Int = 0,
+    val number: Int = 10
+)
+
+@Serializable
+data class ProductSuggestFiltersDto(
+    val query: String,
     val number: Int = 10
 )
 
@@ -48,6 +63,23 @@ data class FoodSearchResponseDto(
 )
 
 @Serializable
+data class FoodAutocompleteResponseDto(
+    val suggestions: List<FoodAutocompleteSuggestionDto>,
+    val number: Int
+)
+
+@Serializable
+data class FoodAutocompleteSuggestionDto(
+    val id: String,
+    val name: String,
+    val category: String,
+    val image: String? = null,
+    val brand: String? = null,
+    val aisle: String? = null,
+    val possibleUnits: List<String> = emptyList()
+)
+
+@Serializable
 data class IngredientSearchResponseDto(
     val results: List<IngredientSearchResultDto> = emptyList(),
     val offset: Int = 0,
@@ -60,6 +92,15 @@ data class IngredientSearchResultDto(
     val id: Int,
     val name: String,
     val image: String? = null
+)
+
+@Serializable
+data class IngredientAutocompleteItemDto(
+    val id: Int,
+    val name: String,
+    val image: String? = null,
+    val aisle: String? = null,
+    val possibleUnits: List<String> = emptyList()
 )
 
 @Serializable
@@ -78,6 +119,17 @@ data class ProductSearchResultDto(
     val title: String,
     val image: String? = null,
     val brand: String? = null
+)
+
+@Serializable
+data class ProductSuggestResponseDto(
+    val results: List<ProductSuggestItemDto> = emptyList()
+)
+
+@Serializable
+data class ProductSuggestItemDto(
+    val id: Int,
+    val title: String
 )
 
 @Serializable

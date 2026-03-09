@@ -17,8 +17,13 @@ const props = defineProps<{
 }>();
 
 const totalCalories = computed(() => {
-    return props.macros.reduce((sum, macro) => sum + macro.percent, 0)
+    return Math.round(props.macros.reduce((sum, macro) => sum + macro.percent, 0))
 })
+
+const formatPercent = (value: number) => {
+    const roundedValue = Math.round(value * 10) / 10
+    return Number.isInteger(roundedValue) ? `${roundedValue}` : `${roundedValue}`
+}
 </script>
 
 <template>
@@ -54,10 +59,10 @@ const totalCalories = computed(() => {
                         <span
                             class="h-3 w-3 rounded-full flex-shrink-0"
                             :style="{ backgroundColor: macro.color }"
-                        ></span>
+                        />
                         <div class="flex flex-col">
                             <span class="text-sm font-medium text-foreground">{{ macro.name }}</span>
-                            <span class="text-xs text-muted-foreground">{{ macro.percent }}%</span>
+                            <span class="text-xs text-muted-foreground">{{ formatPercent(macro.percent) }}%</span>
                         </div>
                     </div>
                 </div>

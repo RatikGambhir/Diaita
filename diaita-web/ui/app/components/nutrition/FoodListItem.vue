@@ -1,19 +1,11 @@
 <script setup lang="ts">
+import type { NutritionFood } from "~/types/nutrition"
 import Button from "~/components/ui/button/Button.vue"
-
-type FoodItem = {
-    name: string;
-    calories: number;
-    carbs: number;
-    protein: number;
-    fat: number;
-    servingSize: string;
-};
 
 type ActionVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 
 const props = withDefaults(defineProps<{
-    item: FoodItem;
+    item: NutritionFood;
     actionLabel?: string;
     actionVariant?: ActionVariant;
     actionDisabled?: boolean;
@@ -36,19 +28,19 @@ const emit = defineEmits<{
                 <div class="text-xs text-muted-foreground">{{ props.item.servingSize }}</div>
                 <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     <div class="flex items-center gap-1">
-                        <span class="h-1.5 w-1.5 rounded-full bg-chart-4"></span>
+                        <span class="h-1.5 w-1.5 rounded-full bg-chart-4"/>
                         {{ props.item.calories }} cal
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="h-1.5 w-1.5 rounded-full bg-chart-1"></span>
+                        <span class="h-1.5 w-1.5 rounded-full bg-chart-1"/>
                         {{ props.item.carbs }}g carbs
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="h-1.5 w-1.5 rounded-full bg-chart-3"></span>
+                        <span class="h-1.5 w-1.5 rounded-full bg-chart-3"/>
                         {{ props.item.protein }}g protein
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="h-1.5 w-1.5 rounded-full bg-chart-2"></span>
+                        <span class="h-1.5 w-1.5 rounded-full bg-chart-2"/>
                         {{ props.item.fat }}g fat
                     </div>
                 </div>

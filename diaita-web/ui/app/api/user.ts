@@ -1,15 +1,5 @@
-import axios from 'axios';
 import type { LoginCredentials, CreateProfileData, UserProfile, AuthResponse } from '~/types';
-
-const API_BASE_URL = process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
-});
+import { apiClient } from '~/api/client';
 
 export const userApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {

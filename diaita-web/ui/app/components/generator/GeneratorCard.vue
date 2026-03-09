@@ -19,7 +19,6 @@ const handleWorkoutSubmit = (data: any) => {
 
 const handleMealPlanSubmit = (data: any) => {
   isLoading.value = true
-  // Simulate API call
   setTimeout(() => {
     isLoading.value = false
     console.log('Meal plan form submitted:', data)

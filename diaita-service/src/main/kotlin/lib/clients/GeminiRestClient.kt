@@ -33,6 +33,9 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         try {
             return client.post {
                 contentType(ContentType.Application.Json)
+                headers {
+                    append("x-goog-api-key", apiKey)
+                }
                 setBody(request)
             }.body<GeminiResponseDto>().candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
         } catch (e: Exception) {
@@ -55,6 +58,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
             client.preparePost(streamUrl) {
                 contentType(ContentType.Application.Json)
                 headers {
+                    append("x-goog-api-key", apiKey)
                     append("Accept", "text/event-stream")
                 }
                 setBody(request)

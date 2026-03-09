@@ -1,11 +1,15 @@
 package com.diaita.service
 
+import com.diaita.dto.FoodAutocompleteResponseDto
 import com.diaita.dto.FoodSearchResponseDto
+import com.diaita.dto.IngredientAutocompleteFiltersDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.MenuItemSearchFiltersDto
+import com.diaita.dto.ProductSuggestFiltersDto
 import com.diaita.dto.ProductSearchFiltersDto
 import com.diaita.dto.FoodDto
 import com.diaita.lib.clients.NutritionRestClient
+import com.diaita.lib.mappings.toFoodAutocompleteSuggestionDto
 import com.diaita.lib.mappings.toFoodDto
 import com.diaita.repo.NutritionRepo
 import kotlinx.coroutines.async
@@ -16,6 +20,34 @@ class NutritionService(
     private val nutritionRepo: NutritionRepo,
     private val nutritionClient: NutritionRestClient
 ) {
+
+    suspend fun autocompleteIngredients(filters: IngredientAutocompleteFiltersDto): FoodAutocompleteResponseDto? {
+        return try {
+            val suggestions = nutritionClient.autocompleteIngredients(filters.query, filters) ?: return null
+
+            FoodAutocompleteResponseDto(
+                suggestions = suggestions.map { it.toFoodAutocompleteSuggestionDto() },
+                number = suggestions.size
+            )
+        } catch (e: Exception) {
+            println("Error autocompleting ingredients in service: ${e.message}")
+            null
+        }
+    }
+
+    suspend fun autocompleteProducts(filters: ProductSuggestFiltersDto): FoodAutocompleteResponseDto? {
+        return try {
+            val suggestions = nutritionClient.suggestProducts(filters.query, filters)?.results ?: return null
+
+            FoodAutocompleteResponseDto(
+                suggestions = suggestions.map { it.toFoodAutocompleteSuggestionDto() },
+                number = suggestions.size
+            )
+        } catch (e: Exception) {
+            println("Error autocompleting products in service: ${e.message}")
+            null
+        }
+    }
 
     private suspend fun <T> buildSearchResponse(
         items: List<T>,
