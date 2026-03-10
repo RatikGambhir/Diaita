@@ -3,6 +3,8 @@ package com.diaita.lib.clients
 
 import com.diaita.dto.GeminiRequestDto
 import com.diaita.dto.GeminiResponseDto
+import com.diaita.dto.ResponseSchemaDto
+import com.diaita.dto.GenerationConfigDto
 import io.ktor.client.call.body
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
@@ -12,6 +14,7 @@ import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.utils.io.readUTF8Line
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -20,13 +23,18 @@ import kotlinx.serialization.json.jsonPrimitive
 
 class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent") : RestClient(apiKey, baseUrl) {
 
+    private val json = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = false
+    }
+
     override fun getFood(): String {
         return searchRecipes("hello")
     }
 
     suspend fun askQuestion(
         prompt: String,
-        config: com.diaita.dto.GenerationConfigDto? = null,
+        config: GenerationConfigDto? = null,
         systemInstruction: String? = null
     ): String? {
         val request = GeminiRequestDto.fromPrompt(prompt, config, systemInstruction)
@@ -44,7 +52,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
     suspend fun askQuestionStream(
         prompt: String,
         systemInstruction: String? = null,
-        config: com.diaita.dto.GenerationConfigDto? = null,
+        config: GenerationConfigDto? = null,
        // onChunk: suspend (String) -> Unit
     ): String? {
         val request = GeminiRequestDto.fromPrompt(prompt, config, systemInstruction)
@@ -84,6 +92,48 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         } catch (e: Exception) {
             println("Error calling Gemini Streaming API: ${e.message}")
             return null
+        }
+    }
+
+    suspend fun <T> askQuestionStructured(
+        prompt: String,
+        responseSchema: ResponseSchemaDto,
+        serializer: DeserializationStrategy<T>,
+        systemInstruction: String? = null,
+        config: GenerationConfigDto? = null
+    ): T? {
+        val request = GeminiRequestDto.fromPrompt(
+            prompt = prompt,
+            config = config?.copy(
+                responseMimeType = "application/json",
+                responseSchema = responseSchema
+            ) ?: GenerationConfigDto(
+                temperature = 0.7,
+                topP = 0.95,
+                topK = 40,
+                maxOutputTokens = 8192,
+                responseMimeType = "application/json",
+                responseSchema = responseSchema
+            ),
+            systemInstruction = systemInstruction
+        )
+
+        return try {
+            val response = client.post {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body<GeminiResponseDto>()
+
+            response.candidates
+                .firstOrNull()
+                ?.content
+                ?.parts
+                ?.firstOrNull()
+                ?.text
+                ?.let { json.decodeFromString(serializer, it) }
+        } catch (e: Exception) {
+            println("Error calling Gemini structured output API: ${e.message}")
+            null
         }
     }
 

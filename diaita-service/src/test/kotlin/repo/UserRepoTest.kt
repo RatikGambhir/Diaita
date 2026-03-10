@@ -1,9 +1,13 @@
 package com.diaita.repo
 
+import com.diaita.dto.RegisteredUserProfileDto
+import com.diaita.lib.factories.Result
 import com.diaita.lib.factories.SupabaseManager
+import com.diaita.lib.mappings.toUpsertFullProfilePayload
 import com.diaita.lib.mappings.toEntity
 import com.diaita.testdata.UserProfileTestData
 import io.github.jan.supabase.SupabaseClient
+import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -18,6 +22,8 @@ class UserRepoTest {
         return UserRepo(SupabaseManager(supabaseClient))
     }
 
+    private fun repo(manager: SupabaseManager): UserRepo = UserRepo(manager)
+
     @Test
     fun section_getters_return_null_when_data_source_fails() = runBlocking {
         val userRepo = repo()
@@ -28,7 +34,6 @@ class UserRepoTest {
         assertNull(userRepo.getGoalsPriorities(userId))
         assertNull(userRepo.getTrainingBackground(userId))
         assertNull(userRepo.getNutritionHistory(userId))
-        // TODO: Re-add medical, behavioral, and metrics repo getter assertions when those setup APIs return.
     }
 
     @Test
@@ -42,7 +47,6 @@ class UserRepoTest {
         assertNull(userRepo.updateGoalsPriorities(userId, request.goals.toEntity(userId)))
         assertNull(userRepo.updateTrainingBackground(userId, request.trainingBackground!!.toEntity(userId)))
         assertNull(userRepo.updateNutritionHistory(userId, request.nutritionHistory!!.toEntity(userId)))
-        // TODO: Re-add medical, behavioral, and metrics repo updater assertions when those setup APIs return.
     }
 
     @Test
@@ -55,16 +59,27 @@ class UserRepoTest {
         assertFalse(userRepo.deleteGoalsPriorities(userId))
         assertFalse(userRepo.deleteTrainingBackground(userId))
         assertFalse(userRepo.deleteNutritionHistory(userId))
-        // TODO: Re-add medical, behavioral, and metrics repo delete assertions when those setup APIs return.
     }
 
     @Test
     fun upsertFullProfile_returns_mutation_failed_when_any_required_upsert_fails() = runBlocking {
         val request = UserProfileTestData.fullRequest()
-        val userRepo = repo()
+        val manager = mockk<SupabaseManager>()
+        val userRepo = repo(manager)
+
+        coEvery {
+            manager.rpcDecoded<RegisteredUserProfileDto>(
+                "upsert_full_profile",
+                mapOf(
+                    "p_user_id" to request.userId,
+                    "p_payload" to request.toUpsertFullProfilePayload()
+                )
+            )
+        } returns Result<RegisteredUserProfileDto>(null, RuntimeException("boom"))
 
         val result = userRepo.upsertFullProfile(request)
 
         assertEquals("Mutation Failed", result)
     }
+
 }

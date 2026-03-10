@@ -45,6 +45,38 @@ fun Application.configureUserRoutes(userController: UserController) {
             call.respondText("Server Error occurred", status = HttpStatusCode.BadRequest)
         }
 
+        post("/users/{userId}/recommendations/generate") {
+            val userId = call.parameters["userId"]
+            if (userId.isNullOrBlank()) {
+                call.respondText("Missing userId parameter", status = HttpStatusCode.BadRequest)
+                return@post
+            }
+
+            val recommendation = userController.generateAndSaveRecommendations(userId)
+            if (recommendation != null) {
+                call.respond(HttpStatusCode.OK, recommendation)
+                return@post
+            }
+
+            call.respondText("Failed to generate recommendations", status = HttpStatusCode.InternalServerError)
+        }
+
+        get("/users/{userId}/recommendations") {
+            val userId = call.parameters["userId"]
+            if (userId.isNullOrBlank()) {
+                call.respondText("Missing userId parameter", status = HttpStatusCode.BadRequest)
+                return@get
+            }
+
+            val recommendation = userController.getRecommendations(userId)
+            if (recommendation != null) {
+                call.respond(HttpStatusCode.OK, recommendation)
+                return@get
+            }
+
+            call.respondText("No recommendations found", status = HttpStatusCode.NotFound)
+        }
+
         route("/user/settings") {
             sectionCrudRoutes(
                 section = "basic-demographics",
@@ -80,7 +112,6 @@ fun Application.configureUserRoutes(userController: UserController) {
                 updater = { userId, body -> userController.updateNutritionHistory(userId, body) },
                 deleter = { userId -> userController.deleteNutritionHistory(userId) }
             )
-            // TODO: Re-add the medical-history, behavioral-factors, and metrics-tracking settings routes when those features return.
         }
     }
 }

@@ -175,5 +175,3 @@ fun NutritionHistoryRowEntity.toDto() = NutritionDietHistoryDto(
     alcoholIntake = alcoholIntake,
     supplementUse = supplementUse
 )
-
-// TODO: Re-add the medical, behavioral, and metrics row mappings when those setup features return.

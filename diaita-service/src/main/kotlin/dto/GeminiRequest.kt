@@ -1,5 +1,6 @@
 package com.diaita.dto
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -36,14 +37,25 @@ data class GenerationConfigDto(
 @Serializable
 data class ResponseSchemaDto(
     val type: String,
+    val description: String? = null,
     val properties: Map<String, SchemaPropertyDto>? = null,
-    val required: List<String>? = null
+    val required: List<String>? = null,
+    val items: SchemaPropertyDto? = null,
+    val nullable: Boolean? = null,
+    @SerialName("enum")
+    val enumValues: List<String>? = null
 )
 
 @Serializable
 data class SchemaPropertyDto(
     val type: String,
-    val description: String? = null
+    val description: String? = null,
+    val properties: Map<String, SchemaPropertyDto>? = null,
+    val required: List<String>? = null,
+    val items: SchemaPropertyDto? = null,
+    val nullable: Boolean? = null,
+    @SerialName("enum")
+    val enumValues: List<String>? = null
 )
 
 @Serializable

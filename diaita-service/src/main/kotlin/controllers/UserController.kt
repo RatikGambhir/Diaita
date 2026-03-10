@@ -4,6 +4,7 @@ import com.diaita.dto.ActivityLevelLifestyleDto
 import com.diaita.dto.BasicDemographicsDto
 import com.diaita.dto.GoalsPrioritiesDto
 import com.diaita.dto.NutritionDietHistoryDto
+import com.diaita.dto.RecommendationDto
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.TrainingBackgroundDto
 import com.diaita.service.UserService
@@ -11,6 +12,14 @@ import com.diaita.service.UserService
 class UserController(private val userService: UserService) {
     suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): String? {
         return userService.registerUserProfile(request)
+    }
+
+    suspend fun generateAndSaveRecommendations(userId: String): RecommendationDto? {
+        return userService.generateAndSaveRecommendations(userId)
+    }
+
+    suspend fun getRecommendations(userId: String): RecommendationDto? {
+        return userService.getRecommendations(userId)
     }
 
     suspend fun getBasicDemographics(userId: String): BasicDemographicsDto? {
@@ -78,6 +87,4 @@ class UserController(private val userService: UserService) {
     suspend fun deleteNutritionHistory(userId: String): Boolean {
         return userService.deleteNutritionHistory(userId)
     }
-
-    // TODO: Re-add medical, behavioral, and metrics controller methods when those setup APIs return.
 }

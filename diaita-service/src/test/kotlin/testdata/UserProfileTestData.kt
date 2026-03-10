@@ -68,7 +68,6 @@ object UserProfileTestData {
                 alcoholIntake = "occasional",
                 supplementUse = listOf("whey", "creatine")
             )
-            // TODO: Re-add medicalHistory, behavioralFactors, metricsTracking, and notes test data when those setup features return.
         )
     }
 }

@@ -51,16 +51,6 @@ data class TrainingBackgroundEntity(
 )
 
 @Serializable
-data class MedicalHistoryEntity(
-    val injuries: List<String>? = null,
-    val chronicConditions: List<String>? = null,
-    val painPatterns: String? = null,
-    val mobilityRestrictions: List<String>? = null,
-    val medications: List<String>? = null,
-    val doctorRestrictions: String? = null
-)
-
-@Serializable
 data class NutritionDietHistoryEntity(
     val currentDietPattern: String? = null,
     val calorieTrackingExperience: Boolean? = null,
@@ -77,25 +67,6 @@ data class NutritionDietHistoryEntity(
 )
 
 @Serializable
-data class BehavioralFactorsEntity(
-    val motivationLevel: String? = null,
-    val consistencyHistory: String? = null,
-    val accountabilityPreference: String? = null,
-    val pastSuccessFailurePatterns: String? = null,
-    val relationshipWithFood: String? = null,
-    val disorderedEatingHistory: String? = null,
-    val stressEatingTendencies: String? = null,
-    val supportSystem: String? = null
-)
-
-@Serializable
-data class MetricsTrackingEntity(
-    val preferredProgressMetrics: List<String>? = null,
-    val trackingTools: List<String>? = null,
-    val checkinFrequency: String? = null
-)
-
-@Serializable
 data class UserProfileEntity(
     val id: String,
     val userId: String,
@@ -103,9 +74,6 @@ data class UserProfileEntity(
     val activityLifestyle: ActivityLevelLifestyleEntity,
     val goals: GoalsPrioritiesEntity,
     val trainingBackground: TrainingBackgroundEntity? = null,
-    val medicalHistory: MedicalHistoryEntity? = null,
     val nutritionHistory: NutritionDietHistoryEntity? = null,
-    val behavioralFactors: BehavioralFactorsEntity? = null,
-    val metricsTracking: MetricsTrackingEntity? = null,
     val notes: String? = null
 )

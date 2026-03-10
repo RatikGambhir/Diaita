@@ -69,6 +69,5 @@ fun RegisterUserProfileRequestDto.toEntity() = UserProfileEntity(
     activityLifestyle = activityLifestyle.toEntity(),
     goals = goals.toEntity(),
     trainingBackground = trainingBackground?.toEntity(),
-    nutritionHistory = nutritionHistory?.toEntity(),
-    // TODO: Re-add medicalHistory, behavioralFactors, metricsTracking, and notes mappings when those setup features return.
+    nutritionHistory = nutritionHistory?.toEntity()
 )

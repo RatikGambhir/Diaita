@@ -1,6 +1,7 @@
 package com.diaita.repo
 
 import com.diaita.dto.RegisterUserProfileRequestDto
+import com.diaita.dto.RegisteredUserProfileDto
 import com.diaita.entity.*
 import com.diaita.lib.factories.SupabaseManager
 import com.diaita.lib.mappings.*
@@ -8,43 +9,15 @@ import com.diaita.lib.mappings.*
 class UserRepo(private val supabaseManager: SupabaseManager) {
 
     suspend fun upsertFullProfile(request: RegisterUserProfileRequestDto): String {
-        val userId = request.userId
+        val result = supabaseManager.rpcDecoded<RegisteredUserProfileDto>(
+            functionName = UPSERT_FULL_PROFILE_RPC,
+            parameters = mapOf(
+                "p_user_id" to request.userId,
+                "p_payload" to request.toUpsertFullProfilePayload()
+            )
+        )
 
-        if (upsertOrFail("user_profile", request.toUserProfileEntity(userId)) == null) {
-            return "Mutation Failed"
-        }
-        if (upsertOrFail("basic_demographics", request.toBasicDemographicsEntity(userId)) == null) {
-            return "Mutation Failed"
-        }
-        if (upsertOrFail("activity_lifestyle", request.toActivityLifestyleEntity(userId)) == null) {
-            return "Mutation Failed"
-        }
-        if (upsertOrFail("goals_priorities", request.toGoalsPrioritiesEntity(userId)) == null) {
-            return "Mutation Failed"
-        }
-
-        request.trainingBackground?.let { trainingBackground ->
-            if (upsertOrFail("training_background", trainingBackground.toEntity(userId)) == null) {
-                return "Mutation Failed"
-            }
-        }
-
-        request.nutritionHistory?.let { nutritionHistory ->
-            if (upsertOrFail("nutrition_history", nutritionHistory.toEntity(userId)) == null) {
-                return "Mutation Failed"
-            }
-        }
-        // TODO: Re-add medical_history, behavioral_factors, and metrics_tracking upserts when those setup features return.
-
-        return "Mutation Success"
-    }
-
-    private suspend inline fun <reified T : Any> upsertOrFail(table: String, data: T): T? {
-        val result = supabaseManager.upsert(table, data)
-        if (result.body == null) {
-            println("Error upserting $table: ${result.error?.message}")
-        }
-        return result.body
+        return if (result.body != null) "Mutation Success" else "Mutation Failed"
     }
 
     private suspend inline fun <reified T : Any> getSection(table: String, userId: String): T? {
@@ -117,5 +90,16 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
     suspend fun deleteNutritionHistory(userId: String): Boolean =
         deleteSection("nutrition_history", userId)
 
-    // TODO: Re-add medical, behavioral, and metrics repo CRUD helpers when those setup APIs return.
+    suspend fun getFullProfile(userId: String): RegisteredUserProfileDto? {
+        val result = supabaseManager.rpcDecoded<RegisteredUserProfileDto>(
+            functionName = GET_FULL_PROFILE_RPC,
+            parameters = mapOf("p_user_id" to userId)
+        )
+        return result.body
+    }
+
+    private companion object {
+        const val UPSERT_FULL_PROFILE_RPC = "upsert_full_profile"
+        const val GET_FULL_PROFILE_RPC = "get_full_profile"
+    }
 }

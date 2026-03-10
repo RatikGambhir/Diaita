@@ -95,22 +95,6 @@ data class TrainingBackgroundRowEntity(
 )
 
 @Serializable
-data class MedicalHistoryRowEntity(
-    @SerialName("user_id")
-    val userId: String,
-    val injuries: List<String>? = null,
-    @SerialName("chronic_conditions")
-    val chronicConditions: List<String>? = null,
-    @SerialName("pain_patterns")
-    val painPatterns: String? = null,
-    @SerialName("mobility_restrictions")
-    val mobilityRestrictions: List<String>? = null,
-    val medications: List<String>? = null,
-    @SerialName("doctor_restrictions")
-    val doctorRestrictions: String? = null
-)
-
-@Serializable
 data class NutritionHistoryRowEntity(
     @SerialName("user_id")
     val userId: String,
@@ -138,38 +122,4 @@ data class NutritionHistoryRowEntity(
     val alcoholIntake: String? = null,
     @SerialName("supplement_use")
     val supplementUse: List<String>? = null
-)
-
-@Serializable
-data class BehavioralFactorsRowEntity(
-    @SerialName("user_id")
-    val userId: String,
-    @SerialName("motivation_level")
-    val motivationLevel: String? = null,
-    @SerialName("consistency_history")
-    val consistencyHistory: String? = null,
-    @SerialName("accountability_preference")
-    val accountabilityPreference: String? = null,
-    @SerialName("past_success_failure_patterns")
-    val pastSuccessFailurePatterns: String? = null,
-    @SerialName("relationship_with_food")
-    val relationshipWithFood: String? = null,
-    @SerialName("disordered_eating_history")
-    val disorderedEatingHistory: String? = null,
-    @SerialName("stress_eating_tendencies")
-    val stressEatingTendencies: String? = null,
-    @SerialName("support_system")
-    val supportSystem: String? = null
-)
-
-@Serializable
-data class MetricsTrackingRowEntity(
-    @SerialName("user_id")
-    val userId: String,
-    @SerialName("preferred_progress_metrics")
-    val preferredProgressMetrics: List<String>? = null,
-    @SerialName("tracking_tools")
-    val trackingTools: List<String>? = null,
-    @SerialName("checkin_frequency")
-    val checkinFrequency: String? = null
 )
