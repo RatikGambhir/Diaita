@@ -5,12 +5,16 @@ import com.diaita.dto.FoodSearchResponseDto
 import com.diaita.dto.IngredientAutocompleteFiltersDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.MenuItemSearchFiltersDto
+import com.diaita.dto.NutritionDaySummaryResponseDto
 import com.diaita.dto.ProductSuggestFiltersDto
 import com.diaita.dto.ProductSearchFiltersDto
 import com.diaita.dto.FoodDto
+import com.diaita.dto.UpsertMealsRequestDto
 import com.diaita.lib.clients.NutritionRestClient
+import com.diaita.lib.mappings.sortedByFoodName
 import com.diaita.lib.mappings.toFoodAutocompleteSuggestionDto
 import com.diaita.lib.mappings.toFoodDto
+import com.diaita.lib.mappings.toNormalizedRequest
 import com.diaita.repo.NutritionRepo
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -20,6 +24,18 @@ class NutritionService(
     private val nutritionRepo: NutritionRepo,
     private val nutritionClient: NutritionRestClient
 ) {
+
+    suspend fun upsertMeals(request: UpsertMealsRequestDto): NutritionDaySummaryResponseDto? {
+        val normalizedRequest = request.toNormalizedRequest()
+        val summary = nutritionRepo.upsertMeals(normalizedRequest) ?: return null
+
+        return summary.copy(
+            breakfast = summary.breakfast.sortedByFoodName(),
+            lunch = summary.lunch.sortedByFoodName(),
+            dinner = summary.dinner.sortedByFoodName(),
+            snacks = summary.snacks.sortedByFoodName()
+        )
+    }
 
     suspend fun autocompleteIngredients(filters: IngredientAutocompleteFiltersDto): FoodAutocompleteResponseDto? {
         return try {

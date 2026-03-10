@@ -6,6 +6,8 @@ import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.MenuItemSearchFiltersDto
 import com.diaita.dto.ProductSuggestFiltersDto
 import com.diaita.dto.ProductSearchFiltersDto
+import com.diaita.dto.UpsertMealsRequestDto
+import com.diaita.dto.ValidationErrorsResponseDto
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
@@ -109,6 +111,31 @@ private suspend fun ApplicationCall.handleGetByIdRequest(
 
 fun Application.configureNutritionRoutes(nutritionController: NutritionController) {
     routing {
+        post("/nutrition/meals/upsert") {
+            val request = try {
+                call.receive<UpsertMealsRequestDto>()
+            } catch (e: Exception) {
+                call.respondText("Invalid request payload", status = HttpStatusCode.BadRequest)
+                return@post
+            }
+
+            val validation = request.validate()
+            if (!validation.isValid) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    ValidationErrorsResponseDto(validation.errors)
+                )
+                return@post
+            }
+
+            val result = nutritionController.upsertMeals(request)
+            if (result != null) {
+                call.respond(HttpStatusCode.OK, result)
+            } else {
+                call.respondText("Failed to save meals", status = HttpStatusCode.InternalServerError)
+            }
+        }
+
         get("/nutrition/autocomplete/ingredients") {
             val query = call.requiredQueryParam("query") ?: return@get
             val number = call.intQueryParam("number", defaultValue = 10, validRange = 1..100) ?: return@get

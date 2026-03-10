@@ -6,11 +6,17 @@ import com.diaita.dto.IngredientAutocompleteFiltersDto
 import com.diaita.dto.FoodSearchResponseDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.MenuItemSearchFiltersDto
+import com.diaita.dto.NutritionDaySummaryResponseDto
 import com.diaita.dto.ProductSuggestFiltersDto
 import com.diaita.dto.ProductSearchFiltersDto
+import com.diaita.dto.UpsertMealsRequestDto
 import com.diaita.service.NutritionService
 
 class NutritionController(private val nutritionService: NutritionService) {
+
+    suspend fun upsertMeals(request: UpsertMealsRequestDto): NutritionDaySummaryResponseDto? {
+        return nutritionService.upsertMeals(request)
+    }
 
     suspend fun autocompleteIngredients(filters: IngredientAutocompleteFiltersDto): FoodAutocompleteResponseDto? {
         return nutritionService.autocompleteIngredients(filters)
