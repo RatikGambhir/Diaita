@@ -316,17 +316,7 @@ class UserRouterTest {
         }
     )
 
-    @Test
-    fun settings_medical_history_crud_success() = assertSectionCrudSuccess(
-        section = "medical-history",
-        body = json.encodeToString(UserProfileTestData.fullRequest().medicalHistory!!),
-        setup = { userId ->
-            val entity = UserProfileTestData.fullRequest().medicalHistory!!.toEntity(userId)
-            coEvery { repo.getMedicalHistory(userId) } returns entity
-            coEvery { repo.updateMedicalHistory(userId, any()) } returns entity
-            coEvery { repo.deleteMedicalHistory(userId) } returns true
-        }
-    )
+    // TODO: Re-add medical history router CRUD tests when the medical setup API returns.
 
     @Test
     fun settings_nutrition_history_crud_success() = assertSectionCrudSuccess(
@@ -340,29 +330,7 @@ class UserRouterTest {
         }
     )
 
-    @Test
-    fun settings_behavioral_factors_crud_success() = assertSectionCrudSuccess(
-        section = "behavioral-factors",
-        body = json.encodeToString(UserProfileTestData.fullRequest().behavioralFactors!!),
-        setup = { userId ->
-            val entity = UserProfileTestData.fullRequest().behavioralFactors!!.toEntity(userId)
-            coEvery { repo.getBehavioralFactors(userId) } returns entity
-            coEvery { repo.updateBehavioralFactors(userId, any()) } returns entity
-            coEvery { repo.deleteBehavioralFactors(userId) } returns true
-        }
-    )
-
-    @Test
-    fun settings_metrics_tracking_crud_success() = assertSectionCrudSuccess(
-        section = "metrics-tracking",
-        body = json.encodeToString(UserProfileTestData.fullRequest().metricsTracking!!),
-        setup = { userId ->
-            val entity = UserProfileTestData.fullRequest().metricsTracking!!.toEntity(userId)
-            coEvery { repo.getMetricsTracking(userId) } returns entity
-            coEvery { repo.updateMetricsTracking(userId, any()) } returns entity
-            coEvery { repo.deleteMetricsTracking(userId) } returns true
-        }
-    )
+    // TODO: Re-add behavioral factors and metrics tracking router CRUD tests when those setup APIs return.
 
     @Test
     fun settings_activity_lifestyle_crud_errors() = assertSectionCrudErrors(
@@ -397,16 +365,7 @@ class UserRouterTest {
         }
     )
 
-    @Test
-    fun settings_medical_history_crud_errors() = assertSectionCrudErrors(
-        section = "medical-history",
-        body = json.encodeToString(UserProfileTestData.fullRequest().medicalHistory!!),
-        setup = { userId ->
-            coEvery { repo.getMedicalHistory(userId) } returns null
-            coEvery { repo.updateMedicalHistory(userId, any()) } returns null
-            coEvery { repo.deleteMedicalHistory(userId) } returns false
-        }
-    )
+    // TODO: Re-add medical history router error-path tests when the medical setup API returns.
 
     @Test
     fun settings_nutrition_history_crud_errors() = assertSectionCrudErrors(
@@ -419,27 +378,7 @@ class UserRouterTest {
         }
     )
 
-    @Test
-    fun settings_behavioral_factors_crud_errors() = assertSectionCrudErrors(
-        section = "behavioral-factors",
-        body = json.encodeToString(UserProfileTestData.fullRequest().behavioralFactors!!),
-        setup = { userId ->
-            coEvery { repo.getBehavioralFactors(userId) } returns null
-            coEvery { repo.updateBehavioralFactors(userId, any()) } returns null
-            coEvery { repo.deleteBehavioralFactors(userId) } returns false
-        }
-    )
-
-    @Test
-    fun settings_metrics_tracking_crud_errors() = assertSectionCrudErrors(
-        section = "metrics-tracking",
-        body = json.encodeToString(UserProfileTestData.fullRequest().metricsTracking!!),
-        setup = { userId ->
-            coEvery { repo.getMetricsTracking(userId) } returns null
-            coEvery { repo.updateMetricsTracking(userId, any()) } returns null
-            coEvery { repo.deleteMetricsTracking(userId) } returns false
-        }
-    )
+    // TODO: Re-add behavioral factors and metrics tracking router error-path tests when those setup APIs return.
 
     @Test
     fun settings_put_returns_400_for_malformed_payload() = testApplication {

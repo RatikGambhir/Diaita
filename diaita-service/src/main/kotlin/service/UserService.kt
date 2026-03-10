@@ -106,18 +106,6 @@ class UserService(private val userRepo: UserRepo, private val client: GeminiRest
         return userRepo.deleteTrainingBackground(userId)
     }
 
-    suspend fun getMedicalHistory(userId: String): MedicalHistoryDto? {
-        return userRepo.getMedicalHistory(userId)?.toDto()
-    }
-
-    suspend fun updateMedicalHistory(userId: String, dto: MedicalHistoryDto): MedicalHistoryDto? {
-        return userRepo.updateMedicalHistory(userId, dto.toEntity(userId))?.toDto()
-    }
-
-    suspend fun deleteMedicalHistory(userId: String): Boolean {
-        return userRepo.deleteMedicalHistory(userId)
-    }
-
     suspend fun getNutritionHistory(userId: String): NutritionDietHistoryDto? {
         return userRepo.getNutritionHistory(userId)?.toDto()
     }
@@ -133,27 +121,5 @@ class UserService(private val userRepo: UserRepo, private val client: GeminiRest
         return userRepo.deleteNutritionHistory(userId)
     }
 
-    suspend fun getBehavioralFactors(userId: String): BehavioralFactorsDto? {
-        return userRepo.getBehavioralFactors(userId)?.toDto()
-    }
-
-    suspend fun updateBehavioralFactors(userId: String, dto: BehavioralFactorsDto): BehavioralFactorsDto? {
-        return userRepo.updateBehavioralFactors(userId, dto.toEntity(userId))?.toDto()
-    }
-
-    suspend fun deleteBehavioralFactors(userId: String): Boolean {
-        return userRepo.deleteBehavioralFactors(userId)
-    }
-
-    suspend fun getMetricsTracking(userId: String): MetricsTrackingDto? {
-        return userRepo.getMetricsTracking(userId)?.toDto()
-    }
-
-    suspend fun updateMetricsTracking(userId: String, dto: MetricsTrackingDto): MetricsTrackingDto? {
-        return userRepo.updateMetricsTracking(userId, dto.toEntity(userId))?.toDto()
-    }
-
-    suspend fun deleteMetricsTracking(userId: String): Boolean {
-        return userRepo.deleteMetricsTracking(userId)
-    }
+    // TODO: Re-add medical, behavioral, and metrics service methods when those setup APIs return.
 }

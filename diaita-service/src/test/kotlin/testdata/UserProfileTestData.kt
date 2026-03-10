@@ -2,10 +2,7 @@ package com.diaita.testdata
 
 import com.diaita.dto.ActivityLevelLifestyleDto
 import com.diaita.dto.BasicDemographicsDto
-import com.diaita.dto.BehavioralFactorsDto
 import com.diaita.dto.GoalsPrioritiesDto
-import com.diaita.dto.MedicalHistoryDto
-import com.diaita.dto.MetricsTrackingDto
 import com.diaita.dto.NutritionDietHistoryDto
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.TrainingBackgroundDto
@@ -57,14 +54,6 @@ object UserProfileTestData {
                 timePerSession = 75,
                 daysPerWeek = 5
             ),
-            medicalHistory = MedicalHistoryDto(
-                injuries = listOf("minor_ankle_sprain_2023"),
-                chronicConditions = listOf("none"),
-                painPatterns = "none",
-                mobilityRestrictions = listOf("none"),
-                medications = listOf("none"),
-                doctorRestrictions = "none"
-            ),
             nutritionHistory = NutritionDietHistoryDto(
                 currentDietPattern = "high_protein",
                 calorieTrackingExperience = true,
@@ -78,23 +67,8 @@ object UserProfileTestData {
                 snackingHabits = "fruit_nuts",
                 alcoholIntake = "occasional",
                 supplementUse = listOf("whey", "creatine")
-            ),
-            behavioralFactors = BehavioralFactorsDto(
-                motivationLevel = "high",
-                consistencyHistory = "mostly_consistent",
-                accountabilityPreference = "app_tracking",
-                pastSuccessFailurePatterns = "works_with_structure",
-                relationshipWithFood = "balanced",
-                disorderedEatingHistory = "none",
-                stressEatingTendencies = "low",
-                supportSystem = "friends_family"
-            ),
-            metricsTracking = MetricsTrackingDto(
-                preferredProgressMetrics = listOf("weight", "photos", "strength"),
-                trackingTools = listOf("apple_watch", "myfitnesspal"),
-                checkinFrequency = "weekly"
-            ),
-            notes = "test profile notes"
+            )
+            // TODO: Re-add medicalHistory, behavioralFactors, metricsTracking, and notes test data when those setup features return.
         )
     }
 }

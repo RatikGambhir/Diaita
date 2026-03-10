@@ -94,15 +94,6 @@ type TrainingBackgroundRequest = {
   daysPerWeek: number | null
 }
 
-type MedicalHistoryRequest = {
-  injuries: string[] | null
-  chronicConditions: string[] | null
-  painPatterns: string | null
-  mobilityRestrictions: string[] | null
-  medications: string[] | null
-  doctorRestrictions: string | null
-}
-
 type NutritionHistoryRequest = {
   currentDietPattern: string | null
   calorieTrackingExperience: boolean | null
@@ -118,23 +109,6 @@ type NutritionHistoryRequest = {
   supplementUse: string[] | null
 }
 
-type BehavioralFactorsRequest = {
-  motivationLevel: string | null
-  consistencyHistory: string | null
-  accountabilityPreference: string | null
-  pastSuccessFailurePatterns: string | null
-  relationshipWithFood: string | null
-  disorderedEatingHistory: string | null
-  stressEatingTendencies: string | null
-  supportSystem: string | null
-}
-
-type MetricsTrackingRequest = {
-  preferredProgressMetrics: string[] | null
-  trackingTools: string[] | null
-  checkinFrequency: string | null
-}
-
 export type RegisterUserProfileRequest = {
   id: string
   userId: string
@@ -142,9 +116,6 @@ export type RegisterUserProfileRequest = {
   activityLifestyle: ActivityLifestyleRequest
   goals: GoalsPrioritiesRequest
   trainingBackground: TrainingBackgroundRequest | null
-  medicalHistory: MedicalHistoryRequest | null
   nutritionHistory: NutritionHistoryRequest | null
-  behavioralFactors: BehavioralFactorsRequest | null
-  metricsTracking: MetricsTrackingRequest | null
-  notes: string | null
+  // TODO: Re-add medicalHistory, behavioralFactors, metricsTracking, and notes when those setup features return.
 }

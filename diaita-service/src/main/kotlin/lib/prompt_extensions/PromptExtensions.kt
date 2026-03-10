@@ -45,14 +45,6 @@ fun RegisterUserProfileRequestDto.toPromptVariables(): Map<String, Any> {
         "timePerSession" to (trainingBackground?.timePerSession?.toString() ?: ""),
         "daysPerWeek" to (trainingBackground?.daysPerWeek?.toString() ?: ""),
 
-        // Medical History
-        "injuries" to (medicalHistory?.injuries?.joinToString(", ") ?: ""),
-        "chronicConditions" to (medicalHistory?.chronicConditions?.joinToString(", ") ?: ""),
-        "painPatterns" to (medicalHistory?.painPatterns ?: ""),
-        "mobilityRestrictions" to (medicalHistory?.mobilityRestrictions?.joinToString(", ") ?: ""),
-        "medications" to (medicalHistory?.medications?.joinToString(", ") ?: ""),
-        "doctorRestrictions" to (medicalHistory?.doctorRestrictions ?: ""),
-
         // Nutrition & Diet History
         "currentDietPattern" to (nutritionHistory?.currentDietPattern ?: ""),
         "calorieTrackingExperience" to (nutritionHistory?.calorieTrackingExperience?.toString() ?: ""),
@@ -66,23 +58,6 @@ fun RegisterUserProfileRequestDto.toPromptVariables(): Map<String, Any> {
         "snackingHabits" to (nutritionHistory?.snackingHabits ?: ""),
         "alcoholIntake" to (nutritionHistory?.alcoholIntake ?: ""),
         "supplementUse" to (nutritionHistory?.supplementUse?.joinToString(", ") ?: ""),
-
-        // Behavioral Factors
-        "motivationLevel" to (behavioralFactors?.motivationLevel ?: ""),
-        "consistencyHistory" to (behavioralFactors?.consistencyHistory ?: ""),
-        "accountabilityPreference" to (behavioralFactors?.accountabilityPreference ?: ""),
-        "pastSuccessFailurePatterns" to (behavioralFactors?.pastSuccessFailurePatterns ?: ""),
-        "relationshipWithFood" to (behavioralFactors?.relationshipWithFood ?: ""),
-        "disorderedEatingHistory" to (behavioralFactors?.disorderedEatingHistory ?: ""),
-        "stressEatingTendencies" to (behavioralFactors?.stressEatingTendencies ?: ""),
-        "supportSystem" to (behavioralFactors?.supportSystem ?: ""),
-
-        // Metrics & Tracking
-        "preferredProgressMetrics" to (metricsTracking?.preferredProgressMetrics?.joinToString(", ") ?: ""),
-        "trackingTools" to (metricsTracking?.trackingTools?.joinToString(", ") ?: ""),
-        "checkinFrequency" to (metricsTracking?.checkinFrequency ?: ""),
-
-        // Notes
-        "notes" to (notes ?: "")
+        // TODO: Re-add medical, behavioral, metrics, and notes prompt variables when those setup features return.
     )
 }

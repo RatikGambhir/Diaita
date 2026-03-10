@@ -1,15 +1,7 @@
 package com.diaita.routers
 
 import com.diaita.controllers.UserController
-import com.diaita.dto.ActivityLevelLifestyleDto
-import com.diaita.dto.BasicDemographicsDto
-import com.diaita.dto.BehavioralFactorsDto
-import com.diaita.dto.GoalsPrioritiesDto
-import com.diaita.dto.MedicalHistoryDto
-import com.diaita.dto.MetricsTrackingDto
-import com.diaita.dto.NutritionDietHistoryDto
 import com.diaita.dto.RegisterUserProfileRequestDto
-import com.diaita.dto.TrainingBackgroundDto
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.request.receive
@@ -83,32 +75,12 @@ fun Application.configureUserRoutes(userController: UserController) {
             )
 
             sectionCrudRoutes(
-                section = "medical-history",
-                getter = { userId -> userController.getMedicalHistory(userId) },
-                updater = { userId, body -> userController.updateMedicalHistory(userId, body) },
-                deleter = { userId -> userController.deleteMedicalHistory(userId) }
-            )
-
-            sectionCrudRoutes(
                 section = "nutrition-history",
                 getter = { userId -> userController.getNutritionHistory(userId) },
                 updater = { userId, body -> userController.updateNutritionHistory(userId, body) },
                 deleter = { userId -> userController.deleteNutritionHistory(userId) }
             )
-
-            sectionCrudRoutes(
-                section = "behavioral-factors",
-                getter = { userId -> userController.getBehavioralFactors(userId) },
-                updater = { userId, body -> userController.updateBehavioralFactors(userId, body) },
-                deleter = { userId -> userController.deleteBehavioralFactors(userId) }
-            )
-
-            sectionCrudRoutes(
-                section = "metrics-tracking",
-                getter = { userId -> userController.getMetricsTracking(userId) },
-                updater = { userId, body -> userController.updateMetricsTracking(userId, body) },
-                deleter = { userId -> userController.deleteMetricsTracking(userId) }
-            )
+            // TODO: Re-add the medical-history, behavioral-factors, and metrics-tracking settings routes when those features return.
         }
     }
 }

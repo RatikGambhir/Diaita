@@ -47,15 +47,6 @@ fun TrainingBackgroundDto.toEntity() = TrainingBackgroundEntity(
     daysPerWeek = daysPerWeek
 )
 
-fun MedicalHistoryDto.toEntity() = MedicalHistoryEntity(
-    injuries = injuries,
-    chronicConditions = chronicConditions,
-    painPatterns = painPatterns,
-    mobilityRestrictions = mobilityRestrictions,
-    medications = medications,
-    doctorRestrictions = doctorRestrictions
-)
-
 fun NutritionDietHistoryDto.toEntity() = NutritionDietHistoryEntity(
     currentDietPattern = currentDietPattern,
     calorieTrackingExperience = calorieTrackingExperience,
@@ -71,23 +62,6 @@ fun NutritionDietHistoryDto.toEntity() = NutritionDietHistoryEntity(
     supplementUse = supplementUse
 )
 
-fun BehavioralFactorsDto.toEntity() = BehavioralFactorsEntity(
-    motivationLevel = motivationLevel,
-    consistencyHistory = consistencyHistory,
-    accountabilityPreference = accountabilityPreference,
-    pastSuccessFailurePatterns = pastSuccessFailurePatterns,
-    relationshipWithFood = relationshipWithFood,
-    disorderedEatingHistory = disorderedEatingHistory,
-    stressEatingTendencies = stressEatingTendencies,
-    supportSystem = supportSystem
-)
-
-fun MetricsTrackingDto.toEntity() = MetricsTrackingEntity(
-    preferredProgressMetrics = preferredProgressMetrics,
-    trackingTools = trackingTools,
-    checkinFrequency = checkinFrequency
-)
-
 fun RegisterUserProfileRequestDto.toEntity() = UserProfileEntity(
     id = id,
     userId = userId,
@@ -95,9 +69,6 @@ fun RegisterUserProfileRequestDto.toEntity() = UserProfileEntity(
     activityLifestyle = activityLifestyle.toEntity(),
     goals = goals.toEntity(),
     trainingBackground = trainingBackground?.toEntity(),
-    medicalHistory = medicalHistory?.toEntity(),
     nutritionHistory = nutritionHistory?.toEntity(),
-    behavioralFactors = behavioralFactors?.toEntity(),
-    metricsTracking = metricsTracking?.toEntity(),
-    notes = notes
+    // TODO: Re-add medicalHistory, behavioralFactors, metricsTracking, and notes mappings when those setup features return.
 )

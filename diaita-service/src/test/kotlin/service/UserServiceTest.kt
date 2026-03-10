@@ -187,34 +187,7 @@ class UserServiceTest {
         assertFalse(service.deleteTrainingBackground(userId))
     }
 
-    @Test
-    fun settings_medical_history_crud_success() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val row = payload.medicalHistory!!.toEntity(userId)
-
-        coEvery { repo.getMedicalHistory(userId) } returns row
-        coEvery { repo.updateMedicalHistory(userId, any()) } returns row
-        coEvery { repo.deleteMedicalHistory(userId) } returns true
-
-        assertEquals(payload.medicalHistory, service.getMedicalHistory(userId))
-        assertEquals(payload.medicalHistory, service.updateMedicalHistory(userId, payload.medicalHistory))
-        assertTrue(service.deleteMedicalHistory(userId))
-    }
-
-    @Test
-    fun settings_medical_history_crud_error() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-
-        coEvery { repo.getMedicalHistory(userId) } returns null
-        coEvery { repo.updateMedicalHistory(userId, any()) } returns null
-        coEvery { repo.deleteMedicalHistory(userId) } returns false
-
-        assertNull(service.getMedicalHistory(userId))
-        assertNull(service.updateMedicalHistory(userId, payload.medicalHistory!!))
-        assertFalse(service.deleteMedicalHistory(userId))
-    }
+    // TODO: Re-add medical history service CRUD tests when the medical setup API returns.
 
     @Test
     fun settings_nutrition_history_crud_success() = runBlocking {
@@ -245,61 +218,5 @@ class UserServiceTest {
         assertFalse(service.deleteNutritionHistory(userId))
     }
 
-    @Test
-    fun settings_behavioral_factors_crud_success() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val row = payload.behavioralFactors!!.toEntity(userId)
-
-        coEvery { repo.getBehavioralFactors(userId) } returns row
-        coEvery { repo.updateBehavioralFactors(userId, any()) } returns row
-        coEvery { repo.deleteBehavioralFactors(userId) } returns true
-
-        assertEquals(payload.behavioralFactors, service.getBehavioralFactors(userId))
-        assertEquals(payload.behavioralFactors, service.updateBehavioralFactors(userId, payload.behavioralFactors))
-        assertTrue(service.deleteBehavioralFactors(userId))
-    }
-
-    @Test
-    fun settings_behavioral_factors_crud_error() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-
-        coEvery { repo.getBehavioralFactors(userId) } returns null
-        coEvery { repo.updateBehavioralFactors(userId, any()) } returns null
-        coEvery { repo.deleteBehavioralFactors(userId) } returns false
-
-        assertNull(service.getBehavioralFactors(userId))
-        assertNull(service.updateBehavioralFactors(userId, payload.behavioralFactors!!))
-        assertFalse(service.deleteBehavioralFactors(userId))
-    }
-
-    @Test
-    fun settings_metrics_tracking_crud_success() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val row = payload.metricsTracking!!.toEntity(userId)
-
-        coEvery { repo.getMetricsTracking(userId) } returns row
-        coEvery { repo.updateMetricsTracking(userId, any()) } returns row
-        coEvery { repo.deleteMetricsTracking(userId) } returns true
-
-        assertEquals(payload.metricsTracking, service.getMetricsTracking(userId))
-        assertEquals(payload.metricsTracking, service.updateMetricsTracking(userId, payload.metricsTracking))
-        assertTrue(service.deleteMetricsTracking(userId))
-    }
-
-    @Test
-    fun settings_metrics_tracking_crud_error() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-
-        coEvery { repo.getMetricsTracking(userId) } returns null
-        coEvery { repo.updateMetricsTracking(userId, any()) } returns null
-        coEvery { repo.deleteMetricsTracking(userId) } returns false
-
-        assertNull(service.getMetricsTracking(userId))
-        assertNull(service.updateMetricsTracking(userId, payload.metricsTracking!!))
-        assertFalse(service.deleteMetricsTracking(userId))
-    }
+    // TODO: Re-add behavioral factors and metrics tracking service CRUD tests when those setup APIs return.
 }

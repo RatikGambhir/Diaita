@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import ReviewCard from '~/components/setup/ReviewCard.vue'
-import Card from '~/components/ui/card/Card.vue'
-import CardContent from '~/components/ui/card/CardContent.vue'
 
 interface Props {
   basicDemographics: Record<string, any>
   activityLifestyle: Record<string, any>
   goals: Record<string, any>
   trainingBackground: Record<string, any>
-  medicalHistory: Record<string, any>
   nutritionHistory: Record<string, any>
-  behavioralFactors: Record<string, any>
-  metricsTracking: Record<string, any>
-  notes: string
 }
 
 const props = defineProps<Props>()
@@ -66,28 +60,6 @@ const nutritionFields = [
   { key: 'dietaryRestrictions', label: 'Dietary Restrictions', type: 'badges' as const },
   { key: 'supplementUse', label: 'Supplements', type: 'badges' as const, badgeVariant: 'outline' as const },
 ]
-
-const medicalFields = [
-  { key: 'painPatterns', label: 'Pain Patterns' },
-  { key: 'doctorRestrictions', label: 'Doctor Restrictions' },
-  { key: 'injuries', label: 'Injuries', type: 'badges' as const },
-  { key: 'chronicConditions', label: 'Chronic Conditions', type: 'badges' as const },
-  { key: 'mobilityRestrictions', label: 'Mobility Restrictions', type: 'badges' as const },
-  { key: 'medications', label: 'Medications', type: 'badges' as const, badgeVariant: 'outline' as const },
-]
-
-const behavioralFields = [
-  { key: 'motivationLevel', label: 'Motivation' },
-  { key: 'consistencyHistory', label: 'Consistency' },
-  { key: 'accountabilityPreference', label: 'Accountability' },
-  { key: 'supportSystem', label: 'Support System' },
-]
-
-const metricsFields = [
-  { key: 'checkinFrequency', label: 'Check-in Frequency' },
-  { key: 'preferredProgressMetrics', label: 'Progress Metrics', type: 'badges' as const },
-  { key: 'trackingTools', label: 'Tracking Tools', type: 'badges' as const, badgeVariant: 'outline' as const },
-]
 </script>
 
 <template>
@@ -128,32 +100,7 @@ const metricsFields = [
         :data="nutritionHistory"
         :fields="nutritionFields"
       />
-
-      <ReviewCard
-        title="Medical History"
-        :data="medicalHistory"
-        :fields="medicalFields"
-      />
-
-      <ReviewCard
-        title="Behavioral Factors"
-        :data="behavioralFactors"
-        :fields="behavioralFields"
-      />
-
-      <ReviewCard
-        title="Metrics & Tracking"
-        :data="metricsTracking"
-        :fields="metricsFields"
-      />
-
-      <!-- Notes -->
-      <Card v-if="notes">
-        <CardContent class="pt-6">
-          <h3 class="text-lg font-semibold mb-4">Additional Notes</h3>
-          <p class="text-sm text-foreground">{{ notes }}</p>
-        </CardContent>
-      </Card>
+      <!-- TODO: Re-add the deferred medical, behavioral, metrics, and notes review sections when those features return. -->
     </div>
   </div>
 </template>

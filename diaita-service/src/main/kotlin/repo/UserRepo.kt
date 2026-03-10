@@ -29,29 +29,12 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
             }
         }
 
-        request.medicalHistory?.let { medicalHistory ->
-            if (upsertOrFail("medical_history", medicalHistory.toEntity(userId)) == null) {
-                return "Mutation Failed"
-            }
-        }
-
         request.nutritionHistory?.let { nutritionHistory ->
             if (upsertOrFail("nutrition_history", nutritionHistory.toEntity(userId)) == null) {
                 return "Mutation Failed"
             }
         }
-
-        request.behavioralFactors?.let { behavioralFactors ->
-            if (upsertOrFail("behavioral_factors", behavioralFactors.toEntity(userId)) == null) {
-                return "Mutation Failed"
-            }
-        }
-
-        request.metricsTracking?.let { metricsTracking ->
-            if (upsertOrFail("metrics_tracking", metricsTracking.toEntity(userId)) == null) {
-                return "Mutation Failed"
-            }
-        }
+        // TODO: Re-add medical_history, behavioral_factors, and metrics_tracking upserts when those setup features return.
 
         return "Mutation Success"
     }
@@ -123,17 +106,6 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
     suspend fun deleteTrainingBackground(userId: String): Boolean =
         deleteSection("training_background", userId)
 
-    suspend fun getMedicalHistory(userId: String): MedicalHistoryRowEntity? =
-        getSection("medical_history", userId)
-
-    suspend fun updateMedicalHistory(
-        userId: String,
-        data: MedicalHistoryRowEntity
-    ): MedicalHistoryRowEntity? = updateSection("medical_history", data, userId)
-
-    suspend fun deleteMedicalHistory(userId: String): Boolean =
-        deleteSection("medical_history", userId)
-
     suspend fun getNutritionHistory(userId: String): NutritionHistoryRowEntity? =
         getSection("nutrition_history", userId)
 
@@ -145,25 +117,5 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
     suspend fun deleteNutritionHistory(userId: String): Boolean =
         deleteSection("nutrition_history", userId)
 
-    suspend fun getBehavioralFactors(userId: String): BehavioralFactorsRowEntity? =
-        getSection("behavioral_factors", userId)
-
-    suspend fun updateBehavioralFactors(
-        userId: String,
-        data: BehavioralFactorsRowEntity
-    ): BehavioralFactorsRowEntity? = updateSection("behavioral_factors", data, userId)
-
-    suspend fun deleteBehavioralFactors(userId: String): Boolean =
-        deleteSection("behavioral_factors", userId)
-
-    suspend fun getMetricsTracking(userId: String): MetricsTrackingRowEntity? =
-        getSection("metrics_tracking", userId)
-
-    suspend fun updateMetricsTracking(
-        userId: String,
-        data: MetricsTrackingRowEntity
-    ): MetricsTrackingRowEntity? = updateSection("metrics_tracking", data, userId)
-
-    suspend fun deleteMetricsTracking(userId: String): Boolean =
-        deleteSection("metrics_tracking", userId)
+    // TODO: Re-add medical, behavioral, and metrics repo CRUD helpers when those setup APIs return.
 }

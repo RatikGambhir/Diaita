@@ -56,15 +56,15 @@ data class TrainingBackgroundDto(
     val daysPerWeek: Int? = null
 )
 
-@Serializable
-data class MedicalHistoryDto(
-    val injuries: List<String>? = null,
-    val chronicConditions: List<String>? = null,
-    val painPatterns: String? = null,
-    val mobilityRestrictions: List<String>? = null,
-    val medications: List<String>? = null,
-    val doctorRestrictions: String? = null
-)
+// TODO: Re-add MedicalHistoryDto when the medical setup flow and APIs are enabled again.
+// data class MedicalHistoryDto(
+//     val injuries: List<String>? = null,
+//     val chronicConditions: List<String>? = null,
+//     val painPatterns: String? = null,
+//     val mobilityRestrictions: List<String>? = null,
+//     val medications: List<String>? = null,
+//     val doctorRestrictions: String? = null
+// )
 
 @Serializable
 data class NutritionDietHistoryDto(
@@ -82,24 +82,24 @@ data class NutritionDietHistoryDto(
     val supplementUse: List<String>? = null
 )
 
-@Serializable
-data class BehavioralFactorsDto(
-    val motivationLevel: String? = null,
-    val consistencyHistory: String? = null,
-    val accountabilityPreference: String? = null,
-    val pastSuccessFailurePatterns: String? = null,
-    val relationshipWithFood: String? = null,
-    val disorderedEatingHistory: String? = null,
-    val stressEatingTendencies: String? = null,
-    val supportSystem: String? = null
-)
+// TODO: Re-add BehavioralFactorsDto when the behavioral setup flow and APIs are enabled again.
+// data class BehavioralFactorsDto(
+//     val motivationLevel: String? = null,
+//     val consistencyHistory: String? = null,
+//     val accountabilityPreference: String? = null,
+//     val pastSuccessFailurePatterns: String? = null,
+//     val relationshipWithFood: String? = null,
+//     val disorderedEatingHistory: String? = null,
+//     val stressEatingTendencies: String? = null,
+//     val supportSystem: String? = null
+// )
 
-@Serializable
-data class MetricsTrackingDto(
-    val preferredProgressMetrics: List<String>? = null, // scale weight, measurements, photos, performance
-    val trackingTools: List<String>? = null, // Apple Watch, Fitbit, MyFitnessPal, Cronometer
-    val checkinFrequency: String? = null
-)
+// TODO: Re-add MetricsTrackingDto when the metrics setup flow and APIs are enabled again.
+// data class MetricsTrackingDto(
+//     val preferredProgressMetrics: List<String>? = null, // scale weight, measurements, photos, performance
+//     val trackingTools: List<String>? = null, // Apple Watch, Fitbit, MyFitnessPal, Cronometer
+//     val checkinFrequency: String? = null
+// )
 
 @Serializable
 data class RegisterUserProfileRequestDto(
@@ -109,11 +109,6 @@ data class RegisterUserProfileRequestDto(
     val activityLifestyle: ActivityLevelLifestyleDto,
     val goals: GoalsPrioritiesDto,
     val trainingBackground: TrainingBackgroundDto? = null,
-    val medicalHistory: MedicalHistoryDto? = null,
     val nutritionHistory: NutritionDietHistoryDto? = null,
-    val behavioralFactors: BehavioralFactorsDto? = null,
-    val metricsTracking: MetricsTrackingDto? = null,
-    val notes: String? = null
+    // TODO: Re-add medicalHistory, behavioralFactors, metricsTracking, and notes when those setup features return.
 )
-
-

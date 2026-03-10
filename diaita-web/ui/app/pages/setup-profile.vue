@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { User, Activity, Target, Apple, Dumbbell, Heart, Brain, BarChart3, FileCheck, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { User, Activity, Target, Apple, Dumbbell, FileCheck, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 import Badge from '~/components/ui/badge/Badge.vue'
 import { userApi, type RegisterUserProfileRequest } from '~/api/user'
@@ -9,10 +9,7 @@ import PersonalInfoStep from '~/components/setup/PersonalInfoStep.vue'
 import LifestyleStep from '~/components/setup/LifestyleStep.vue'
 import GoalsStep from '~/components/setup/GoalsStep.vue'
 import TrainingStep from '~/components/setup/TrainingStep.vue'
-import MedicalStep from '~/components/setup/MedicalStep.vue'
 import NutritionStep from '~/components/setup/NutritionStep.vue'
-import BehavioralStep from '~/components/setup/BehavioralStep.vue'
-import MetricsStep from '~/components/setup/MetricsStep.vue'
 import ReviewStep from '~/components/setup/ReviewStep.vue'
 import LoadingScreen from '~/components/ui/LoadingScreen.vue'
 import { cn } from '~/lib/utils'
@@ -66,15 +63,6 @@ interface TrainingBackground {
   daysPerWeek: number | null
 }
 
-interface MedicalHistory {
-  injuries: string[]
-  chronicConditions: string[]
-  painPatterns: string
-  mobilityRestrictions: string[]
-  medications: string[]
-  doctorRestrictions: string
-}
-
 interface NutritionHistory {
   currentDietPattern: string
   calorieTrackingExperience: boolean | null
@@ -90,33 +78,13 @@ interface NutritionHistory {
   supplementUse: string[]
 }
 
-interface BehavioralFactors {
-  motivationLevel: string
-  consistencyHistory: string
-  accountabilityPreference: string
-  pastSuccessFailurePatterns: string
-  relationshipWithFood: string
-  disorderedEatingHistory: string
-  stressEatingTendencies: string
-  supportSystem: string
-}
-
-interface MetricsTracking {
-  preferredProgressMetrics: string[]
-  trackingTools: string[]
-  checkinFrequency: string
-}
-
 const steps = [
   { id: 1, title: 'Personal Info', description: 'Basic demographics', icon: User, required: true },
   { id: 2, title: 'Lifestyle', description: 'Activity & habits', icon: Activity, required: true },
   { id: 3, title: 'Goals', description: 'Your objectives', icon: Target, required: true },
   { id: 4, title: 'Training', description: 'Exercise background', icon: Dumbbell, required: false },
   { id: 5, title: 'Nutrition', description: 'Diet history', icon: Apple, required: false },
-  { id: 6, title: 'Medical', description: 'Health considerations (optional)', icon: Heart, required: false, skippable: true },
-  { id: 7, title: 'Behavioral', description: 'Habits & mindset (optional)', icon: Brain, required: false, skippable: true },
-  { id: 8, title: 'Metrics', description: 'Progress tracking (optional)', icon: BarChart3, required: false, skippable: true },
-  { id: 9, title: 'Review', description: 'Final check', icon: FileCheck, required: true },
+  { id: 6, title: 'Review', description: 'Final check', icon: FileCheck, required: true },
 ]
 
 const currentStep = ref(1)
@@ -171,15 +139,6 @@ const trainingBackground = ref<TrainingBackground>({
   daysPerWeek: null,
 })
 
-const medicalHistory = ref<MedicalHistory>({
-  injuries: [],
-  chronicConditions: [],
-  painPatterns: '',
-  mobilityRestrictions: [],
-  medications: [],
-  doctorRestrictions: '',
-})
-
 const nutritionHistory = ref<NutritionHistory>({
   currentDietPattern: '',
   calorieTrackingExperience: null,
@@ -194,25 +153,6 @@ const nutritionHistory = ref<NutritionHistory>({
   alcoholIntake: '',
   supplementUse: [],
 })
-
-const behavioralFactors = ref<BehavioralFactors>({
-  motivationLevel: '',
-  consistencyHistory: '',
-  accountabilityPreference: '',
-  pastSuccessFailurePatterns: '',
-  relationshipWithFood: '',
-  disorderedEatingHistory: '',
-  stressEatingTendencies: '',
-  supportSystem: '',
-})
-
-const metricsTracking = ref<MetricsTracking>({
-  preferredProgressMetrics: [],
-  trackingTools: [],
-  checkinFrequency: '',
-})
-
-const notes = ref('')
 
 // Validation for required fields
 const isStep1Valid = computed(() => {
@@ -300,14 +240,6 @@ const handleSubmit = async () => {
       timePerSession: trainingBackground.value.timePerSession,
       daysPerWeek: trainingBackground.value.daysPerWeek,
     },
-    medicalHistory: {
-      injuries: medicalHistory.value.injuries.length > 0 ? medicalHistory.value.injuries : null,
-      chronicConditions: medicalHistory.value.chronicConditions.length > 0 ? medicalHistory.value.chronicConditions : null,
-      painPatterns: medicalHistory.value.painPatterns || null,
-      mobilityRestrictions: medicalHistory.value.mobilityRestrictions.length > 0 ? medicalHistory.value.mobilityRestrictions : null,
-      medications: medicalHistory.value.medications.length > 0 ? medicalHistory.value.medications : null,
-      doctorRestrictions: medicalHistory.value.doctorRestrictions || null,
-    },
     nutritionHistory: {
       currentDietPattern: nutritionHistory.value.currentDietPattern || null,
       calorieTrackingExperience: nutritionHistory.value.calorieTrackingExperience,
@@ -322,28 +254,9 @@ const handleSubmit = async () => {
       alcoholIntake: nutritionHistory.value.alcoholIntake || null,
       supplementUse: nutritionHistory.value.supplementUse.length > 0 ? nutritionHistory.value.supplementUse : null,
     },
-    behavioralFactors: {
-      motivationLevel: behavioralFactors.value.motivationLevel || null,
-      consistencyHistory: behavioralFactors.value.consistencyHistory || null,
-      accountabilityPreference: behavioralFactors.value.accountabilityPreference || null,
-      pastSuccessFailurePatterns: behavioralFactors.value.pastSuccessFailurePatterns || null,
-      relationshipWithFood: behavioralFactors.value.relationshipWithFood || null,
-      disorderedEatingHistory: behavioralFactors.value.disorderedEatingHistory || null,
-      stressEatingTendencies: behavioralFactors.value.stressEatingTendencies || null,
-      supportSystem: behavioralFactors.value.supportSystem || null,
-    },
-    metricsTracking: {
-      preferredProgressMetrics: metricsTracking.value.preferredProgressMetrics.length > 0 ? metricsTracking.value.preferredProgressMetrics : null,
-      trackingTools: metricsTracking.value.trackingTools.length > 0 ? metricsTracking.value.trackingTools : null,
-      checkinFrequency: metricsTracking.value.checkinFrequency || null,
-    },
-    notes: notes.value || null,
+    // TODO: Re-add medicalHistory, behavioralFactors, metricsTracking, and notes when those setup steps return.
   }
   const hasTrainingData = Object.values(payload.trainingBackground ?? {}).some((value) => {
-    if (Array.isArray(value)) return value.length > 0
-    return value !== null && value !== ''
-  })
-  const hasMedicalData = Object.values(payload.medicalHistory ?? {}).some((value) => {
     if (Array.isArray(value)) return value.length > 0
     return value !== null && value !== ''
   })
@@ -351,20 +264,9 @@ const handleSubmit = async () => {
     if (Array.isArray(value)) return value.length > 0
     return value !== null && value !== ''
   })
-  const hasBehavioralData = Object.values(payload.behavioralFactors ?? {}).some((value) => {
-    if (Array.isArray(value)) return value.length > 0
-    return value !== null && value !== ''
-  })
-  const hasMetricsData = Object.values(payload.metricsTracking ?? {}).some((value) => {
-    if (Array.isArray(value)) return value.length > 0
-    return value !== null && value !== ''
-  })
 
   payload.trainingBackground = hasTrainingData ? payload.trainingBackground : null
-  payload.medicalHistory = hasMedicalData ? payload.medicalHistory : null
   payload.nutritionHistory = hasNutritionData ? payload.nutritionHistory : null
-  payload.behavioralFactors = hasBehavioralData ? payload.behavioralFactors : null
-  payload.metricsTracking = hasMetricsData ? payload.metricsTracking : null
   isSubmitting.value = true
   try {
     await userApi.createUserProfile(payload)
@@ -488,6 +390,7 @@ const handleSkip = () => {
               :form-data="nutritionHistory"
               @update:form-data="(data) => nutritionHistory = { ...nutritionHistory, ...data }"
             />
+            <!-- TODO: Re-enable the Medical, Behavioral, and Metrics setup steps when those features are added back.
             <MedicalStep
               v-if="currentStep === 6"
               :form-data="medicalHistory"
@@ -505,17 +408,14 @@ const handleSkip = () => {
               @update:form-data="(data) => metricsTracking = { ...metricsTracking, ...data }"
               @update:notes="(val) => notes = val"
             />
+            -->
             <ReviewStep
-              v-if="currentStep === 9"
+              v-if="currentStep === 6"
               :basic-demographics="basicDemographics"
               :activity-lifestyle="activityLifestyle"
               :goals="goals"
               :training-background="trainingBackground"
-              :medical-history="medicalHistory"
               :nutrition-history="nutritionHistory"
-              :behavioral-factors="behavioralFactors"
-              :metrics-tracking="metricsTracking"
-              :notes="notes"
             />
 
             <div class="flex items-center justify-between mt-12 pt-8 border-t border-border">

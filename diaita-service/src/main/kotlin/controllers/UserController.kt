@@ -2,10 +2,7 @@ package com.diaita.controllers
 
 import com.diaita.dto.ActivityLevelLifestyleDto
 import com.diaita.dto.BasicDemographicsDto
-import com.diaita.dto.BehavioralFactorsDto
 import com.diaita.dto.GoalsPrioritiesDto
-import com.diaita.dto.MedicalHistoryDto
-import com.diaita.dto.MetricsTrackingDto
 import com.diaita.dto.NutritionDietHistoryDto
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.TrainingBackgroundDto
@@ -67,18 +64,6 @@ class UserController(private val userService: UserService) {
         return userService.deleteTrainingBackground(userId)
     }
 
-    suspend fun getMedicalHistory(userId: String): MedicalHistoryDto? {
-        return userService.getMedicalHistory(userId)
-    }
-
-    suspend fun updateMedicalHistory(userId: String, dto: MedicalHistoryDto): MedicalHistoryDto? {
-        return userService.updateMedicalHistory(userId, dto)
-    }
-
-    suspend fun deleteMedicalHistory(userId: String): Boolean {
-        return userService.deleteMedicalHistory(userId)
-    }
-
     suspend fun getNutritionHistory(userId: String): NutritionDietHistoryDto? {
         return userService.getNutritionHistory(userId)
     }
@@ -94,27 +79,5 @@ class UserController(private val userService: UserService) {
         return userService.deleteNutritionHistory(userId)
     }
 
-    suspend fun getBehavioralFactors(userId: String): BehavioralFactorsDto? {
-        return userService.getBehavioralFactors(userId)
-    }
-
-    suspend fun updateBehavioralFactors(userId: String, dto: BehavioralFactorsDto): BehavioralFactorsDto? {
-        return userService.updateBehavioralFactors(userId, dto)
-    }
-
-    suspend fun deleteBehavioralFactors(userId: String): Boolean {
-        return userService.deleteBehavioralFactors(userId)
-    }
-
-    suspend fun getMetricsTracking(userId: String): MetricsTrackingDto? {
-        return userService.getMetricsTracking(userId)
-    }
-
-    suspend fun updateMetricsTracking(userId: String, dto: MetricsTrackingDto): MetricsTrackingDto? {
-        return userService.updateMetricsTracking(userId, dto)
-    }
-
-    suspend fun deleteMetricsTracking(userId: String): Boolean {
-        return userService.deleteMetricsTracking(userId)
-    }
+    // TODO: Re-add medical, behavioral, and metrics controller methods when those setup APIs return.
 }

@@ -5,8 +5,8 @@ import com.diaita.entity.*
 
 fun RegisterUserProfileRequestDto.toUserProfileEntity(userId: String) = UserProfileRowEntity(
     userId = userId,
-    profileId = id,
-    notes = notes
+    profileId = id
+    // TODO: Re-add notes persistence when the metrics setup flow returns.
 )
 
 fun RegisterUserProfileRequestDto.toBasicDemographicsEntity(userId: String) =
@@ -100,17 +100,6 @@ fun TrainingBackgroundDto.toEntity(userId: String) =
         daysPerWeek = daysPerWeek
     )
 
-fun MedicalHistoryDto.toEntity(userId: String) =
-    MedicalHistoryRowEntity(
-        userId = userId,
-        injuries = injuries,
-        chronicConditions = chronicConditions,
-        painPatterns = painPatterns,
-        mobilityRestrictions = mobilityRestrictions,
-        medications = medications,
-        doctorRestrictions = doctorRestrictions
-    )
-
 fun NutritionDietHistoryDto.toEntity(userId: String) =
     NutritionHistoryRowEntity(
         userId = userId,
@@ -126,27 +115,6 @@ fun NutritionDietHistoryDto.toEntity(userId: String) =
         snackingHabits = snackingHabits,
         alcoholIntake = alcoholIntake,
         supplementUse = supplementUse
-    )
-
-fun BehavioralFactorsDto.toEntity(userId: String) =
-    BehavioralFactorsRowEntity(
-        userId = userId,
-        motivationLevel = motivationLevel,
-        consistencyHistory = consistencyHistory,
-        accountabilityPreference = accountabilityPreference,
-        pastSuccessFailurePatterns = pastSuccessFailurePatterns,
-        relationshipWithFood = relationshipWithFood,
-        disorderedEatingHistory = disorderedEatingHistory,
-        stressEatingTendencies = stressEatingTendencies,
-        supportSystem = supportSystem
-    )
-
-fun MetricsTrackingDto.toEntity(userId: String) =
-    MetricsTrackingRowEntity(
-        userId = userId,
-        preferredProgressMetrics = preferredProgressMetrics,
-        trackingTools = trackingTools,
-        checkinFrequency = checkinFrequency
     )
 
 fun BasicDemographicsRowEntity.toDto() = BasicDemographicsDto(
@@ -193,15 +161,6 @@ fun TrainingBackgroundRowEntity.toDto() = TrainingBackgroundDto(
     daysPerWeek = daysPerWeek
 )
 
-fun MedicalHistoryRowEntity.toDto() = MedicalHistoryDto(
-    injuries = injuries,
-    chronicConditions = chronicConditions,
-    painPatterns = painPatterns,
-    mobilityRestrictions = mobilityRestrictions,
-    medications = medications,
-    doctorRestrictions = doctorRestrictions
-)
-
 fun NutritionHistoryRowEntity.toDto() = NutritionDietHistoryDto(
     currentDietPattern = currentDietPattern,
     calorieTrackingExperience = calorieTrackingExperience,
@@ -217,19 +176,4 @@ fun NutritionHistoryRowEntity.toDto() = NutritionDietHistoryDto(
     supplementUse = supplementUse
 )
 
-fun BehavioralFactorsRowEntity.toDto() = BehavioralFactorsDto(
-    motivationLevel = motivationLevel,
-    consistencyHistory = consistencyHistory,
-    accountabilityPreference = accountabilityPreference,
-    pastSuccessFailurePatterns = pastSuccessFailurePatterns,
-    relationshipWithFood = relationshipWithFood,
-    disorderedEatingHistory = disorderedEatingHistory,
-    stressEatingTendencies = stressEatingTendencies,
-    supportSystem = supportSystem
-)
-
-fun MetricsTrackingRowEntity.toDto() = MetricsTrackingDto(
-    preferredProgressMetrics = preferredProgressMetrics,
-    trackingTools = trackingTools,
-    checkinFrequency = checkinFrequency
-)
+// TODO: Re-add the medical, behavioral, and metrics row mappings when those setup features return.

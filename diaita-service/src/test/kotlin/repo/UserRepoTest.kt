@@ -27,10 +27,8 @@ class UserRepoTest {
         assertNull(userRepo.getActivityLifestyle(userId))
         assertNull(userRepo.getGoalsPriorities(userId))
         assertNull(userRepo.getTrainingBackground(userId))
-        assertNull(userRepo.getMedicalHistory(userId))
         assertNull(userRepo.getNutritionHistory(userId))
-        assertNull(userRepo.getBehavioralFactors(userId))
-        assertNull(userRepo.getMetricsTracking(userId))
+        // TODO: Re-add medical, behavioral, and metrics repo getter assertions when those setup APIs return.
     }
 
     @Test
@@ -43,10 +41,8 @@ class UserRepoTest {
         assertNull(userRepo.updateActivityLifestyle(userId, request.activityLifestyle.toEntity(userId)))
         assertNull(userRepo.updateGoalsPriorities(userId, request.goals.toEntity(userId)))
         assertNull(userRepo.updateTrainingBackground(userId, request.trainingBackground!!.toEntity(userId)))
-        assertNull(userRepo.updateMedicalHistory(userId, request.medicalHistory!!.toEntity(userId)))
         assertNull(userRepo.updateNutritionHistory(userId, request.nutritionHistory!!.toEntity(userId)))
-        assertNull(userRepo.updateBehavioralFactors(userId, request.behavioralFactors!!.toEntity(userId)))
-        assertNull(userRepo.updateMetricsTracking(userId, request.metricsTracking!!.toEntity(userId)))
+        // TODO: Re-add medical, behavioral, and metrics repo updater assertions when those setup APIs return.
     }
 
     @Test
@@ -58,10 +54,8 @@ class UserRepoTest {
         assertFalse(userRepo.deleteActivityLifestyle(userId))
         assertFalse(userRepo.deleteGoalsPriorities(userId))
         assertFalse(userRepo.deleteTrainingBackground(userId))
-        assertFalse(userRepo.deleteMedicalHistory(userId))
         assertFalse(userRepo.deleteNutritionHistory(userId))
-        assertFalse(userRepo.deleteBehavioralFactors(userId))
-        assertFalse(userRepo.deleteMetricsTracking(userId))
+        // TODO: Re-add medical, behavioral, and metrics repo delete assertions when those setup APIs return.
     }
 
     @Test
