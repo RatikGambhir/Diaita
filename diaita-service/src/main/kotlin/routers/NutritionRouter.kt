@@ -17,6 +17,8 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import java.time.LocalDate
+import java.util.UUID
 
 private suspend inline fun <reified T : Any> ApplicationCall.handleSearchRequest(
     searchFailureMessage: String,
@@ -109,8 +111,42 @@ private suspend fun ApplicationCall.handleGetByIdRequest(
     }
 }
 
+private fun isValidUuid(value: String): Boolean =
+    runCatching { UUID.fromString(value.trim()) }.isSuccess
+
+private fun isValidIsoDate(value: String): Boolean =
+    runCatching { LocalDate.parse(value.trim()) }.isSuccess
+
 fun Application.configureNutritionRoutes(nutritionController: NutritionController) {
     routing {
+        get("/nutrition/day-summary") {
+            val userId = call.requiredQueryParam("userId") ?: return@get
+            val date = call.requiredQueryParam("date") ?: return@get
+
+            if (!isValidUuid(userId)) {
+                call.respondText(
+                    "Invalid request: 'userId' must be a valid UUID",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+
+            if (!isValidIsoDate(date)) {
+                call.respondText(
+                    "Invalid request: 'date' must be in YYYY-MM-DD format",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+
+            val result = nutritionController.getNutritionDaySummary(userId, date)
+            if (result != null) {
+                call.respond(HttpStatusCode.OK, result)
+            } else {
+                call.respondText("Failed to fetch nutrition day summary", status = HttpStatusCode.InternalServerError)
+            }
+        }
+
         post("/nutrition/meals/upsert") {
             val request = try {
                 call.receive<UpsertMealsRequestDto>()

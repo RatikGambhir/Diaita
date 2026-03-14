@@ -39,13 +39,13 @@ const { sectionRef, isVisible } = useScrollAnimation(0.25)
         >
           <p class="text-2xl font-bold text-foreground md:text-3xl">hello@diaita.app</p>
           <div class="flex items-center gap-3 text-muted-foreground">
-            <a href="#" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border transition hover:bg-accent">
+            <a href="#" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border transition hover:bg-white">
               <Mail class="h-4 w-4" />
             </a>
-            <a href="#" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border transition hover:bg-accent">
+            <a href="#" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border transition hover:bg-white">
               <Instagram class="h-4 w-4" />
             </a>
-            <a href="#" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border transition hover:bg-accent">
+            <a href="#" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border transition hover:bg-white">
               <Linkedin class="h-4 w-4" />
             </a>
           </div>

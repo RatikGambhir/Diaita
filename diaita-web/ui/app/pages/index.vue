@@ -30,6 +30,8 @@ const items = [
 const userStore = useUserStore()
 const user = userStore.user
 const session = userStore.session
+console.log(user)
+console.log(userStore)
 
 // Load user profile if not already loaded
 const { fetchProfile } = useUserProfile()

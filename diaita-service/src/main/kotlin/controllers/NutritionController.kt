@@ -14,6 +14,10 @@ import com.diaita.service.NutritionService
 
 class NutritionController(private val nutritionService: NutritionService) {
 
+    suspend fun getNutritionDaySummary(userId: String, date: String): NutritionDaySummaryResponseDto? {
+        return nutritionService.getNutritionDaySummary(userId, date)
+    }
+
     suspend fun upsertMeals(request: UpsertMealsRequestDto): NutritionDaySummaryResponseDto? {
         return nutritionService.upsertMeals(request)
     }

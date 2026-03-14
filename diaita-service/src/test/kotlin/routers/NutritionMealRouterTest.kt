@@ -12,6 +12,7 @@ import com.diaita.dto.UpsertMealItemRequestDto
 import com.diaita.dto.UpsertMealRequestDto
 import com.diaita.dto.UpsertMealsRequestDto
 import com.diaita.service.NutritionService
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -46,6 +47,37 @@ class NutritionMealRouterTest {
             json()
         }
         configureNutritionRoutes(controller)
+    }
+
+    @Test
+    fun daySummary_returns_200_for_valid_request() = testApplication {
+        coEvery {
+            service.getNutritionDaySummary(
+                "123e4567-e89b-12d3-a456-426614174000",
+                "2026-03-09"
+            )
+        } returns summary()
+
+        application { testModule() }
+
+        val response = client.get(
+            "/nutrition/day-summary?userId=123e4567-e89b-12d3-a456-426614174000&date=2026-03-09"
+        )
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertTrue(response.bodyAsText().contains("\"date\":\"2026-03-09\""))
+    }
+
+    @Test
+    fun daySummary_returns_400_for_invalid_date() = testApplication {
+        application { testModule() }
+
+        val response = client.get(
+            "/nutrition/day-summary?userId=123e4567-e89b-12d3-a456-426614174000&date=03-09-2026"
+        )
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertTrue(response.bodyAsText().contains("YYYY-MM-DD"))
     }
 
     @Test

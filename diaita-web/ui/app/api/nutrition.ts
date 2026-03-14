@@ -1,17 +1,13 @@
-import axios from "axios";
 import type {
   NutritionAutocompleteSuggestion,
+  NutritionDaySummary,
   NutritionFood,
+  NutritionItemType,
   NutritionSearchFilter,
+  NutritionUpsertMealsRequest,
 } from "~/types/nutrition";
+import { apiClient } from "./client";
 
-const nutritionApiClient = axios.create({
-  baseURL: "/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true,
-});
 
 type FoodDto = {
   id: string;
@@ -88,11 +84,26 @@ const formatServingSize = (food: FoodDto) => {
   return `${formatServingAmount(food.servingSize)} ${normalizedUnit}`;
 };
 
+const normalizeFoodCategory = (
+  category: string | null,
+): NutritionItemType | null => {
+  if (
+    category === "ingredient"
+    || category === "product"
+    || category === "menu_item"
+    || category === "custom"
+  ) {
+    return category;
+  }
+
+  return null;
+};
+
 const mapFoodDto = (food: FoodDto): NutritionFood => ({
   id: food.id,
   name: food.name,
   brand: food.brand,
-  category: food.category,
+  category: normalizeFoodCategory(food.category),
   servingSize: formatServingSize(food),
   calories: roundNutritionValue(food.caloriesPerServingSize ?? 0),
   carbs: roundNutritionValue(food.carbGPerServingSize ?? 0),
@@ -113,6 +124,31 @@ const mapAutocompleteSuggestionDto = (
 });
 
 export const nutritionApi = {
+  async getDaySummary(
+    userId: string,
+    date: string,
+  ): Promise<NutritionDaySummary> {
+    const response = await apiClient.get<NutritionDaySummary>(
+      "/nutrition/day-summary",
+      {
+        params: { userId, date },
+      },
+    );
+
+    return response.data;
+  },
+
+  async upsertMeals(
+    payload: NutritionUpsertMealsRequest,
+  ): Promise<NutritionDaySummary> {
+    const response = await apiClient.post<NutritionDaySummary>(
+      "/nutrition/meals/upsert",
+      payload,
+    );
+
+    return response.data;
+  },
+
   async autocompleteFoods({
     query,
     filter,
@@ -139,7 +175,7 @@ export const nutritionApi = {
             metaInformation: true,
           };
 
-    const response = await nutritionApiClient.get<FoodAutocompleteResponseDto>(
+    const response = await apiClient.get<FoodAutocompleteResponseDto>(
       endpoint,
       {
         params,
@@ -166,7 +202,7 @@ export const nutritionApi = {
         ? "/nutrition/search/products"
         : "/nutrition/search/ingredients";
 
-    const response = await nutritionApiClient.post<FoodSearchResponseDto>(
+    const response = await apiClient.post<FoodSearchResponseDto>(
       endpoint,
       {
         query: trimmedQuery,

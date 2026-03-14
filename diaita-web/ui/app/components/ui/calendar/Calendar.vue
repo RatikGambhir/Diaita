@@ -121,7 +121,7 @@ function nextMonth() {
     <div class="flex items-center justify-between mb-4">
       <button
         type="button"
-        class="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+        class="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-white hover:text-accent-foreground transition-colors"
         @click="prevMonth"
       >
         <ChevronLeft class="h-4 w-4" />
@@ -129,7 +129,7 @@ function nextMonth() {
       <span class="text-sm font-medium">{{ monthYearLabel }}</span>
       <button
         type="button"
-        class="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+        class="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-white hover:text-accent-foreground transition-colors"
         @click="nextMonth"
       >
         <ChevronRight class="h-4 w-4" />
@@ -162,7 +162,7 @@ function nextMonth() {
             'relative h-9 w-9 rounded-md text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             isSelected(day)
               ? 'bg-orange-500 text-white font-semibold shadow-sm'
-              : 'hover:bg-accent hover:text-accent-foreground',
+              : 'hover:bg-white hover:text-accent-foreground',
             isToday(day) && !isSelected(day) ? 'font-bold text-orange-500' : '',
             animatingDay === day ? 'scale-125' : 'scale-100',
           )"

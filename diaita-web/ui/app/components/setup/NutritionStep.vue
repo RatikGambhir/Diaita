@@ -217,7 +217,7 @@ const removeSupplement = (index: number) => {
               'px-3 py-1.5 rounded-full text-sm border transition-colors',
               formData.foodAllergies.includes(allergy)
                 ? 'bg-destructive text-destructive-foreground border-destructive'
-                : 'bg-background text-foreground border-border hover:bg-accent'
+                : 'bg-background text-foreground border-border hover:bg-white'
             ]"
             @click="toggleAllergy(allergy)"
           >
@@ -238,7 +238,7 @@ const removeSupplement = (index: number) => {
               'px-3 py-1.5 rounded-full text-sm border transition-colors',
               formData.dietaryRestrictions.includes(restriction)
                 ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background text-foreground border-border hover:bg-accent'
+                : 'bg-background text-foreground border-border hover:bg-white'
             ]"
             @click="toggleRestriction(restriction)"
           >

@@ -5,12 +5,13 @@ import { useForm, Field as FormField } from 'vee-validate'
 import { supabase } from "~/utils";
 import { useUserStore } from "~/stores/useUserStore";
 import type {AuthError} from "@supabase/supabase-js";
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import Button from '~/components/ui/button/Button.vue'
 import Input from '~/components/ui/input/Input.vue'
 import FormItem from '~/components/ui/form/FormItem.vue'
 import FormControl from '~/components/ui/form/FormControl.vue'
 import FormMessage from '~/components/ui/form/FormMessage.vue'
-import { ChevronLeft, Mail } from 'lucide-vue-next'
+import { AlertCircle, ChevronLeft, LoaderCircle, Mail } from 'lucide-vue-next'
 
 definePageMeta({
     layout: false,
@@ -25,6 +26,8 @@ export interface UserSession {
 const userStore = useUserStore();
 
 const toast = useToast();
+const isLoading = ref(false);
+const errorMessage = ref("");
 
 const schema = toTypedSchema(z.object({
     email: z.string().email("Invalid email"),
@@ -62,26 +65,33 @@ async function login(email: string): Promise<UserSession> {
 }
 
 const onSubmit = handleSubmit(async (values) => {
+    isLoading.value = true;
+    errorMessage.value = "";
     const { email } = values;
-    const {user, session, error} = await login(email)
-    if(error) {
-      toast.add({
-        title: "Uh oh, something went wrong with your email, please try again",
-        description: error.message,
-        color: "error",
-      });
-    } else {
-      userStore.addUserSession(user ?? {}, session ?? {});
+    try {
+      const {user, session, error} = await login(email)
+      if(error) {
+        errorMessage.value = error.message;
+        toast.add({
+          title: "Login failed",
+          description: error.message,
+          color: "error",
+        });
+      } else {
+        userStore.addUserSession(user ?? {}, session ?? {});
 
-      const redirectPath = route.query.redirect as string | undefined
+        const redirectPath = route.query.redirect as string | undefined
 
-      await router.push({
-        path: "/verify-email",
-        query: {
-          email: values.email,
-          ...(redirectPath && { redirect: redirectPath }),
-        },
-      });
+        await router.push({
+          path: "/verify-email",
+          query: {
+            email: values.email,
+            ...(redirectPath && { redirect: redirectPath }),
+          },
+        });
+      }
+    } finally {
+      isLoading.value = false;
     }
 });
 </script>
@@ -123,6 +133,12 @@ const onSubmit = handleSubmit(async (values) => {
                 </NuxtLink>
 
                 <div class="space-y-8">
+                    <Alert v-if="errorMessage" variant="destructive">
+                        <AlertCircle class="h-4 w-4" />
+                        <AlertTitle>Login failed</AlertTitle>
+                        <AlertDescription>{{ errorMessage }}</AlertDescription>
+                    </Alert>
+
                     <div>
                         <h1
                             class="text-3xl font-bold text-foreground mb-2"
@@ -130,7 +146,7 @@ const onSubmit = handleSubmit(async (values) => {
                             Sign In or Join Now!
                         </h1>
                         <p class="text-muted-foreground">
-                            login or create your efferd account.
+                            login or create your Diaita account.
                         </p>
                     </div>
 
@@ -164,7 +180,7 @@ const onSubmit = handleSubmit(async (values) => {
                                                 v-bind="componentField"
                                                 type="email"
                                                 placeholder="your.email@example.com"
-                                                class="h-11 pl-10 w-full"
+                                                class="h-11 w-full bg-white pl-10 focus-visible:bg-white"
                                             />
                                         </div>
                                     </FormControl>
@@ -176,8 +192,10 @@ const onSubmit = handleSubmit(async (values) => {
                                 type="submit"
                                 size="lg"
                                 class="w-full font-medium"
+                                :disabled="isLoading"
                             >
-                                Continue With Email
+                                <LoaderCircle v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
+                                {{ isLoading ? "Sending..." : "Continue With Email" }}
                             </Button>
                         </form>
 
