@@ -22,8 +22,6 @@ abstract class RestClient(apiKey: String, url: String) {
             requestTimeoutMillis = 480_000      // 8 minutes overall cap
         }
         defaultRequest {
-                headers.append("Content-Type", "application/json")
-                headers.append("x-goog-api-key",apiKey)
             url(url)
         }
     }

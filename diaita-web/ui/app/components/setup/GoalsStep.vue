@@ -209,7 +209,7 @@ const toggleHealthGoal = (goal: string) => {
               'px-3 py-1.5 rounded-full text-sm border transition-colors',
               formData.healthGoals.includes(goal)
                 ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background text-foreground border-border hover:bg-accent'
+                : 'bg-background text-foreground border-border hover:bg-white'
             ]"
             @click="toggleHealthGoal(goal)"
           >

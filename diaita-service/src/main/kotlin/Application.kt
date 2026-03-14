@@ -9,15 +9,7 @@ fun main(args: Array<String>) {
 fun Application.module() {
     configureFrameworks()
     configureSerialization()
-
-
-
     val container = configureContainer()
-
-
-//    ApplicationStopPreparing.run { val source = container.get<HikariDataSource>()
-//        source.close()
-//    }
     // configureMonitoring()
     configureHTTP()
     // configureSecurity()

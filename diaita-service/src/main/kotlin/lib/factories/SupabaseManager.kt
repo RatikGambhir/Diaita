@@ -5,6 +5,8 @@ import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 
 
 data class Result<T>(val body: T?, val error: Exception?)
@@ -219,11 +221,14 @@ class SupabaseManager(val client: SupabaseClient) {
 
     suspend inline fun <reified T : Any> rpcDecoded(
         functionName: String,
-        parameters: Map<String, Any> = emptyMap()
+        parameters: JsonObject = buildJsonObject {},
+        schemaStr: String = "public"
     ): Result<T> {
         return try {
-            val result = client.postgrest.rpc(functionName, parameters)
-                .decodeAs<T>()
+            val result = client.postgrest.rpc(functionName, parameters) {
+                schema = schemaStr
+            }
+                .decodeAs<T>() as T
             Result(result, null)
         } catch (e: Exception) {
             println("RPC decoded error: ${e.message}")

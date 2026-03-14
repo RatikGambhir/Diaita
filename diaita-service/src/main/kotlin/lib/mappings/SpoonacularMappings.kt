@@ -1,9 +1,12 @@
 package com.diaita.lib.mappings
 
+import com.diaita.dto.FoodAutocompleteSuggestionDto
 import com.diaita.dto.IngredientInformationDto
+import com.diaita.dto.IngredientAutocompleteItemDto
 import com.diaita.dto.FoodDto
 import com.diaita.dto.MenuItemInformationDto
 import com.diaita.dto.ProductInformationDto
+import com.diaita.dto.ProductSuggestItemDto
 import com.diaita.dto.SpoonacularNutrientDto
 
 private fun List<SpoonacularNutrientDto>.valueOf(vararg nutrientNames: String): Double? {
@@ -63,5 +66,29 @@ fun MenuItemInformationDto.toFoodDto(): FoodDto {
         carbGPerServingSize = nutrients.valueOf("Carbohydrates", "Carbs"),
         fatGPerServingSize = nutrients.valueOf("Fat"),
         createdAt = null
+    )
+}
+
+fun IngredientAutocompleteItemDto.toFoodAutocompleteSuggestionDto(): FoodAutocompleteSuggestionDto {
+    return FoodAutocompleteSuggestionDto(
+        id = id.toString(),
+        name = name,
+        category = "ingredient",
+        image = image,
+        brand = null,
+        aisle = aisle,
+        possibleUnits = possibleUnits
+    )
+}
+
+fun ProductSuggestItemDto.toFoodAutocompleteSuggestionDto(): FoodAutocompleteSuggestionDto {
+    return FoodAutocompleteSuggestionDto(
+        id = id.toString(),
+        name = title,
+        category = "product",
+        image = null,
+        brand = null,
+        aisle = null,
+        possibleUnits = emptyList()
     )
 }

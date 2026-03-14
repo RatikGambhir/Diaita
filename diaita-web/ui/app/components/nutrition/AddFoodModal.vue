@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import { Search } from "lucide-vue-next"
+import { useNutritionAutocomplete } from "~/composables/useNutritionAutocomplete"
+import { useNutritionSearch } from "~/composables/useNutritionSearch"
 import Dialog from "~/components/ui/dialog/Dialog.vue"
 import DialogContent from "~/components/ui/dialog/DialogContent.vue"
 import DialogHeader from "~/components/ui/dialog/DialogHeader.vue"
@@ -13,17 +15,7 @@ import SelectContent from "~/components/ui/select/SelectContent.vue"
 import SelectItem from "~/components/ui/select/SelectItem.vue"
 import SelectTrigger from "~/components/ui/select/SelectTrigger.vue"
 import SelectValue from "~/components/ui/select/SelectValue.vue"
-
-type Ingredient = {
-    name: string;
-    calories: number;
-    carbs: number;
-    protein: number;
-    fat: number;
-    servingSize: string;
-};
-
-type SearchFilter = "ingredient" | "product";
+import type { NutritionAutocompleteSuggestion, NutritionFood } from "~/types/nutrition"
 
 const props = defineProps<{
     open: boolean;
@@ -32,80 +24,88 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: "update:open", value: boolean): void;
-    (e: "save-foods", ingredients: Ingredient[]): void;
+    (e: "save-foods", ingredients: NutritionFood[]): void;
 }>();
 
-const searchQuery = ref("");
-const selectedIngredients = ref<Ingredient[]>([]);
-const searchFilter = ref<SearchFilter>("ingredient");
+const selectedFoods = ref<NutritionFood[]>([]);
+const showSuggestions = ref(true);
+const hiddenSuggestionsQuery = ref<string | null>(null);
 
-const ingredientsList: Ingredient[] = [
-    { name: "Chicken Breast", calories: 165, carbs: 0, protein: 31, fat: 3.6, servingSize: "100g" },
-    { name: "Brown Rice", calories: 216, carbs: 45, protein: 5, fat: 1.8, servingSize: "1 cup" },
-    { name: "Broccoli", calories: 55, carbs: 11, protein: 3.7, fat: 0.6, servingSize: "1 cup" },
-    { name: "Salmon", calories: 208, carbs: 0, protein: 20, fat: 13, servingSize: "100g" },
-    { name: "Egg", calories: 78, carbs: 0.6, protein: 6, fat: 5, servingSize: "1 large" },
-    { name: "Avocado", calories: 160, carbs: 9, protein: 2, fat: 15, servingSize: "100g" },
-    { name: "Sweet Potato", calories: 103, carbs: 24, protein: 2.3, fat: 0.2, servingSize: "1 medium" },
-    { name: "Greek Yogurt", calories: 100, carbs: 6, protein: 17, fat: 0.4, servingSize: "170g" },
-    { name: "Tofu", calories: 94, carbs: 2.3, protein: 10, fat: 5.9, servingSize: "100g" },
-    { name: "Almonds", calories: 164, carbs: 6, protein: 6, fat: 14, servingSize: "28g" },
-    { name: "Spinach", calories: 23, carbs: 3.6, protein: 2.9, fat: 0.4, servingSize: "100g" },
-    { name: "Quinoa", calories: 222, carbs: 39, protein: 8, fat: 3.6, servingSize: "1 cup" },
-    { name: "Banana", calories: 105, carbs: 27, protein: 1.3, fat: 0.3, servingSize: "1 medium" },
-    { name: "Black Beans", calories: 227, carbs: 41, protein: 15, fat: 0.9, servingSize: "1 cup" },
-    { name: "Olive Oil", calories: 119, carbs: 0, protein: 0, fat: 13.5, servingSize: "1 tbsp" },
-    { name: "Cottage Cheese", calories: 103, carbs: 4.3, protein: 11, fat: 4.3, servingSize: "100g" },
-    { name: "Whole Wheat Bread", calories: 81, carbs: 13.8, protein: 4, fat: 1.1, servingSize: "1 slice" },
-    { name: "Apple", calories: 95, carbs: 25, protein: 0.5, fat: 0.3, servingSize: "1 medium" },
-    { name: "Tuna", calories: 132, carbs: 0, protein: 28, fat: 1.3, servingSize: "100g" },
-    { name: "Peanut Butter", calories: 188, carbs: 6.9, protein: 8, fat: 16, servingSize: "2 tbsp" },
-];
+const {
+    query: searchQuery,
+    filter: searchFilter,
+    results: searchResults,
+    isSearching,
+    error: searchError,
+    hasSearched,
+    normalizedQuery,
+    searchPlaceholder,
+    minQueryLength,
+    reset: resetSearch,
+} = useNutritionSearch();
+
+const {
+    suggestions: autocompleteSuggestions,
+    isLoading: isAutocompleting,
+    error: autocompleteError,
+    minQueryLength: autocompleteMinQueryLength,
+} = useNutritionAutocomplete(searchQuery, searchFilter);
 
 const isOpen = computed({
     get: () => props.open,
-    set: (value) => {
-        if (!value) {
-            searchQuery.value = "";
-            selectedIngredients.value = [];
-            searchFilter.value = "ingredient";
-        }
-        emit("update:open", value);
-    },
+    set: (value) => emit("update:open", value),
 });
 
-const searchPlaceholder = computed(() => {
-    return searchFilter.value === "ingredient" ? "Search ingredients..." : "Search products...";
+const resetModalState = () => {
+    selectedFoods.value = [];
+    showSuggestions.value = true;
+    hiddenSuggestionsQuery.value = null;
+    resetSearch();
+};
+
+watch(() => props.open, (open) => {
+    if (!open) {
+        resetModalState();
+    }
 });
 
-const filteredIngredients = computed(() => {
-    const query = searchQuery.value.trim().toLowerCase();
-    if (!query) {
-        return ingredientsList;
+watch(searchQuery, (query) => {
+    if (hiddenSuggestionsQuery.value === query) {
+        return;
     }
 
-    return ingredientsList.filter((ingredient) =>
-        ingredient.name.toLowerCase().includes(query)
-    );
+    hiddenSuggestionsQuery.value = null;
+    showSuggestions.value = true;
 });
 
-const isIngredientSelected = (ingredient: Ingredient) => {
-    return selectedIngredients.value.some(
-        (selectedIngredient) =>
-            selectedIngredient.name === ingredient.name &&
-            selectedIngredient.servingSize === ingredient.servingSize
+watch(searchFilter, () => {
+    hiddenSuggestionsQuery.value = null;
+    showSuggestions.value = true;
+});
+
+const isFoodSelected = (food: NutritionFood) => {
+    return selectedFoods.value.some(
+        (selectedFood) =>
+            selectedFood.id === food.id &&
+            selectedFood.category === food.category
     );
 };
 
-const handleAddFood = (ingredient: Ingredient) => {
-    if (isIngredientSelected(ingredient)) {
+const handleAddFood = (food: NutritionFood) => {
+    if (isFoodSelected(food)) {
         return;
     }
-    selectedIngredients.value.push(ingredient);
+    selectedFoods.value.push(food);
+};
+
+const handleSuggestionSelect = (suggestion: NutritionAutocompleteSuggestion) => {
+    hiddenSuggestionsQuery.value = suggestion.name;
+    showSuggestions.value = false;
+    searchQuery.value = suggestion.name;
 };
 
 const handleRemoveFood = (index: number) => {
-    selectedIngredients.value.splice(index, 1);
+    selectedFoods.value.splice(index, 1);
 };
 
 const handleCancel = () => {
@@ -113,10 +113,10 @@ const handleCancel = () => {
 };
 
 const handleSave = () => {
-    if (selectedIngredients.value.length === 0) {
+    if (selectedFoods.value.length === 0) {
         return;
     }
-    emit("save-foods", [...selectedIngredients.value]);
+    emit("save-foods", [...selectedFoods.value]);
     isOpen.value = false;
 };
 </script>
@@ -151,13 +151,49 @@ const handleSave = () => {
                     </Select>
                 </div>
 
-                <div v-if="selectedIngredients.length > 0" class="rounded-lg border border-border bg-muted/40 p-3">
-                    <div class="mb-2 text-xs font-medium text-muted-foreground">Selected foods</div>
+                <div
+                    v-if="showSuggestions && normalizedQuery.length >= autocompleteMinQueryLength && (isAutocompleting || autocompleteSuggestions.length > 0 || autocompleteError)"
+                    class="rounded-lg border border-border bg-card"
+                >
+                    <div class="border-b border-border px-3 py-2 text-xs font-medium text-muted-foreground">
+                        Suggestions
+                    </div>
+
+                    <div v-if="isAutocompleting" class="px-3 py-3 text-sm text-muted-foreground">
+                        Looking up suggestions...
+                    </div>
+
+                    <div v-else-if="autocompleteError" class="px-3 py-3 text-sm text-destructive">
+                        {{ autocompleteError }}
+                    </div>
+
+                    <div v-else class="max-h-44 overflow-y-auto">
+                        <button
+                            v-for="suggestion in autocompleteSuggestions"
+                            :key="`${suggestion.category}-${suggestion.id}`"
+                            type="button"
+                            class="flex w-full flex-col items-start gap-1 px-3 py-3 text-left transition-colors hover:bg-muted"
+                            @click="handleSuggestionSelect(suggestion)"
+                        >
+                            <span class="text-sm font-medium text-foreground">{{ suggestion.name }}</span>
+                            <span class="text-xs text-muted-foreground">
+                                {{
+                                    suggestion.category === "ingredient"
+                                        ? suggestion.aisle || suggestion.possibleUnits.slice(0, 3).join(", ") || "Ingredient"
+                                        : suggestion.brand || "Product"
+                                }}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <div v-if="selectedFoods.length > 0" class="rounded-lg border border-border bg-muted/40 p-3">
+                    <div class="mb-2 text-xs font-medium text-muted-foreground">Selected foods ({{ selectedFoods.length }})</div>
                     <div class="max-h-40 overflow-y-auto space-y-2">
                         <FoodListItem
-                            v-for="(ingredient, index) in selectedIngredients"
-                            :key="`${ingredient.name}-${ingredient.servingSize}`"
-                            :item="ingredient"
+                            v-for="(food, index) in selectedFoods"
+                            :key="`${food.category}-${food.id}`"
+                            :item="food"
                             action-label="Remove"
                             action-variant="ghost"
                             @action="handleRemoveFood(index)"
@@ -166,22 +202,52 @@ const handleSave = () => {
                 </div>
 
                 <div class="min-h-0 flex-1 overflow-y-auto space-y-2 pr-1">
-                    <FoodListItem
-                        v-for="ingredient in filteredIngredients"
-                        :key="ingredient.name"
-                        :item="ingredient"
-                        :action-label="isIngredientSelected(ingredient) ? 'Added' : 'Add'"
-                        action-variant="secondary"
-                        :action-disabled="isIngredientSelected(ingredient)"
-                        @action="handleAddFood(ingredient)"
-                    />
-
                     <div
-                        v-if="filteredIngredients.length === 0"
+                        v-if="!normalizedQuery"
                         class="py-8 text-center text-sm text-muted-foreground"
                     >
-                        No ingredients found
+                        Start typing to search and add foods.
                     </div>
+
+                    <div
+                        v-else-if="normalizedQuery.length < minQueryLength"
+                        class="py-8 text-center text-sm text-muted-foreground"
+                    >
+                        Type at least {{ minQueryLength }} characters to search.
+                    </div>
+
+                    <div
+                        v-else-if="isSearching"
+                        class="py-8 text-center text-sm text-muted-foreground"
+                    >
+                        Searching {{ searchFilter === "ingredient" ? "ingredients" : "products" }}...
+                    </div>
+
+                    <div
+                        v-else-if="searchError"
+                        class="py-8 text-center text-sm text-destructive"
+                    >
+                        {{ searchError }}
+                    </div>
+
+                    <template v-else>
+                        <FoodListItem
+                            v-for="food in searchResults"
+                            :key="`${food.category}-${food.id}`"
+                            :item="food"
+                            :action-label="isFoodSelected(food) ? 'Added' : 'Add'"
+                            action-variant="secondary"
+                            :action-disabled="isFoodSelected(food)"
+                            @action="handleAddFood(food)"
+                        />
+
+                        <div
+                            v-if="hasSearched && searchResults.length === 0"
+                            class="py-8 text-center text-sm text-muted-foreground"
+                        >
+                            No matching foods found.
+                        </div>
+                    </template>
                 </div>
             </div>
 
@@ -189,7 +255,7 @@ const handleSave = () => {
                 <Button variant="outline" @click="handleCancel">
                     Cancel
                 </Button>
-                <Button :disabled="selectedIngredients.length === 0" @click="handleSave">
+                <Button :disabled="selectedFoods.length === 0" @click="handleSave">
                     Save
                 </Button>
             </div>

@@ -1,36 +1,30 @@
 <script setup lang="ts">
 import { ref } from "vue"
+import type { FunctionalComponent } from "vue"
+import type { LucideProps } from "lucide-vue-next"
+import type { NutritionFood } from "~/types/nutrition"
 import Button from "~/components/ui/button/Button.vue"
 import Card from "~/components/ui/card/Card.vue"
 import CardContent from "~/components/ui/card/CardContent.vue"
 import AddFoodModal from "~/components/nutrition/AddFoodModal.vue"
 import { Pencil, Plus, Trash2 } from "lucide-vue-next"
 
-type Ingredient = {
-    name: string;
-    calories: number;
-    carbs: number;
-    protein: number;
-    fat: number;
-    servingSize: string;
-};
-
 defineProps<{
     meal: {
         name: string;
-        icon: any;
+        icon: FunctionalComponent<LucideProps>;
         totals: { calories: number; carbs: number; protein: number; fat: number };
         items: Array<{ name: string; calories: number; carbs: number; protein: number; fat: number }>;
     };
 }>();
 
 const emit = defineEmits<{
-    (e: "add-foods", ingredients: Ingredient[]): void;
+    (e: "add-foods", ingredients: NutritionFood[]): void;
 }>();
 
 const addFoodOpen = ref(false);
 
-const handleSaveFoods = (ingredients: Ingredient[]) => {
+const handleSaveFoods = (ingredients: NutritionFood[]) => {
     emit("add-foods", ingredients);
 };
 </script>
@@ -78,19 +72,19 @@ const handleSaveFoods = (ingredients: Ingredient[]) => {
                         <div class="text-sm font-medium text-foreground">{{ item.name }}</div>
                         <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                             <div class="flex items-center gap-1">
-                                <span class="h-1.5 w-1.5 rounded-full bg-chart-4"></span>
+                                <span class="h-1.5 w-1.5 rounded-full bg-chart-4"/>
                                 {{ item.calories }} cal
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="h-1.5 w-1.5 rounded-full bg-chart-1"></span>
+                                <span class="h-1.5 w-1.5 rounded-full bg-chart-1"/>
                                 {{ item.carbs }}g carbs
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="h-1.5 w-1.5 rounded-full bg-chart-3"></span>
+                                <span class="h-1.5 w-1.5 rounded-full bg-chart-3"/>
                                 {{ item.protein }}g protein
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="h-1.5 w-1.5 rounded-full bg-chart-2"></span>
+                                <span class="h-1.5 w-1.5 rounded-full bg-chart-2"/>
                                 {{ item.fat }}g fat
                             </div>
                         </div>
