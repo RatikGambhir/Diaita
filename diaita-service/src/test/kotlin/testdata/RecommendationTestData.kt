@@ -125,7 +125,6 @@ object RecommendationTestData {
         val request = UserProfileTestData.fullRequest(userId)
         return RegisteredUserProfileDto(
             userId = request.userId,
-            profileId = request.id,
             basicDemographics = request.basicDemographics,
             activityLifestyle = request.activityLifestyle,
             goals = request.goals,
