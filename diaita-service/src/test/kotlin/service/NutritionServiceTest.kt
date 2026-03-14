@@ -1,6 +1,8 @@
 package com.diaita.service
 
 import com.diaita.Container
+import com.diaita.dto.IngredientAutocompleteFiltersDto
+import com.diaita.dto.IngredientAutocompleteItemDto
 import com.diaita.dto.IngredientInformationDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.IngredientSearchResponseDto
@@ -10,6 +12,9 @@ import com.diaita.dto.MenuItemSearchFiltersDto
 import com.diaita.dto.MenuItemSearchResponseDto
 import com.diaita.dto.MenuItemSearchResultDto
 import com.diaita.dto.ProductInformationDto
+import com.diaita.dto.ProductSuggestFiltersDto
+import com.diaita.dto.ProductSuggestItemDto
+import com.diaita.dto.ProductSuggestResponseDto
 import com.diaita.dto.ProductSearchFiltersDto
 import com.diaita.dto.ProductSearchResponseDto
 import com.diaita.dto.SpoonacularNutrientDto
@@ -22,6 +27,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class NutritionServiceTest {
 
@@ -31,6 +37,29 @@ class NutritionServiceTest {
         bind<NutritionRestClient>(client)
     }
     private val service = container.get<NutritionService>()
+
+    @Test
+    fun autocompleteIngredients_returns_normalized_suggestions() = runBlocking {
+        client.ingredientAutocompleteResponse = listOf(
+            IngredientAutocompleteItemDto(
+                id = 9003,
+                name = "apple",
+                image = "apple.jpg",
+                aisle = "Produce",
+                possibleUnits = listOf("small", "large", "cup")
+            )
+        )
+
+        val result = service.autocompleteIngredients(
+            IngredientAutocompleteFiltersDto(query = "appl", number = 5, metaInformation = true)
+        )
+
+        assertNotNull(result)
+        assertEquals(1, result.number)
+        assertEquals("ingredient", result.suggestions.first().category)
+        assertEquals("apple", result.suggestions.first().name)
+        assertEquals("Produce", result.suggestions.first().aisle)
+    }
 
     @Test
     fun searchIngredients_returns_mapped_foods_and_filters_out_missing_details() = runBlocking {
@@ -55,6 +84,27 @@ class NutritionServiceTest {
         assertEquals(1, result.foods.size)
         assertEquals("Chicken Breast", result.foods.first().name)
         assertEquals(31.0, result.foods.first().proteinGPerServingSize)
+    }
+
+    @Test
+    fun autocompleteProducts_returns_normalized_suggestions() = runBlocking {
+        client.productSuggestResponse = ProductSuggestResponseDto(
+            results = listOf(
+                ProductSuggestItemDto(
+                    id = 208698,
+                    title = "buddig premium deli chicken breast - rotisserie flavored"
+                )
+            )
+        )
+
+        val result = service.autocompleteProducts(
+            ProductSuggestFiltersDto(query = "chicke", number = 2)
+        )
+
+        assertNotNull(result)
+        assertEquals(1, result.number)
+        assertEquals("product", result.suggestions.first().category)
+        assertTrue(result.suggestions.first().name.contains("chicken"))
     }
 
     @Test
@@ -151,12 +201,21 @@ class NutritionServiceTest {
     }
 
     private class FakeNutritionClient : NutritionRestClient("test", "https://example.com") {
+        var ingredientAutocompleteResponse: List<IngredientAutocompleteItemDto>? = null
         var ingredientSearchResponse: IngredientSearchResponseDto? = null
+        var productSuggestResponse: ProductSuggestResponseDto? = null
         var productSearchResponse: ProductSearchResponseDto? = null
         var menuItemSearchResponse: MenuItemSearchResponseDto? = null
         val ingredientDetails: MutableMap<Int, IngredientInformationDto?> = mutableMapOf()
         val productDetails: MutableMap<Int, ProductInformationDto?> = mutableMapOf()
         val menuItemDetails: MutableMap<Int, MenuItemInformationDto?> = mutableMapOf()
+
+        override suspend fun autocompleteIngredients(
+            query: String,
+            filters: IngredientAutocompleteFiltersDto
+        ): List<IngredientAutocompleteItemDto>? {
+            return ingredientAutocompleteResponse
+        }
 
         override suspend fun searchIngredients(
             query: String,
@@ -182,6 +241,13 @@ class NutritionServiceTest {
 
         override suspend fun getProductInformation(id: Int): ProductInformationDto? {
             return productDetails[id]
+        }
+
+        override suspend fun suggestProducts(
+            query: String,
+            filters: ProductSuggestFiltersDto
+        ): ProductSuggestResponseDto? {
+            return productSuggestResponse
         }
 
         override suspend fun searchMenuItems(

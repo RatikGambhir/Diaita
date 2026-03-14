@@ -3,6 +3,7 @@ package com.diaita.routers
 import com.diaita.Container
 import com.diaita.controllers.NutritionController
 import com.diaita.dto.IngredientInformationDto
+import com.diaita.dto.IngredientAutocompleteItemDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.IngredientSearchResponseDto
 import com.diaita.dto.IngredientSearchResultDto
@@ -11,6 +12,8 @@ import com.diaita.dto.MenuItemSearchFiltersDto
 import com.diaita.dto.MenuItemSearchResponseDto
 import com.diaita.dto.MenuItemSearchResultDto
 import com.diaita.dto.ProductInformationDto
+import com.diaita.dto.ProductSuggestItemDto
+import com.diaita.dto.ProductSuggestResponseDto
 import com.diaita.dto.ProductSearchFiltersDto
 import com.diaita.dto.ProductSearchResponseDto
 import com.diaita.dto.SpoonacularNutrientDto
@@ -90,6 +93,37 @@ class NutritionRouterTest {
     }
 
     @Test
+    fun ingredient_autocomplete_returns_200_with_normalized_suggestions() = testApplication {
+        fakeClient.ingredientAutocompleteResponse = listOf(
+            IngredientAutocompleteItemDto(
+                id = 9003,
+                name = "apple",
+                image = "apple.jpg",
+                aisle = "Produce",
+                possibleUnits = listOf("small", "large", "cup")
+            )
+        )
+
+        application { testModule() }
+
+        val response = client.get("/nutrition/autocomplete/ingredients?query=appl&number=5&language=en&metaInformation=true")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertTrue(response.bodyAsText().contains("\"category\":\"ingredient\""))
+        assertTrue(response.bodyAsText().contains("\"name\":\"apple\""))
+    }
+
+    @Test
+    fun ingredient_autocomplete_rejects_blank_query() = testApplication {
+        application { testModule() }
+
+        val response = client.get("/nutrition/autocomplete/ingredients?query=%20%20")
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertTrue(response.bodyAsText().contains("query"))
+    }
+
+    @Test
     fun ingredient_search_rejects_blank_query() = testApplication {
         application { testModule() }
 
@@ -113,6 +147,26 @@ class NutritionRouterTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertTrue(response.bodyAsText().contains("Invalid request payload"))
+    }
+
+    @Test
+    fun product_autocomplete_returns_200_with_normalized_suggestions() = testApplication {
+        fakeClient.productSuggestResponse = ProductSuggestResponseDto(
+            results = listOf(
+                ProductSuggestItemDto(
+                    id = 208698,
+                    title = "buddig premium deli chicken breast - rotisserie flavored"
+                )
+            )
+        )
+
+        application { testModule() }
+
+        val response = client.get("/nutrition/autocomplete/products?query=chicke&number=2")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertTrue(response.bodyAsText().contains("\"category\":\"product\""))
+        assertTrue(response.bodyAsText().contains("rotisserie flavored"))
     }
 
     @Test
@@ -198,12 +252,21 @@ class NutritionRouterTest {
     }
 
     private class FakeNutritionClient : NutritionRestClient("test", "https://example.com") {
+        var ingredientAutocompleteResponse: List<IngredientAutocompleteItemDto>? = null
         var ingredientSearchResponse: IngredientSearchResponseDto? = null
+        var productSuggestResponse: ProductSuggestResponseDto? = null
         var productSearchResponse: ProductSearchResponseDto? = null
         var menuItemSearchResponse: MenuItemSearchResponseDto? = null
         val ingredientDetails: MutableMap<Int, IngredientInformationDto?> = mutableMapOf()
         val productDetails: MutableMap<Int, ProductInformationDto?> = mutableMapOf()
         val menuItemDetails: MutableMap<Int, MenuItemInformationDto?> = mutableMapOf()
+
+        override suspend fun autocompleteIngredients(
+            query: String,
+            filters: com.diaita.dto.IngredientAutocompleteFiltersDto
+        ): List<IngredientAutocompleteItemDto>? {
+            return ingredientAutocompleteResponse
+        }
 
         override suspend fun searchIngredients(
             query: String,
@@ -229,6 +292,13 @@ class NutritionRouterTest {
 
         override suspend fun getProductInformation(id: Int): ProductInformationDto? {
             return productDetails[id]
+        }
+
+        override suspend fun suggestProducts(
+            query: String,
+            filters: com.diaita.dto.ProductSuggestFiltersDto
+        ): ProductSuggestResponseDto? {
+            return productSuggestResponse
         }
 
         override suspend fun searchMenuItems(

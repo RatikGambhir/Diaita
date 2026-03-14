@@ -1,5 +1,7 @@
 package com.diaita.lib.clients
 
+import com.diaita.dto.IngredientAutocompleteFiltersDto
+import com.diaita.dto.IngredientAutocompleteItemDto
 import com.diaita.dto.IngredientInformationDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.IngredientSearchResponseDto
@@ -9,6 +11,8 @@ import com.diaita.dto.MenuItemSearchResponseDto
 import com.diaita.dto.ProductInformationDto
 import com.diaita.dto.ProductSearchFiltersDto
 import com.diaita.dto.ProductSearchResponseDto
+import com.diaita.dto.ProductSuggestFiltersDto
+import com.diaita.dto.ProductSuggestResponseDto
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -43,6 +47,26 @@ open class NutritionRestClient(
             }.body<IngredientSearchResponseDto>()
         } catch (e: Exception) {
             println("Error searching ingredients: ${e.message}")
+            null
+        }
+    }
+
+    open suspend fun autocompleteIngredients(
+        query: String,
+        filters: IngredientAutocompleteFiltersDto
+    ): List<IngredientAutocompleteItemDto>? {
+        return try {
+            client.get("/food/ingredients/autocomplete") {
+                parameter("apiKey", apiKey)
+                parameter("query", query)
+                parameter("number", filters.number)
+                parameter("language", filters.language)
+                parameter("metaInformation", filters.metaInformation)
+                filters.intolerances?.takeIf { it.isNotEmpty() }
+                    ?.let { parameter("intolerances", it.joinToString(",")) }
+            }.body<List<IngredientAutocompleteItemDto>>()
+        } catch (e: Exception) {
+            println("Error autocompleting ingredients: ${e.message}")
             null
         }
     }
@@ -96,6 +120,22 @@ open class NutritionRestClient(
             }.body<ProductInformationDto>()
         } catch (e: Exception) {
             println("Error getting product information: ${e.message}")
+            null
+        }
+    }
+
+    open suspend fun suggestProducts(
+        query: String,
+        filters: ProductSuggestFiltersDto
+    ): ProductSuggestResponseDto? {
+        return try {
+            client.get("/food/products/suggest") {
+                parameter("apiKey", apiKey)
+                parameter("query", query)
+                parameter("number", filters.number)
+            }.body<ProductSuggestResponseDto>()
+        } catch (e: Exception) {
+            println("Error suggesting products: ${e.message}")
             null
         }
     }

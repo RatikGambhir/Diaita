@@ -332,7 +332,7 @@ const handleSkip = () => {
               :class="cn(
                 'w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors',
                 currentStep === step.id && 'bg-accent',
-                currentStep !== step.id && 'hover:bg-accent/50'
+                currentStep !== step.id && 'hover:bg-white'
               )"
               @click="currentStep = step.id"
             >

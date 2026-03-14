@@ -64,6 +64,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
             client.preparePost(streamUrl) {
                 contentType(ContentType.Application.Json)
                 headers {
+                    append("x-goog-api-key", apiKey)
                     append("Accept", "text/event-stream")
                 }
                 setBody(request)

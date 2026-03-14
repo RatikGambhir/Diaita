@@ -10,7 +10,6 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.calllogging.*
-import com.diaita.HelloService
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.defaultheaders.*
@@ -29,14 +28,5 @@ import org.koin.logger.slf4jLogger
 import org.slf4j.event.*
 
 fun Application.configureFrameworks() {
-    install(Koin) {
-        slf4jLogger()
-        modules(module {
-            single<HelloService> {
-                HelloService {
-                    println(environment.log.info("Hello, World!"))
-                }
-            }
-        })
-    }
+    install(Koin)
 }

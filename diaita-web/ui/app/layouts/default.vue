@@ -79,7 +79,7 @@ onMounted(async () => {
       <div class="p-2">
         <Button
           variant="outline"
-          class="bg-sidebar hover:bg-background text-sidebar-foreground hover:text-sidebar-accent-foreground"
+          class="bg-sidebar hover:bg-white text-sidebar-foreground hover:text-sidebar-accent-foreground"
           :class="sidebarCollapsed ? 'w-full justify-center' : 'w-full justify-start'"
         >
           <Search class="h-4 w-4" />
@@ -93,7 +93,7 @@ onMounted(async () => {
           v-for="item in mainNavItems"
           :key="item.to"
           :to="item.to"
-          class="flex items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          class="flex items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground transition-colors hover:bg-white hover:text-sidebar-accent-foreground"
           :class="{
             'bg-sidebar-primary text-sidebar-primary-foreground': route.path === item.to || (item.to !== '/' && route.path.startsWith(item.to)),
             'justify-center': sidebarCollapsed
@@ -112,7 +112,7 @@ onMounted(async () => {
           :href="item.to"
           target="_blank"
           rel="noopener noreferrer"
-          class="flex items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          class="flex items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground/80 transition-colors hover:bg-white hover:text-sidebar-accent-foreground"
           :class="{ 'justify-center': sidebarCollapsed }"
         >
           <component :is="item.icon" class="h-5 w-5 shrink-0" />
@@ -120,7 +120,7 @@ onMounted(async () => {
         </a>
         <button
           type="button"
-          class="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          class="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground/80 transition-colors hover:bg-white hover:text-sidebar-accent-foreground"
           :class="{ 'justify-center': sidebarCollapsed }"
           @click="signOut"
         >
@@ -134,7 +134,7 @@ onMounted(async () => {
         <Button
           variant="ghost"
           size="sm"
-          class="font-sans text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          class="font-sans text-sidebar-foreground hover:bg-white hover:text-sidebar-accent-foreground"
           :class="sidebarCollapsed ? 'w-full justify-center' : 'w-full justify-start'"
           @click="toggleSidebar"
         >
