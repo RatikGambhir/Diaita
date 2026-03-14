@@ -10,12 +10,15 @@ import com.diaita.dto.NutritionDietHistoryDto
 import com.diaita.dto.RecommendationDto
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.RegisteredUserProfileDto
+import com.diaita.dto.ServiceResult
 import com.diaita.dto.TrainingBackgroundDto
 import com.diaita.lib.factories.PromptFactory
 import com.diaita.lib.mappings.*
 import com.diaita.lib.prompt_extensions.toPromptVariables
 import com.diaita.repo.RecommendationRepo
 import com.diaita.repo.UserRepo
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 
 class UserService(
@@ -24,22 +27,38 @@ class UserService(
     private val recommendationRepo: RecommendationRepo
 ) {
 
-    suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): String? {
-        val result = userRepo.upsertFullProfile(request)
-        if (result != "Mutation Success") {
-            return null
-        }
-        val recommendation = genRecommendations(request)
-        if (recommendation == null) {
-            return null
-        }
-        if (!saveUserRecommendations(request.userId, recommendation)) {
-            return null
-        }
-        return "Mutation Success"
-    }
+    suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): ServiceResult<RecommendationDto> = coroutineScope {
+        val upsertDeferred = async { runCatching { userRepo.upsertFullProfile(request) } }
+        val recommendationDeferred = async { runCatching { genRecommendations(request) } }
 
-    suspend fun registerUser(request: RegisterUserProfileRequestDto): String? = registerUserProfile(request)
+        val upsertResult = upsertDeferred.await()
+        val recommendationResult = recommendationDeferred.await()
+
+        val result = upsertResult.getOrElse {
+            return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: ${it.message}")
+        }
+        if (result != "Mutation Success") {
+            return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: $result")
+        }
+
+        val recommendation = recommendationResult.getOrElse {
+            return@coroutineScope ServiceResult.Failure("genRecommendations failed: ${it.message}")
+        }
+        if (recommendation == null) {
+            return@coroutineScope ServiceResult.Failure("genRecommendations failed: returned null")
+        }
+
+        val saved = try {
+            saveUserRecommendations(request.userId, recommendation)
+        } catch (e: Exception) {
+            return@coroutineScope ServiceResult.Failure("saveUserRecommendations failed: ${e.message}")
+        }
+        if (!saved) {
+            return@coroutineScope ServiceResult.Failure("saveUserRecommendations failed: save returned false")
+        }
+
+        ServiceResult.Success(recommendation)
+    }
 
     suspend fun genRecommendations(
         request: RegisterUserProfileRequestDto,
@@ -61,10 +80,19 @@ class UserService(
         systemInstruction = systemInstruction
     )
 
-    suspend fun generateAndSaveRecommendations(userId: String): RecommendationDto? {
-        val profile = userRepo.getFullProfile(userId) ?: return null
-        val recommendation = genRecommendations(profile) ?: return null
-        return recommendation.takeIf { saveUserRecommendations(userId, it) }
+    suspend fun generateAndSaveRecommendations(userId: String): ServiceResult<RecommendationDto> {
+        val profile = userRepo.getFullProfile(userId)
+            ?: return ServiceResult.Failure("getFullProfile failed: profile not found for userId=$userId")
+        val recommendation = try {
+            genRecommendations(profile)
+        } catch (e: Exception) {
+            return ServiceResult.Failure("genRecommendations failed: ${e.message}")
+        } ?: return ServiceResult.Failure("genRecommendations failed: returned null")
+        return if (saveUserRecommendations(userId, recommendation)) {
+            ServiceResult.Success(recommendation)
+        } else {
+            ServiceResult.Failure("saveUserRecommendations failed: save returned false")
+        }
     }
 
     suspend fun saveUserRecommendations(userId: String, recommendation: RecommendationDto): Boolean {

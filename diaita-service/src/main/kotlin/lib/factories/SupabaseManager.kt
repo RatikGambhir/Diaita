@@ -5,6 +5,7 @@ import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 
 data class Result<T>(val body: T?, val error: Exception?)
@@ -205,7 +206,7 @@ class SupabaseManager(val client: SupabaseClient) {
 
     suspend fun rpc(
         functionName: String,
-        parameters: Map<String, Any> = emptyMap()
+        parameters: JsonObject = JsonObject(emptyMap())
     ): Result<JsonElement> {
         return try {
             val result = client.postgrest.rpc(functionName, parameters)
@@ -219,7 +220,7 @@ class SupabaseManager(val client: SupabaseClient) {
 
     suspend inline fun <reified T : Any> rpcDecoded(
         functionName: String,
-        parameters: Map<String, Any> = emptyMap()
+        parameters: JsonObject = JsonObject(emptyMap())
     ): Result<T> {
         return try {
             val result = client.postgrest.rpc(functionName, parameters)

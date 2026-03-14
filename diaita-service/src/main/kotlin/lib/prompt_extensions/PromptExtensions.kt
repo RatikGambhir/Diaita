@@ -15,7 +15,7 @@ fun RegisterUserProfileRequestDto.toPromptVariables(): Map<String, Any> = buildP
     goals = goals,
     trainingBackground = trainingBackground,
     nutritionHistory = nutritionHistory,
-    notes = ""
+//    notes = ""
 )
 
 fun RegisteredUserProfileDto.toPromptVariables(): Map<String, Any> = buildPromptVariables(
@@ -25,7 +25,7 @@ fun RegisteredUserProfileDto.toPromptVariables(): Map<String, Any> = buildPrompt
     goals = goals,
     trainingBackground = trainingBackground,
     nutritionHistory = nutritionHistory,
-    notes = notes ?: ""
+//    notes = notes ?: ""
 )
 
 private fun buildPromptVariables(
@@ -35,7 +35,7 @@ private fun buildPromptVariables(
     goals: GoalsPrioritiesDto?,
     trainingBackground: TrainingBackgroundDto?,
     nutritionHistory: NutritionDietHistoryDto?,
-    notes: String
+//    notes: String
 ): Map<String, Any> {
     return mapOf(
         "userId" to userId,
@@ -83,6 +83,8 @@ private fun buildPromptVariables(
         "snackingHabits" to (nutritionHistory?.snackingHabits ?: ""),
         "alcoholIntake" to (nutritionHistory?.alcoholIntake ?: ""),
         "supplementUse" to (nutritionHistory?.supplementUse?.joinToString(", ") ?: ""),
+/*
         "notes" to notes
+*/
     )
 }

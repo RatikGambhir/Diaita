@@ -30,13 +30,13 @@ fun RegisterUserProfileRequestDto.toUpsertFullProfilePayload(): JsonObject = bui
     trainingBackground?.let {
         put(
             "trainingBackground",
-            rpcPayloadJson.encodeToJsonElement(TrainingBackgroundDto.serializer(), it)
+            rpcPayloadJson.encodeToJsonElement(TrainingBackgroundDto.serializer(), trainingBackground)
         )
     }
     nutritionHistory?.let {
         put(
             "nutritionHistory",
-            rpcPayloadJson.encodeToJsonElement(NutritionDietHistoryDto.serializer(), it)
+            rpcPayloadJson.encodeToJsonElement(NutritionDietHistoryDto.serializer(), nutritionHistory)
         )
     }
 }

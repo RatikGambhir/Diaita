@@ -38,15 +38,16 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         systemInstruction: String? = null
     ): String? {
         val request = GeminiRequestDto.fromPrompt(prompt, config, systemInstruction)
-        try {
-            return client.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }.body<GeminiResponseDto>().candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
-        } catch (e: Exception) {
-            println("Error calling Gemini API: ${e.message}")
-            return null
+        val response = client.post {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body<GeminiResponseDto>()
+
+        if (response.error != null) {
+            throw Exception("Gemini API error (${response.error.code} ${response.error.status}): ${response.error.message}")
         }
+
+        return response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
     }
 
     suspend fun askQuestionStream(
@@ -118,23 +119,22 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
             systemInstruction = systemInstruction
         )
 
-        return try {
-            val response = client.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }.body<GeminiResponseDto>()
+        val response = client.post {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body<GeminiResponseDto>()
 
-            response.candidates
-                .firstOrNull()
-                ?.content
-                ?.parts
-                ?.firstOrNull()
-                ?.text
-                ?.let { json.decodeFromString(serializer, it) }
-        } catch (e: Exception) {
-            println("Error calling Gemini structured output API: ${e.message}")
-            null
+        if (response.error != null) {
+            throw Exception("Gemini API error (${response.error.code} ${response.error.status}): ${response.error.message}")
         }
+
+        return response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull()
+            ?.text
+            ?.let { json.decodeFromString(serializer, it) }
     }
 
     private fun buildStreamUrl(): String {

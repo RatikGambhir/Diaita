@@ -75,10 +75,18 @@ data class GeminiPartDto(
 
 @Serializable
 data class GeminiResponseDto(
-    val candidates: List<GeminiCandidateDto>
+    val candidates: List<GeminiCandidateDto> = emptyList(),
+    val error: GeminiErrorDto? = null
+)
+
+@Serializable
+data class GeminiErrorDto(
+    val code: Int? = null,
+    val message: String? = null,
+    val status: String? = null
 )
 
 @Serializable
 data class GeminiCandidateDto(
-    val content: GeminiContentDto
+    val content: GeminiContentDto? = null
 )

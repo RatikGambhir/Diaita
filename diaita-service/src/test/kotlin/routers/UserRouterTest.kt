@@ -82,7 +82,7 @@ class UserRouterTest {
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertTrue(response.bodyAsText().contains("\"status\":\"ok\""))
+        assertEquals(recommendation, Json.decodeFromString<RecommendationDto>(response.bodyAsText()))
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
         coVerify(exactly = 1) {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
@@ -109,9 +109,13 @@ class UserRouterTest {
     }
 
     @Test
-    fun user_profile_returns_400_when_controller_reports_failure() = testApplication {
+    fun user_profile_returns_500_when_controller_reports_failure() = testApplication {
         val payload = UserProfileTestData.fullRequest()
+        val recommendation = RecommendationTestData.recommendation()
         coEvery { repo.upsertFullProfile(payload) } returns "Mutation Failed"
+        coEvery {
+            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
+        } returns recommendation
 
         application {
             testModule()
@@ -122,10 +126,9 @@ class UserRouterTest {
             setBody(json.encodeToString(payload))
         }
 
-        assertEquals(HttpStatusCode.BadRequest, response.status)
-        assertTrue(response.bodyAsText().contains("Server Error"))
+        assertEquals(HttpStatusCode.InternalServerError, response.status)
+        assertTrue(response.bodyAsText().contains("upsertFullProfile failed"))
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
-        confirmVerified(gemini, recommendationRepo)
     }
 
     @Test
@@ -148,7 +151,7 @@ class UserRouterTest {
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertTrue(response.bodyAsText().contains("\"status\":\"ok\""))
+        assertEquals(recommendation, Json.decodeFromString<RecommendationDto>(response.bodyAsText()))
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
         coVerify(exactly = 1) {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
@@ -200,10 +203,14 @@ class UserRouterTest {
     }
 
     @Test
-    fun integration_register_skips_recommendations_when_upsert_fails() = testApplication {
+    fun integration_register_returns_500_when_upsert_fails() = testApplication {
         val payload = UserProfileTestData.fullRequest()
+        val recommendation = RecommendationTestData.recommendation()
 
         coEvery { repo.upsertFullProfile(payload) } returns "Mutation Failed"
+        coEvery {
+            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
+        } returns recommendation
 
         application {
             testModule()
@@ -214,9 +221,9 @@ class UserRouterTest {
             setBody(json.encodeToString(payload))
         }
 
-        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertEquals(HttpStatusCode.InternalServerError, response.status)
+        assertTrue(response.bodyAsText().contains("upsertFullProfile failed"))
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
-        confirmVerified(gemini, recommendationRepo)
     }
 
     @Test

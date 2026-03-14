@@ -6,15 +6,16 @@ import com.diaita.dto.GoalsPrioritiesDto
 import com.diaita.dto.NutritionDietHistoryDto
 import com.diaita.dto.RecommendationDto
 import com.diaita.dto.RegisterUserProfileRequestDto
+import com.diaita.dto.ServiceResult
 import com.diaita.dto.TrainingBackgroundDto
 import com.diaita.service.UserService
 
 class UserController(private val userService: UserService) {
-    suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): String? {
+    suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): ServiceResult<RecommendationDto> {
         return userService.registerUserProfile(request)
     }
 
-    suspend fun generateAndSaveRecommendations(userId: String): RecommendationDto? {
+    suspend fun generateAndSaveRecommendations(userId: String): ServiceResult<RecommendationDto> {
         return userService.generateAndSaveRecommendations(userId)
     }
 

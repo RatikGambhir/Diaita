@@ -2,6 +2,7 @@ package com.diaita.routers
 
 import com.diaita.controllers.UserController
 import com.diaita.dto.RegisterUserProfileRequestDto
+import com.diaita.dto.ServiceResult
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.request.receive
@@ -23,12 +24,10 @@ fun Application.configureUserRoutes(userController: UserController) {
                 call.respondText("Invalid request, request body is invalid", status = HttpStatusCode.BadRequest)
                 return@post
             }
-            val registeredUser = userController.registerUserProfile(user)
-            if(registeredUser == "Mutation Success") {
-                call.respond(HttpStatusCode.OK, mapOf("status" to "ok"))
-                return@post
+            when (val result = userController.registerUserProfile(user)) {
+                is ServiceResult.Success -> call.respond(HttpStatusCode.OK, result.data)
+                is ServiceResult.Failure -> call.respondText(result.error, status = HttpStatusCode.InternalServerError)
             }
-            call.respondText("Server Error occurred", status = HttpStatusCode.BadRequest)
         }
 
         post("/user/profile") {
@@ -37,12 +36,10 @@ fun Application.configureUserRoutes(userController: UserController) {
                 call.respondText("Invalid request, request body is invalid", status = HttpStatusCode.BadRequest)
                 return@post
             }
-            val registeredUser = userController.registerUserProfile(user)
-            if(registeredUser == "Mutation Success") {
-                call.respond(HttpStatusCode.OK, mapOf("status" to "ok"))
-                return@post
+            when (val result = userController.registerUserProfile(user)) {
+                is ServiceResult.Success -> call.respond(HttpStatusCode.OK, result.data)
+                is ServiceResult.Failure -> call.respondText(result.error, status = HttpStatusCode.InternalServerError)
             }
-            call.respondText("Server Error occurred", status = HttpStatusCode.BadRequest)
         }
 
         post("/users/{userId}/recommendations/generate") {
@@ -52,13 +49,10 @@ fun Application.configureUserRoutes(userController: UserController) {
                 return@post
             }
 
-            val recommendation = userController.generateAndSaveRecommendations(userId)
-            if (recommendation != null) {
-                call.respond(HttpStatusCode.OK, recommendation)
-                return@post
+            when (val result = userController.generateAndSaveRecommendations(userId)) {
+                is ServiceResult.Success -> call.respond(HttpStatusCode.OK, result.data)
+                is ServiceResult.Failure -> call.respondText(result.error, status = HttpStatusCode.InternalServerError)
             }
-
-            call.respondText("Failed to generate recommendations", status = HttpStatusCode.InternalServerError)
         }
 
         get("/users/{userId}/recommendations") {

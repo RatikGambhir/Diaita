@@ -10,6 +10,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -70,10 +72,10 @@ class UserRepoTest {
         coEvery {
             manager.rpcDecoded<RegisteredUserProfileDto>(
                 "upsert_full_profile",
-                mapOf(
-                    "p_user_id" to request.userId,
-                    "p_payload" to request.toUpsertFullProfilePayload()
-                )
+                buildJsonObject {
+                    put("p_user_id", JsonPrimitive(request.userId))
+                    put("p_payload", request.toUpsertFullProfilePayload())
+                }
             )
         } returns Result<RegisteredUserProfileDto>(null, RuntimeException("boom"))
 

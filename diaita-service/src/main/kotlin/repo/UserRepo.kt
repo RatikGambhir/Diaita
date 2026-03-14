@@ -5,16 +5,18 @@ import com.diaita.dto.RegisteredUserProfileDto
 import com.diaita.entity.*
 import com.diaita.lib.factories.SupabaseManager
 import com.diaita.lib.mappings.*
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 
 class UserRepo(private val supabaseManager: SupabaseManager) {
 
     suspend fun upsertFullProfile(request: RegisterUserProfileRequestDto): String {
         val result = supabaseManager.rpcDecoded<RegisteredUserProfileDto>(
             functionName = UPSERT_FULL_PROFILE_RPC,
-            parameters = mapOf(
-                "p_user_id" to request.userId,
-                "p_payload" to request.toUpsertFullProfilePayload()
-            )
+            parameters = buildJsonObject {
+                put("p_user_id", JsonPrimitive(request.userId))
+                put("p_payload", request.toUpsertFullProfilePayload())
+            }
         )
 
         return if (result.body != null) "Mutation Success" else "Mutation Failed"
@@ -93,7 +95,9 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
     suspend fun getFullProfile(userId: String): RegisteredUserProfileDto? {
         val result = supabaseManager.rpcDecoded<RegisteredUserProfileDto>(
             functionName = GET_FULL_PROFILE_RPC,
-            parameters = mapOf("p_user_id" to userId)
+            parameters = buildJsonObject {
+                put("p_user_id", JsonPrimitive(userId))
+            }
         )
         return result.body
     }
