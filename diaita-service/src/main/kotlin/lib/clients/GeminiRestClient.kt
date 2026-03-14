@@ -32,24 +32,6 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         return searchRecipes("hello")
     }
 
-    suspend fun askQuestion(
-        prompt: String,
-        config: GenerationConfigDto? = null,
-        systemInstruction: String? = null
-    ): String? {
-        val request = GeminiRequestDto.fromPrompt(prompt, config, systemInstruction)
-        val response = client.post {
-            contentType(ContentType.Application.Json)
-            setBody(request)
-        }.body<GeminiResponseDto>()
-
-        if (response.error != null) {
-            throw Exception("Gemini API error (${response.error.code} ${response.error.status}): ${response.error.message}")
-        }
-
-        return response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
-    }
-
     suspend fun askQuestionStream(
         prompt: String,
         systemInstruction: String? = null,
@@ -104,38 +86,44 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         systemInstruction: String? = null,
         config: GenerationConfigDto? = null
     ): T? {
-        val request = GeminiRequestDto.fromPrompt(
-            prompt = prompt,
-            config = config?.copy(
-                responseMimeType = "application/json",
-                responseSchema = responseSchema
-            ) ?: GenerationConfigDto(
-                temperature = 0.7,
-                topP = 0.95,
-                topK = 40,
-                maxOutputTokens = 8192,
-                responseMimeType = "application/json",
-                responseSchema = responseSchema
-            ),
-            systemInstruction = systemInstruction
-        )
+        try {
+            val request = GeminiRequestDto.fromPrompt(
+                prompt = prompt,
+                config = config?.copy(
+                    responseMimeType = "application/json",
+                    responseSchema = responseSchema
+                ) ?: GenerationConfigDto(
+                    temperature = 0.7,
+                    topP = 0.95,
+                    topK = 40,
+                    maxOutputTokens = 8192,
+                    responseMimeType = "application/json",
+                    responseSchema = responseSchema
+                ),
+                systemInstruction = systemInstruction
+            )
 
-        val response = client.post {
-            contentType(ContentType.Application.Json)
-            setBody(request)
-        }.body<GeminiResponseDto>()
+            val response = client.post {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body<GeminiResponseDto>()
 
-        if (response.error != null) {
-            throw Exception("Gemini API error (${response.error.code} ${response.error.status}): ${response.error.message}")
+            if (response.error != null) {
+                println("Gemini API error (${response.error.code} ${response.error.status}): ${response.error.message}")
+                return null
+            }
+
+            return response.candidates
+                .firstOrNull()
+                ?.content
+                ?.parts
+                ?.firstOrNull()
+                ?.text
+                ?.let { json.decodeFromString(serializer, it) }
+        } catch (e: Exception) {
+            println("Error calling Gemini Structured API: ${e.message}")
+            return null
         }
-
-        return response.candidates
-            .firstOrNull()
-            ?.content
-            ?.parts
-            ?.firstOrNull()
-            ?.text
-            ?.let { json.decodeFromString(serializer, it) }
     }
 
     private fun buildStreamUrl(): String {

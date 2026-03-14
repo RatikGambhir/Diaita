@@ -28,36 +28,39 @@ class UserService(
 ) {
 
     suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): ServiceResult<RecommendationDto> = coroutineScope {
-        val upsertDeferred = async { runCatching { userRepo.upsertFullProfile(request) } }
-        val recommendationDeferred = async { runCatching { genRecommendations(request) } }
+        coroutineScope {
+            val upsertDeferred = async { runCatching { userRepo.upsertFullProfile(request) } }
+            val recommendationDeferred = async { runCatching { genRecommendations(request) } }
 
-        val upsertResult = upsertDeferred.await()
-        val recommendationResult = recommendationDeferred.await()
+            val upsertResult = upsertDeferred.await()
+            val recommendationResult = recommendationDeferred.await()
+            upsertResult.getOrElse {
+                return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: ${it.message}")
+            }
+//            if (result != "Mutation Success") {
+//                return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: $result")
+//            }
 
-        val result = upsertResult.getOrElse {
-            return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: ${it.message}")
-        }
-        if (result != "Mutation Success") {
-            return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: $result")
+            val recommendation = recommendationResult.getOrElse {
+                return@coroutineScope ServiceResult.Failure("genRecommendations failed: ${it.message}")
+            }
+            if (recommendation == null) {
+                return@coroutineScope ServiceResult.Failure("genRecommendations failed: returned null")
+            }
+
+            val saved = try {
+                saveUserRecommendations(request.userId, recommendation)
+            } catch (e: Exception) {
+                return@coroutineScope ServiceResult.Failure("saveUserRecommendations failed: ${e.message}")
+            }
+            if (!saved) {
+                return@coroutineScope ServiceResult.Failure("saveUserRecommendations failed: save returned false")
+            }
+
+            ServiceResult.Success(recommendation)
         }
 
-        val recommendation = recommendationResult.getOrElse {
-            return@coroutineScope ServiceResult.Failure("genRecommendations failed: ${it.message}")
-        }
-        if (recommendation == null) {
-            return@coroutineScope ServiceResult.Failure("genRecommendations failed: returned null")
-        }
 
-        val saved = try {
-            saveUserRecommendations(request.userId, recommendation)
-        } catch (e: Exception) {
-            return@coroutineScope ServiceResult.Failure("saveUserRecommendations failed: ${e.message}")
-        }
-        if (!saved) {
-            return@coroutineScope ServiceResult.Failure("saveUserRecommendations failed: save returned false")
-        }
-
-        ServiceResult.Success(recommendation)
     }
 
     suspend fun genRecommendations(
