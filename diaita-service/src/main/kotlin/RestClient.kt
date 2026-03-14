@@ -1,16 +1,10 @@
 package com.diaita
-import com.google.genai.Client
 import com.diaita.lib.clients.GeminiRestClient
 import com.diaita.lib.clients.NutritionRestClient
 import com.diaita.lib.clients.RestClient
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.server.application.*
-import io.ktor.client.plugins.defaultRequest
 
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
+import io.ktor.server.application.*
+
 
 
 fun Application.configureRestClient(): List<RestClient> {
