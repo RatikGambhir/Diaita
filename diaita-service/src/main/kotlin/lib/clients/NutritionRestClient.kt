@@ -22,9 +22,7 @@ open class NutritionRestClient(
     url: String
 ) : RestClient(apiKey, url) {
 
-    override fun getFood(): String {
-        return searchRecipes("hello")
-    }
+
 
     open suspend fun searchIngredients(
         query: String,

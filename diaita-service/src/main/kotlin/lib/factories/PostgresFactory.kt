@@ -4,6 +4,7 @@ object PostgresFactory {
 
     // ── Schemas ──
     const val NUTRITION_SCHEMA = "nutrition"
+    const val PUBLIC_SCHEMA = "public"
 
     // ── Tables ──
     const val MEALS_TABLE = "meals"

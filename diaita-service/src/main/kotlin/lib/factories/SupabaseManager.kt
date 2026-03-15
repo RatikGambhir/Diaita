@@ -222,7 +222,7 @@ class SupabaseManager(val client: SupabaseClient) {
     suspend inline fun <reified T : Any> rpcDecoded(
         functionName: String,
         parameters: JsonObject = buildJsonObject {},
-        schemaStr: String = "public"
+        schemaStr: String = PostgresFactory::PUBLIC_SCHEMA.toString()
     ): Result<T> {
         return try {
             val result = client.postgrest.rpc(functionName, parameters) {

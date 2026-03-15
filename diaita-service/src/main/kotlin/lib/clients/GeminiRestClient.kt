@@ -28,9 +28,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         explicitNulls = false
     }
 
-    override fun getFood(): String {
-        return searchRecipes("hello")
-    }
+
 
     suspend fun askQuestionStream(
         prompt: String,

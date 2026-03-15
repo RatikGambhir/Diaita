@@ -26,9 +26,5 @@ abstract class RestClient(apiKey: String, url: String) {
         }
     }
 
-    fun searchRecipes(query: String): String {
-        return ""
-    }
 
-    abstract fun getFood(): String
 }
