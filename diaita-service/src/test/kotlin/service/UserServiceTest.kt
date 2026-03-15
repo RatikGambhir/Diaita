@@ -2,6 +2,7 @@ package com.diaita.service
 
 import com.diaita.Container
 import com.diaita.dto.RecommendationDto
+import com.diaita.dto.RegisterUserProfileResponseDto
 import com.diaita.dto.ServiceResult
 import com.diaita.lib.clients.GeminiRestClient
 import com.diaita.lib.mappings.toEntity
@@ -36,9 +37,10 @@ class UserServiceTest {
     @Test
     fun registerUserProfile_returns_success_when_upsert_and_recommendations_succeed() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
+        val profile = RecommendationTestData.registeredProfile(payload.userId)
         val recommendation = RecommendationTestData.recommendation()
 
-        coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
+        coEvery { repo.upsertFullProfile(payload) } returns profile
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -46,8 +48,9 @@ class UserServiceTest {
 
         val result = service.registerUserProfile(payload)
 
-        assertIs<ServiceResult.Success<RecommendationDto>>(result)
-        assertEquals(recommendation, result.data)
+        assertIs<ServiceResult.Success<RegisterUserProfileResponseDto>>(result)
+        assertEquals(profile, result.data.profile)
+        assertEquals(recommendation, result.data.recommendation)
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
         coVerify(exactly = 1) {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
@@ -60,7 +63,7 @@ class UserServiceTest {
         val payload = UserProfileTestData.fullRequest()
         val recommendation = RecommendationTestData.recommendation()
 
-        coEvery { repo.upsertFullProfile(payload) } returns "Mutation Failed"
+        coEvery { repo.upsertFullProfile(payload) } returns null
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -75,8 +78,9 @@ class UserServiceTest {
     @Test
     fun registerUserProfile_returns_failure_when_recommendation_generation_fails() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
+        val profile = RecommendationTestData.registeredProfile(payload.userId)
 
-        coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
+        coEvery { repo.upsertFullProfile(payload) } returns profile
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns null
@@ -95,9 +99,10 @@ class UserServiceTest {
     @Test
     fun registerUserProfile_returns_failure_when_recommendation_save_fails() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
+        val profile = RecommendationTestData.registeredProfile(payload.userId)
         val recommendation = RecommendationTestData.recommendation()
 
-        coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
+        coEvery { repo.upsertFullProfile(payload) } returns profile
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation

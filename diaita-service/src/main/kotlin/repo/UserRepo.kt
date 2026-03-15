@@ -10,7 +10,7 @@ import kotlinx.serialization.json.buildJsonObject
 
 class UserRepo(private val supabaseManager: SupabaseManager) {
 
-    suspend fun upsertFullProfile(request: RegisterUserProfileRequestDto): String {
+    suspend fun upsertFullProfile(request: RegisterUserProfileRequestDto): RegisteredUserProfileDto? {
         val result = supabaseManager.rpcDecoded<RegisteredUserProfileDto>(
             functionName = UPSERT_FULL_PROFILE_RPC,
             parameters = buildJsonObject {
@@ -19,7 +19,7 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
             }
         )
 
-        return if (result.body != null) "Mutation Success" else "Mutation Failed"
+        return result.body
     }
 
     private suspend inline fun <reified T : Any> getSection(table: String, userId: String): T? {

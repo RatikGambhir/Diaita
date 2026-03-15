@@ -65,8 +65,9 @@ class UserRouterTest {
     @Test
     fun register_returns_200_and_calls_controller_with_payload_on_success() = testApplication {
         val payload = UserProfileTestData.fullRequest()
+        val profile = RecommendationTestData.registeredProfile(payload.userId)
         val recommendation = RecommendationTestData.recommendation()
-        coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
+        coEvery { repo.upsertFullProfile(payload) } returns profile
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -82,7 +83,9 @@ class UserRouterTest {
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(recommendation, Json.decodeFromString<RecommendationDto>(response.bodyAsText()))
+        val body = Json.decodeFromString<RegisterUserProfileResponseDto>(response.bodyAsText())
+        assertEquals(profile, body.profile)
+        assertEquals(recommendation, body.recommendation)
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
         coVerify(exactly = 1) {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
@@ -112,7 +115,7 @@ class UserRouterTest {
     fun user_profile_returns_500_when_controller_reports_failure() = testApplication {
         val payload = UserProfileTestData.fullRequest()
         val recommendation = RecommendationTestData.recommendation()
-        coEvery { repo.upsertFullProfile(payload) } returns "Mutation Failed"
+        coEvery { repo.upsertFullProfile(payload) } returns null
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -134,8 +137,9 @@ class UserRouterTest {
     @Test
     fun user_profile_returns_200_on_success() = testApplication {
         val payload = UserProfileTestData.fullRequest()
+        val profile = RecommendationTestData.registeredProfile(payload.userId)
         val recommendation = RecommendationTestData.recommendation()
-        coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
+        coEvery { repo.upsertFullProfile(payload) } returns profile
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -151,7 +155,9 @@ class UserRouterTest {
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(recommendation, Json.decodeFromString<RecommendationDto>(response.bodyAsText()))
+        val body = Json.decodeFromString<RegisterUserProfileResponseDto>(response.bodyAsText())
+        assertEquals(profile, body.profile)
+        assertEquals(recommendation, body.recommendation)
         coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
         coVerify(exactly = 1) {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
@@ -177,9 +183,10 @@ class UserRouterTest {
     @Test
     fun integration_register_calls_repo_and_recommendations_when_upsert_succeeds() = testApplication {
         val payload = UserProfileTestData.fullRequest()
+        val profile = RecommendationTestData.registeredProfile(payload.userId)
         val recommendation = RecommendationTestData.recommendation()
 
-        coEvery { repo.upsertFullProfile(payload) } returns "Mutation Success"
+        coEvery { repo.upsertFullProfile(payload) } returns profile
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -207,7 +214,7 @@ class UserRouterTest {
         val payload = UserProfileTestData.fullRequest()
         val recommendation = RecommendationTestData.recommendation()
 
-        coEvery { repo.upsertFullProfile(payload) } returns "Mutation Failed"
+        coEvery { repo.upsertFullProfile(payload) } returns null
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation

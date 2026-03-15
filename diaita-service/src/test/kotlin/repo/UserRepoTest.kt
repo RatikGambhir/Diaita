@@ -64,7 +64,7 @@ class UserRepoTest {
     }
 
     @Test
-    fun upsertFullProfile_returns_mutation_failed_when_any_required_upsert_fails() = runBlocking {
+    fun upsertFullProfile_returns_null_when_rpc_fails() = runBlocking {
         val request = UserProfileTestData.fullRequest()
         val manager = mockk<SupabaseManager>()
         val userRepo = repo(manager)
@@ -81,7 +81,7 @@ class UserRepoTest {
 
         val result = userRepo.upsertFullProfile(request)
 
-        assertEquals("Mutation Failed", result)
+        assertNull(result)
     }
 
 }
