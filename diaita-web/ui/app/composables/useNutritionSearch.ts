@@ -1,6 +1,6 @@
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { nutritionApi } from "~/api/nutrition";
-import type { NutritionFood, NutritionSearchFilter } from "~/types/nutrition";
+import type { NutritionFood, NutritionSearchFilter } from "~/types/NutritionTypes";
 
 const SEARCH_DEBOUNCE_MS = 250;
 const MIN_QUERY_LENGTH = 2;

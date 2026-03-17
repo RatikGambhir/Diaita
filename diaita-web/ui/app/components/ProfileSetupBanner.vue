@@ -24,7 +24,7 @@ onMounted(() => {
 })
 
 const shouldShowBanner = computed(() => {
-  return !userStore.hasCompletedProfile && !isDismissed.value
+  return userStore.getProfileStatus === 'missing' && !isDismissed.value
 })
 
 const completeNow = () => {

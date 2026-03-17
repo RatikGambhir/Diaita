@@ -36,8 +36,9 @@ const updateField = (field: keyof BasicDemographics, value: any) => {
   emit('update:formData', { [field]: value })
 }
 
-const handleNumberInput = (field: keyof BasicDemographics, value: string) => {
-  const numValue = value === '' ? null : Number(value)
+const handleNumberInput = (field: keyof BasicDemographics, value: string | number) => {
+  const normalizedValue = value === '' ? '' : String(value)
+  const numValue = normalizedValue === '' ? null : Number(normalizedValue)
   updateField(field, numValue)
 }
 </script>
@@ -57,6 +58,7 @@ const handleNumberInput = (field: keyof BasicDemographics, value: string) => {
           type="number"
           min="1"
           max="120"
+          class="bg-background"
           :model-value="formData.age?.toString() ?? ''"
           @update:model-value="handleNumberInput('age', $event)"
           placeholder="25"
@@ -87,6 +89,7 @@ const handleNumberInput = (field: keyof BasicDemographics, value: string) => {
           type="number"
           min="50"
           max="1000"
+          class="autofill:high"
           :model-value="formData.weight?.toString() ?? ''"
           @update:model-value="handleNumberInput('weight', $event)"
           placeholder="155"

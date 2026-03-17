@@ -4,7 +4,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useForm, Field as FormField } from 'vee-validate'
 import { supabase } from "~/utils";
 import { useUserStore } from "~/stores/useUserStore";
-import type {AuthError} from "@supabase/supabase-js";
+import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import Button from '~/components/ui/button/Button.vue'
 import Input from '~/components/ui/input/Input.vue'
@@ -19,8 +19,8 @@ definePageMeta({
 
 export interface UserSession {
   error: AuthError | null,
-  user: object | null,
-  session: object | null
+  user: User | null,
+  session: Session | null
 }
 
 const userStore = useUserStore();
@@ -78,7 +78,7 @@ const onSubmit = handleSubmit(async (values) => {
           color: "error",
         });
       } else {
-        userStore.addUserSession(user ?? {}, session ?? {});
+        userStore.addUserSession(user ?? null, session ?? null);
 
         const redirectPath = route.query.redirect as string | undefined
 

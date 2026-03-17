@@ -4,7 +4,7 @@ import { nutritionApi } from "~/api/nutrition";
 import type {
   NutritionAutocompleteSuggestion,
   NutritionSearchFilter,
-} from "~/types/nutrition";
+} from "~/types/NutritionTypes";
 
 const AUTOCOMPLETE_DEBOUNCE_MS = 150;
 const AUTOCOMPLETE_MIN_QUERY_LENGTH = 2;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Period, Range, Stat } from '~/types'
+import type { Period, Range, Stat } from '~/types/SharedTypes'
 import { randomInt } from '~/utils'
 import Card from '~/components/ui/card/Card.vue'
 import CardContent from '~/components/ui/card/CardContent.vue'
@@ -19,7 +19,7 @@ function formatCurrency(value: number): string {
   })
 }
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, Component> = {
   'i-lucide-users': Users,
   'i-lucide-chart-pie': PieChart,
   'i-lucide-circle-dollar-sign': CircleDollarSign,

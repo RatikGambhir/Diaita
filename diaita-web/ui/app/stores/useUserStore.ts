@@ -1,35 +1,61 @@
+import type { Session, User } from "@supabase/supabase-js";
 import { defineStore } from "pinia";
-import type { UserProfile } from "~/types";
+import type { Recommendation, RegisteredUserProfile } from "~/types/ProfileTypes";
 
 const USER_STATE_STORAGE_KEY = "diaita-user-state";
 
 type PersistedUserState = {
-  user: object | null;
-  session: object | null;
+  user: User | null;
+  session: Session | null;
 };
+
+export type ProfileStatus = "idle" | "loading" | "loaded" | "missing";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
-    user: null as object | null,
-    session: null as object | null,
+    user: null as User | null,
+    session: null as Session | null,
     error: null as string | null,
-    profile: null as UserProfile | null,
+    profile: null as RegisteredUserProfile | null,
+    recommendation: null as Recommendation | null,
+    profileStatus: "idle" as ProfileStatus,
   }),
   getters: {
     getUser: (state) => state.user,
     getSession: (state) => state.session,
     getError: (state) => state.error,
     getProfile: (state) => state.profile,
-    hasCompletedProfile: (state) => state.profile !== null,
+    getRecommendation: (state) => state.recommendation,
+    getProfileStatus: (state) => state.profileStatus,
+    hasCompletedProfile: (state) =>
+      state.profileStatus === "loaded" && state.profile !== null,
   },
   actions: {
-    addUserSession(user: object | null, session: object | null) {
+    addUserSession(user: User | null, session: Session | null) {
+      const previousUserId = this.user?.id ?? null;
+      const nextUserId = user?.id ?? null;
+
+      if (previousUserId !== nextUserId) {
+        this.resetProfileState();
+      }
+
       this.user = user;
       this.session = session;
       this.persistAuthState();
     },
-    setProfile(profile: UserProfile | null) {
+    setProfile(profile: RegisteredUserProfile | null) {
       this.profile = profile;
+    },
+    setRecommendation(recommendation: Recommendation | null) {
+      this.recommendation = recommendation;
+    },
+    setProfileStatus(status: ProfileStatus) {
+      this.profileStatus = status;
+    },
+    resetProfileState() {
+      this.profile = null;
+      this.recommendation = null;
+      this.profileStatus = "idle";
     },
     hydrateAuthState() {
       if (!import.meta.client) {
@@ -65,8 +91,8 @@ export const useUserStore = defineStore("user", {
     clearSession() {
       this.user = null;
       this.session = null;
-      this.profile = null;
       this.error = null;
+      this.resetProfileState();
 
       if (import.meta.client) {
         localStorage.removeItem(USER_STATE_STORAGE_KEY);

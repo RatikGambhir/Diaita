@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { WorkoutCard } from "~/types";
+import type { WorkoutCard } from "~/types/WorkoutTypes";
 import Card from '~/components/ui/card/Card.vue'
 import Badge from '~/components/ui/badge/Badge.vue'
 import Button from '~/components/ui/button/Button.vue'

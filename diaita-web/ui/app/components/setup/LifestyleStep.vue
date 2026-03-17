@@ -56,8 +56,9 @@ const updateField = (field: keyof ActivityLifestyle, value: any) => {
   emit('update:formData', { [field]: value })
 }
 
-const handleNumberInput = (field: keyof ActivityLifestyle, value: string) => {
-  const numValue = value === '' ? null : Number(value)
+const handleNumberInput = (field: keyof ActivityLifestyle, value: string | number) => {
+  const normalizedValue = value === '' ? '' : String(value)
+  const numValue = normalizedValue === '' ? null : Number(normalizedValue)
   updateField(field, numValue)
 }
 </script>

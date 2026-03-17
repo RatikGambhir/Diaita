@@ -65,8 +65,9 @@ const updateField = (field: keyof TrainingBackground, value: any) => {
   emit('update:formData', { [field]: value })
 }
 
-const handleNumberInput = (field: keyof TrainingBackground, value: string) => {
-  const numValue = value === '' ? null : Number(value)
+const handleNumberInput = (field: keyof TrainingBackground, value: string | number) => {
+  const normalizedValue = value === '' ? '' : String(value)
+  const numValue = normalizedValue === '' ? null : Number(normalizedValue)
   updateField(field, numValue)
 }
 

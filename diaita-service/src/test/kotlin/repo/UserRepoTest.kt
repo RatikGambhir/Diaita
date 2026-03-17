@@ -1,19 +1,19 @@
 package com.diaita.repo
 
 import com.diaita.dto.RegisteredUserProfileDto
+import com.diaita.lib.factories.PostgresFactory
 import com.diaita.lib.factories.Result
 import com.diaita.lib.factories.SupabaseManager
 import com.diaita.lib.mappings.toUpsertFullProfilePayload
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import com.diaita.lib.mappings.toEntity
 import com.diaita.testdata.UserProfileTestData
 import io.github.jan.supabase.SupabaseClient
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 

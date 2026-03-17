@@ -63,8 +63,9 @@ const updateField = (field: keyof GoalsPriorities, value: any) => {
   emit('update:formData', { [field]: value })
 }
 
-const handleNumberInput = (field: keyof GoalsPriorities, value: string) => {
-  const numValue = value === '' ? null : Number(value)
+const handleNumberInput = (field: keyof GoalsPriorities, value: string | number) => {
+  const normalizedValue = value === '' ? '' : String(value)
+  const numValue = normalizedValue === '' ? null : Number(normalizedValue)
   updateField(field, numValue)
 }
 

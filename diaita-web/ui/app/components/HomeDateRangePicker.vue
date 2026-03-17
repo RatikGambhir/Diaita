@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Range } from '~/types'
+import type { Range } from '~/types/SharedTypes'
 import Button from '~/components/ui/button/Button.vue'
 import { Calendar } from 'lucide-vue-next'
 

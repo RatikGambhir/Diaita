@@ -153,7 +153,7 @@ const toggleTool = (tool: string) => {
         <Textarea
           id="notes"
           :model-value="notes"
-          @update:model-value="emit('update:notes', $event)"
+          @update:model-value="emit('update:notes', String($event))"
           placeholder="Anything else you'd like us to know about your goals, preferences, or situation..."
           class="min-h-[120px]"
         />

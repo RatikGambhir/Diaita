@@ -9,6 +9,7 @@ object PostgresFactory {
     // ── Tables ──
     const val MEALS_TABLE = "meals"
     const val MEAL_ITEMS_TABLE = "meal_items"
+    const val USER_PROFILE_TABLE = "user_profile_"
     const val BASIC_DEMOGRAPHICS_TABLE = "basic_demographics"
     const val ACTIVITY_LIFESTYLE_TABLE = "activity_lifestyle"
     const val GOALS_PRIORITIES_TABLE = "goals_priorities"

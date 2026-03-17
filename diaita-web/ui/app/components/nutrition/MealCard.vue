@@ -2,7 +2,7 @@
 import { ref } from "vue"
 import type { FunctionalComponent } from "vue"
 import type { LucideProps } from "lucide-vue-next"
-import type { NutritionFood } from "~/types/nutrition"
+import type { NutritionFood } from "~/types/NutritionTypes"
 import Button from "~/components/ui/button/Button.vue"
 import Card from "~/components/ui/card/Card.vue"
 import CardContent from "~/components/ui/card/CardContent.vue"

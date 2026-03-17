@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NutritionFood } from "~/types/nutrition"
+import type { NutritionFood } from "~/types/NutritionTypes"
 import Button from "~/components/ui/button/Button.vue"
 
 type ActionVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";

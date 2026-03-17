@@ -42,6 +42,22 @@ fun Application.configureUserRoutes(userController: UserController) {
             }
         }
 
+        get("/user/profile/{userId}") {
+            val userId = call.parameters["userId"]
+            if (userId.isNullOrBlank()) {
+                call.respondText("Missing userId parameter", status = HttpStatusCode.BadRequest)
+                return@get
+            }
+
+            val profile = userController.getUserProfile(userId)
+            if (profile != null) {
+                call.respond(HttpStatusCode.OK, profile)
+                return@get
+            }
+
+            call.respondText("Profile not found", status = HttpStatusCode.NotFound)
+        }
+
         post("/users/{userId}/recommendations/generate") {
             val userId = call.parameters["userId"]
             if (userId.isNullOrBlank()) {

@@ -5,7 +5,7 @@ import type {
   NutritionItemType,
   NutritionSearchFilter,
   NutritionUpsertMealsRequest,
-} from "~/types/nutrition";
+} from "~/types/NutritionTypes";
 import { apiClient } from "./client";
 
 

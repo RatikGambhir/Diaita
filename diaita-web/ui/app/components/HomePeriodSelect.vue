@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Period, Range } from '~/types'
+import type { Period, Range } from '~/types/SharedTypes'
 import Button from '~/components/ui/button/Button.vue'
 
-const props = defineProps<{
+defineProps<{
   modelValue: Period
   range: Range
 }>()

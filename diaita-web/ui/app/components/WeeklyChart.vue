@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, format } from 'date-fns'
 import { VisXYContainer, VisLine, VisAxis, VisArea, VisCrosshair, VisTooltip } from '@unovis/vue'
-import type { Period, Range } from '~/types'
-import { randomInt } from '~/utils'
+import type { Period, Range } from '~/types/SharedTypes'
 import { useElementSize } from '@vueuse/core'
 import Card from '~/components/ui/card/Card.vue'
 import CardHeader from '~/components/ui/card/CardHeader.vue'

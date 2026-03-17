@@ -15,7 +15,7 @@ import SelectContent from "~/components/ui/select/SelectContent.vue"
 import SelectItem from "~/components/ui/select/SelectItem.vue"
 import SelectTrigger from "~/components/ui/select/SelectTrigger.vue"
 import SelectValue from "~/components/ui/select/SelectValue.vue"
-import type { NutritionAutocompleteSuggestion, NutritionFood } from "~/types/nutrition"
+import type { NutritionAutocompleteSuggestion, NutritionFood } from "~/types/NutritionTypes"
 
 const props = defineProps<{
     open: boolean;

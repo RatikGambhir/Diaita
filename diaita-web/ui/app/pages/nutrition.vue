@@ -12,7 +12,7 @@ import type {
   NutritionMealBucket,
   NutritionMealType,
   NutritionUpsertMealItem,
-} from "~/types/nutrition";
+} from "~/types/NutritionTypes";
 import Button from "~/components/ui/button/Button.vue"
 import NutritionSummaryCard from "~/components/nutrition/NutritionSummaryCard.vue"
 import MacroDistributionCard from "~/components/nutrition/MacroDistributionCard.vue"

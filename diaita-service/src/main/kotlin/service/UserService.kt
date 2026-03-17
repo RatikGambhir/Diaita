@@ -29,17 +29,15 @@ class UserService(
 ) {
 
     suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): ServiceResult<RegisterUserProfileResponseDto> = coroutineScope {
-        val upsertDeferred = async { runCatching { userRepo.upsertFullProfile(request) } }
-        val recommendationDeferred = async { runCatching { genRecommendations(request) } }
-
-        val upsertResult = upsertDeferred.await()
-        val recommendationResult = recommendationDeferred.await()
+        val upsertResult = async { runCatching { userRepo.upsertFullProfile(request) } }.await()
         val profile = upsertResult.getOrElse {
             return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: ${it.message}")
         }
         if (profile == null) {
             return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: returned null")
         }
+
+        val recommendationResult = async { runCatching { genRecommendations(profile) } }.await()
 
         val recommendation = recommendationResult.getOrElse {
             return@coroutineScope ServiceResult.Failure("genRecommendations failed: ${it.message}")
@@ -93,6 +91,10 @@ class UserService(
         } else {
             ServiceResult.Failure("saveUserRecommendations failed: save returned false")
         }
+    }
+
+    suspend fun getUserProfile(userId: String): RegisteredUserProfileDto? {
+        return userRepo.getFullProfile(userId)
     }
 
     suspend fun saveUserRecommendations(userId: String, recommendation: RecommendationDto): Boolean {

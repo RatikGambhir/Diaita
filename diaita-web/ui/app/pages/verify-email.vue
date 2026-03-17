@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { AuthError, Session, User } from "@supabase/supabase-js";
 import {useUserStore} from "~/stores/useUserStore";
-import type {UserSession} from "~/pages/login.vue"
 import Button from '~/components/ui/button/Button.vue'
+import type { RegisteredUserProfile } from "~/types/ProfileTypes";
 
 const userStore = useUserStore();
 
@@ -21,6 +22,12 @@ const inputRefs = ref<HTMLInputElement[]>([]);
 const resendTimer = ref(25);
 const canResend = ref(false);
 const timerInterval = ref<NodeJS.Timeout | null>(null);
+
+type UserSession = {
+  error: AuthError | null;
+  user: User | null;
+  session: Session | null;
+};
 
 const startTimer = () => {
     resendTimer.value = 25;
@@ -131,7 +138,19 @@ console.log("ERROR: ", error)
     userStore.addUserSession(user, session)
 
     const { fetchProfile } = useUserProfile()
-    const profile = await fetchProfile()
+    let profile: RegisteredUserProfile | null = null
+
+    try {
+      profile = await fetchProfile()
+    } catch (profileError) {
+      console.error("Error fetching profile after verification:", profileError)
+      toast.add({
+        title: "Could not load your profile",
+        description: "Please try again.",
+        color: "error",
+      })
+      return
+    }
 
     const redirectPath = route.query.redirect as string | undefined
 

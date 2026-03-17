@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Home, Dumbbell, Utensils, Settings, MessageCircle, LogOut, Search, PanelLeftClose, PanelLeft } from 'lucide-vue-next'
+import { Home, Dumbbell, Utensils, Settings, MessageCircle, LogOut, Search, PanelLeftClose, PanelLeft, UserCircle } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 import { supabase } from '~/utils'
 import { useUserStore } from '~/stores/useUserStore'
@@ -12,6 +12,7 @@ const sidebarCollapsed = ref(false)
 
 const mainNavItems = [
   { label: 'Home', icon: Home, to: '/' },
+  { label: 'Profile', icon: UserCircle, to: '/profile' },
   { label: 'Workouts', icon: Dumbbell, to: '/workouts' },
   { label: 'Nutrition', icon: Utensils, to: '/nutrition' },
   { label: 'Settings', icon: Settings, to: '/settings' }

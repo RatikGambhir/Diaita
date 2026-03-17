@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { Range } from '~/types'
-import { useUserStore } from "~/stores/useUserStore"
+import type { Range } from '~/types/SharedTypes'
 import Button from '~/components/ui/button/Button.vue'
 import { Bell, Plus, Send, UserPlus } from 'lucide-vue-next'
 import {
@@ -25,21 +24,6 @@ const items = [
   { label: 'New mail', icon: Send, to: '/inbox' },
   { label: 'New customer', icon: UserPlus, to: '/customers' }
 ]
-
-//TODO: Prefetch user data
-const userStore = useUserStore()
-const user = userStore.user
-const session = userStore.session
-console.log(user)
-console.log(userStore)
-
-// Load user profile if not already loaded
-const { fetchProfile } = useUserProfile()
-onMounted(async () => {
-  if (!userStore.getProfile) {
-    await fetchProfile()
-  }
-})
 
 const range = shallowRef<Range>({
   start: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),

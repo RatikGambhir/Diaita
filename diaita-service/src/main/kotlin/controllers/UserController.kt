@@ -7,6 +7,7 @@ import com.diaita.dto.NutritionDietHistoryDto
 import com.diaita.dto.RecommendationDto
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.RegisterUserProfileResponseDto
+import com.diaita.dto.RegisteredUserProfileDto
 import com.diaita.dto.ServiceResult
 import com.diaita.dto.TrainingBackgroundDto
 import com.diaita.service.UserService
@@ -18,6 +19,10 @@ class UserController(private val userService: UserService) {
 
     suspend fun generateAndSaveRecommendations(userId: String): ServiceResult<RecommendationDto> {
         return userService.generateAndSaveRecommendations(userId)
+    }
+
+    suspend fun getUserProfile(userId: String): RegisteredUserProfileDto? {
+        return userService.getUserProfile(userId)
     }
 
     suspend fun getRecommendations(userId: String): RecommendationDto? {
