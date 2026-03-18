@@ -13,6 +13,8 @@ import com.diaita.dto.RegisterUserProfileResponseDto
 import com.diaita.dto.RegisteredUserProfileDto
 import com.diaita.dto.ServiceResult
 import com.diaita.dto.TrainingBackgroundDto
+import com.diaita.dto.UserSettingsAction
+import com.diaita.dto.UserSettingsPage
 import com.diaita.lib.factories.PromptFactory
 import com.diaita.lib.mappings.*
 import com.diaita.lib.prompt_extensions.toPromptVariables
@@ -20,6 +22,9 @@ import com.diaita.repo.RecommendationRepo
 import com.diaita.repo.UserRepo
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
 
 
 class UserService(
@@ -27,6 +32,7 @@ class UserService(
     private val client: GeminiRestClient,
     private val recommendationRepo: RecommendationRepo
 ) {
+    private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): ServiceResult<RegisterUserProfileResponseDto> = coroutineScope {
         val upsertResult = async { runCatching { userRepo.upsertFullProfile(request) } }.await()
@@ -105,77 +111,85 @@ class UserService(
         return recommendationRepo.getRecommendationByUserId(userId)
     }
 
-    suspend fun getBasicDemographics(userId: String): BasicDemographicsDto? {
-        return userRepo.getBasicDemographics(userId)?.toDto()
-    }
-
-    suspend fun updateBasicDemographics(
+    suspend fun handleUserSettings(
         userId: String,
-        dto: BasicDemographicsDto
-    ): BasicDemographicsDto? {
-        return userRepo.updateBasicDemographics(userId, dto.toEntity(userId))?.toDto()
+        page: UserSettingsPage,
+        action: UserSettingsAction,
+        payload: JsonElement? = null
+    ): Any? = when (page) {
+        UserSettingsPage.BASIC_DEMOGRAPHICS -> runSettingsAction(
+            action = action,
+            userId = userId,
+            payload = payload,
+            getter = userRepo::getBasicDemographics,
+            updater = userRepo::updateBasicDemographics,
+            deleter = userRepo::deleteBasicDemographics,
+            decodeDto = { json.decodeFromJsonElement<BasicDemographicsDto>(it) },
+            toEntity = { payload, id -> payload.toEntity(id) },
+            toDto = { entity -> entity.toDto() }
+        )
+        UserSettingsPage.ACTIVITY_LIFESTYLE -> runSettingsAction(
+            action = action,
+            userId = userId,
+            payload = payload,
+            getter = userRepo::getActivityLifestyle,
+            updater = userRepo::updateActivityLifestyle,
+            deleter = userRepo::deleteActivityLifestyle,
+            decodeDto = { json.decodeFromJsonElement<ActivityLevelLifestyleDto>(it) },
+            toEntity = { payload, id -> payload.toEntity(id) },
+            toDto = { entity -> entity.toDto() }
+        )
+        UserSettingsPage.GOALS_PRIORITIES -> runSettingsAction(
+            action = action,
+            userId = userId,
+            payload = payload,
+            getter = userRepo::getGoalsPriorities,
+            updater = userRepo::updateGoalsPriorities,
+            deleter = userRepo::deleteGoalsPriorities,
+            decodeDto = { json.decodeFromJsonElement<GoalsPrioritiesDto>(it) },
+            toEntity = { payload, id -> payload.toEntity(id) },
+            toDto = { entity -> entity.toDto() }
+        )
+        UserSettingsPage.TRAINING_BACKGROUND -> runSettingsAction(
+            action = action,
+            userId = userId,
+            payload = payload,
+            getter = userRepo::getTrainingBackground,
+            updater = userRepo::updateTrainingBackground,
+            deleter = userRepo::deleteTrainingBackground,
+            decodeDto = { json.decodeFromJsonElement<TrainingBackgroundDto>(it) },
+            toEntity = { payload, id -> payload.toEntity(id) },
+            toDto = { entity -> entity.toDto() }
+        )
+        UserSettingsPage.NUTRITION_HISTORY -> runSettingsAction(
+            action = action,
+            userId = userId,
+            payload = payload,
+            getter = userRepo::getNutritionHistory,
+            updater = userRepo::updateNutritionHistory,
+            deleter = userRepo::deleteNutritionHistory,
+            decodeDto = { json.decodeFromJsonElement<NutritionDietHistoryDto>(it) },
+            toEntity = { payload, id -> payload.toEntity(id) },
+            toDto = { entity -> entity.toDto() }
+        )
     }
 
-    suspend fun deleteBasicDemographics(userId: String): Boolean {
-        return userRepo.deleteBasicDemographics(userId)
-    }
-
-    suspend fun getActivityLifestyle(userId: String): ActivityLevelLifestyleDto? {
-        return userRepo.getActivityLifestyle(userId)?.toDto()
-    }
-
-    suspend fun updateActivityLifestyle(
+    private suspend fun <TDto : Any, TEntity : Any> runSettingsAction(
+        action: UserSettingsAction,
         userId: String,
-        dto: ActivityLevelLifestyleDto
-    ): ActivityLevelLifestyleDto? {
-        return userRepo.updateActivityLifestyle(userId, dto.toEntity(userId))?.toDto()
+        payload: JsonElement?,
+        getter: suspend (String) -> TEntity?,
+        updater: suspend (String, TEntity) -> TEntity?,
+        deleter: suspend (String) -> Boolean,
+        decodeDto: (JsonElement) -> TDto,
+        toEntity: (TDto, String) -> TEntity,
+        toDto: (TEntity) -> TDto
+    ): Any? = when (action) {
+        UserSettingsAction.GET -> getter(userId)?.let(toDto)
+        UserSettingsAction.UPDATE -> payload?.let(decodeDto)?.let { updater(userId, toEntity(it, userId))?.let(toDto) }
+        UserSettingsAction.DELETE -> deleter(userId)
     }
 
-    suspend fun deleteActivityLifestyle(userId: String): Boolean {
-        return userRepo.deleteActivityLifestyle(userId)
-    }
-
-    suspend fun getGoalsPriorities(userId: String): GoalsPrioritiesDto? {
-        return userRepo.getGoalsPriorities(userId)?.toDto()
-    }
-
-    suspend fun updateGoalsPriorities(userId: String, dto: GoalsPrioritiesDto): GoalsPrioritiesDto? {
-        return userRepo.updateGoalsPriorities(userId, dto.toEntity(userId))?.toDto()
-    }
-
-    suspend fun deleteGoalsPriorities(userId: String): Boolean {
-        return userRepo.deleteGoalsPriorities(userId)
-    }
-
-    suspend fun getTrainingBackground(userId: String): TrainingBackgroundDto? {
-        return userRepo.getTrainingBackground(userId)?.toDto()
-    }
-
-    suspend fun updateTrainingBackground(
-        userId: String,
-        dto: TrainingBackgroundDto
-    ): TrainingBackgroundDto? {
-        return userRepo.updateTrainingBackground(userId, dto.toEntity(userId))?.toDto()
-    }
-
-    suspend fun deleteTrainingBackground(userId: String): Boolean {
-        return userRepo.deleteTrainingBackground(userId)
-    }
-
-    suspend fun getNutritionHistory(userId: String): NutritionDietHistoryDto? {
-        return userRepo.getNutritionHistory(userId)?.toDto()
-    }
-
-    suspend fun updateNutritionHistory(
-        userId: String,
-        dto: NutritionDietHistoryDto
-    ): NutritionDietHistoryDto? {
-        return userRepo.updateNutritionHistory(userId, dto.toEntity(userId))?.toDto()
-    }
-
-    suspend fun deleteNutritionHistory(userId: String): Boolean {
-        return userRepo.deleteNutritionHistory(userId)
-    }
     private suspend fun genRecommendations(
         promptVariables: Map<String, Any>,
         config: GenerationConfigDto?,

@@ -3,18 +3,21 @@ package com.diaita.routers
 import com.diaita.controllers.UserController
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.ServiceResult
+import com.diaita.dto.UserSettingsAction
+import com.diaita.dto.UserSettingsPage
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonElement
 
 fun Application.configureUserRoutes(userController: UserController) {
     routing {
@@ -87,94 +90,87 @@ fun Application.configureUserRoutes(userController: UserController) {
             call.respondText("No recommendations found", status = HttpStatusCode.NotFound)
         }
 
-        route("/user/settings") {
-            sectionCrudRoutes(
-                section = "basic-demographics",
-                getter = { userId -> userController.getBasicDemographics(userId) },
-                updater = { userId, body -> userController.updateBasicDemographics(userId, body) },
-                deleter = { userId -> userController.deleteBasicDemographics(userId) }
-            )
-
-            sectionCrudRoutes(
-                section = "activity-lifestyle",
-                getter = { userId -> userController.getActivityLifestyle(userId) },
-                updater = { userId, body -> userController.updateActivityLifestyle(userId, body) },
-                deleter = { userId -> userController.deleteActivityLifestyle(userId) }
-            )
-
-            sectionCrudRoutes(
-                section = "goals-priorities",
-                getter = { userId -> userController.getGoalsPriorities(userId) },
-                updater = { userId, body -> userController.updateGoalsPriorities(userId, body) },
-                deleter = { userId -> userController.deleteGoalsPriorities(userId) }
-            )
-
-            sectionCrudRoutes(
-                section = "training-background",
-                getter = { userId -> userController.getTrainingBackground(userId) },
-                updater = { userId, body -> userController.updateTrainingBackground(userId, body) },
-                deleter = { userId -> userController.deleteTrainingBackground(userId) }
-            )
-
-            sectionCrudRoutes(
-                section = "nutrition-history",
-                getter = { userId -> userController.getNutritionHistory(userId) },
-                updater = { userId, body -> userController.updateNutritionHistory(userId, body) },
-                deleter = { userId -> userController.deleteNutritionHistory(userId) }
-            )
+        route("/user/settings/{userId}") {
+            get {
+                call.handleUserSettingsRequest(userController)
+            }
+            put {
+                call.handleUserSettingsRequest(userController)
+            }
+            delete {
+                call.handleUserSettingsRequest(userController)
+            }
+            post {
+                call.handleUserSettingsRequest(userController)
+            }
         }
     }
 }
 
-private inline fun <reified T : Any> Route.sectionCrudRoutes(
-    section: String,
-    crossinline getter: suspend (String) -> T?,
-    crossinline updater: suspend (String, T) -> T?,
-    crossinline deleter: suspend (String) -> Boolean
-) {
-    get("/$section/{userId}") {
-        val userId = call.parameters["userId"]
-        if (userId.isNullOrBlank()) {
-            call.respondText("Missing userId", status = HttpStatusCode.BadRequest)
-            return@get
-        }
-
-        val result = getter(userId)
-        if (result == null) {
-            call.respondText("Not found", status = HttpStatusCode.NotFound)
-            return@get
-        }
-        call.respond(HttpStatusCode.OK, result)
+private suspend fun ApplicationCall.handleUserSettingsRequest(userController: UserController) {
+    val userId = parameters["userId"]
+    if (userId.isNullOrBlank()) {
+        respondText("Missing userId", status = HttpStatusCode.BadRequest)
+        return
     }
 
-    put("/$section/{userId}") {
-        val userId = call.parameters["userId"]
-        if (userId.isNullOrBlank()) {
-            call.respondText("Missing userId", status = HttpStatusCode.BadRequest)
-            return@put
-        }
-
-        val body = call.receive<T>()
-        val result = updater(userId, body)
-        if (result == null) {
-            call.respondText("Update failed", status = HttpStatusCode.InternalServerError)
-            return@put
-        }
-        call.respond(HttpStatusCode.OK, result)
+    val page = UserSettingsPage.fromQuery(request.queryParameters["page"])
+    if (page == null) {
+        respondText("Missing or invalid page query parameter", status = HttpStatusCode.BadRequest)
+        return
     }
 
-    delete("/$section/{userId}") {
-        val userId = call.parameters["userId"]
-        if (userId.isNullOrBlank()) {
-            call.respondText("Missing userId", status = HttpStatusCode.BadRequest)
-            return@delete
-        }
+    val action = UserSettingsAction.fromQuery(request.queryParameters["action"])
+    if (action == null) {
+        respondText("Missing or invalid action query parameter", status = HttpStatusCode.BadRequest)
+        return
+    }
 
-        val success = deleter(userId)
-        if (!success) {
-            call.respondText("Delete failed", status = HttpStatusCode.InternalServerError)
-            return@delete
+    val payload = if (action == UserSettingsAction.UPDATE) {
+        try {
+            receive<JsonElement>()
+        } catch (_: Exception) {
+            respondText("Invalid request body", status = HttpStatusCode.BadRequest)
+            return
         }
-        call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
+    } else {
+        null
+    }
+
+    val result = try {
+        userController.handleUserSettings(
+            userId = userId,
+            page = page,
+            action = action,
+            payload = payload
+        )
+    } catch (_: SerializationException) {
+        respondText("Invalid request body for selected page", status = HttpStatusCode.BadRequest)
+        return
+    }
+
+    when (action) {
+        UserSettingsAction.GET -> {
+            if (result == null) {
+                respondText("Not found", status = HttpStatusCode.NotFound)
+                return
+            }
+            respond(HttpStatusCode.OK, result)
+        }
+        UserSettingsAction.UPDATE -> {
+            if (result == null) {
+                respondText("Update failed", status = HttpStatusCode.InternalServerError)
+                return
+            }
+            respond(HttpStatusCode.OK, result)
+        }
+        UserSettingsAction.DELETE -> {
+            val success = result as? Boolean ?: false
+            if (!success) {
+                respondText("Delete failed", status = HttpStatusCode.InternalServerError)
+                return
+            }
+            respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
+        }
     }
 }

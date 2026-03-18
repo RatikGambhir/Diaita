@@ -4,6 +4,8 @@ import com.diaita.Container
 import com.diaita.dto.RecommendationDto
 import com.diaita.dto.RegisterUserProfileResponseDto
 import com.diaita.dto.ServiceResult
+import com.diaita.dto.UserSettingsAction
+import com.diaita.dto.UserSettingsPage
 import com.diaita.lib.clients.GeminiRestClient
 import com.diaita.lib.mappings.toEntity
 import com.diaita.repo.RecommendationRepo
@@ -15,11 +17,13 @@ import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class UserServiceTest {
@@ -27,6 +31,7 @@ class UserServiceTest {
     private val repo = mockk<UserRepo>()
     private val gemini = mockk<GeminiRestClient>(relaxed = true)
     private val recommendationRepo = mockk<RecommendationRepo>()
+    private val json = Json
     private val container = Container().apply {
         bind<UserRepo>(repo)
         bind<GeminiRestClient>(gemini)
@@ -149,28 +154,33 @@ class UserServiceTest {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
         val row = payload.basicDemographics.toEntity(userId)
+        val updatePayload = json.encodeToJsonElement(payload.basicDemographics)
 
         coEvery { repo.getBasicDemographics(userId) } returns row
         coEvery { repo.updateBasicDemographics(userId, any()) } returns row
         coEvery { repo.deleteBasicDemographics(userId) } returns true
 
-        assertEquals(payload.basicDemographics, service.getBasicDemographics(userId))
-        assertEquals(payload.basicDemographics, service.updateBasicDemographics(userId, payload.basicDemographics))
-        assertTrue(service.deleteBasicDemographics(userId))
+        assertEquals(payload.basicDemographics, service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.GET))
+        assertEquals(
+            payload.basicDemographics,
+            service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.UPDATE, updatePayload)
+        )
+        assertTrue(service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.DELETE) as Boolean)
     }
 
     @Test
     fun settings_basic_demographics_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
+        val updatePayload = json.encodeToJsonElement(payload.basicDemographics)
 
         coEvery { repo.getBasicDemographics(userId) } returns null
         coEvery { repo.updateBasicDemographics(userId, any()) } returns null
         coEvery { repo.deleteBasicDemographics(userId) } returns false
 
-        assertNull(service.getBasicDemographics(userId))
-        assertNull(service.updateBasicDemographics(userId, payload.basicDemographics))
-        assertFalse(service.deleteBasicDemographics(userId))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.GET))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.UPDATE, updatePayload))
+        assertFalse(service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.DELETE) as Boolean)
     }
 
     @Test
@@ -178,28 +188,33 @@ class UserServiceTest {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
         val row = payload.activityLifestyle.toEntity(userId)
+        val updatePayload = json.encodeToJsonElement(payload.activityLifestyle)
 
         coEvery { repo.getActivityLifestyle(userId) } returns row
         coEvery { repo.updateActivityLifestyle(userId, any()) } returns row
         coEvery { repo.deleteActivityLifestyle(userId) } returns true
 
-        assertEquals(payload.activityLifestyle, service.getActivityLifestyle(userId))
-        assertEquals(payload.activityLifestyle, service.updateActivityLifestyle(userId, payload.activityLifestyle))
-        assertTrue(service.deleteActivityLifestyle(userId))
+        assertEquals(payload.activityLifestyle, service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.GET))
+        assertEquals(
+            payload.activityLifestyle,
+            service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.UPDATE, updatePayload)
+        )
+        assertTrue(service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.DELETE) as Boolean)
     }
 
     @Test
     fun settings_activity_lifestyle_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
+        val updatePayload = json.encodeToJsonElement(payload.activityLifestyle)
 
         coEvery { repo.getActivityLifestyle(userId) } returns null
         coEvery { repo.updateActivityLifestyle(userId, any()) } returns null
         coEvery { repo.deleteActivityLifestyle(userId) } returns false
 
-        assertNull(service.getActivityLifestyle(userId))
-        assertNull(service.updateActivityLifestyle(userId, payload.activityLifestyle))
-        assertFalse(service.deleteActivityLifestyle(userId))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.GET))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.UPDATE, updatePayload))
+        assertFalse(service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.DELETE) as Boolean)
     }
 
     @Test
@@ -207,28 +222,33 @@ class UserServiceTest {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
         val row = payload.goals.toEntity(userId)
+        val updatePayload = json.encodeToJsonElement(payload.goals)
 
         coEvery { repo.getGoalsPriorities(userId) } returns row
         coEvery { repo.updateGoalsPriorities(userId, any()) } returns row
         coEvery { repo.deleteGoalsPriorities(userId) } returns true
 
-        assertEquals(payload.goals, service.getGoalsPriorities(userId))
-        assertEquals(payload.goals, service.updateGoalsPriorities(userId, payload.goals))
-        assertTrue(service.deleteGoalsPriorities(userId))
+        assertEquals(payload.goals, service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.GET))
+        assertEquals(
+            payload.goals,
+            service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.UPDATE, updatePayload)
+        )
+        assertTrue(service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.DELETE) as Boolean)
     }
 
     @Test
     fun settings_goals_priorities_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
+        val updatePayload = json.encodeToJsonElement(payload.goals)
 
         coEvery { repo.getGoalsPriorities(userId) } returns null
         coEvery { repo.updateGoalsPriorities(userId, any()) } returns null
         coEvery { repo.deleteGoalsPriorities(userId) } returns false
 
-        assertNull(service.getGoalsPriorities(userId))
-        assertNull(service.updateGoalsPriorities(userId, payload.goals))
-        assertFalse(service.deleteGoalsPriorities(userId))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.GET))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.UPDATE, updatePayload))
+        assertFalse(service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.DELETE) as Boolean)
     }
 
     @Test
@@ -236,28 +256,33 @@ class UserServiceTest {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
         val row = payload.trainingBackground!!.toEntity(userId)
+        val updatePayload = json.encodeToJsonElement(payload.trainingBackground)
 
         coEvery { repo.getTrainingBackground(userId) } returns row
         coEvery { repo.updateTrainingBackground(userId, any()) } returns row
         coEvery { repo.deleteTrainingBackground(userId) } returns true
 
-        assertEquals(payload.trainingBackground, service.getTrainingBackground(userId))
-        assertEquals(payload.trainingBackground, service.updateTrainingBackground(userId, payload.trainingBackground))
-        assertTrue(service.deleteTrainingBackground(userId))
+        assertEquals(payload.trainingBackground, service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.GET))
+        assertEquals(
+            payload.trainingBackground,
+            service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.UPDATE, updatePayload)
+        )
+        assertTrue(service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.DELETE) as Boolean)
     }
 
     @Test
     fun settings_training_background_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
+        val updatePayload = json.encodeToJsonElement(payload.trainingBackground)
 
         coEvery { repo.getTrainingBackground(userId) } returns null
         coEvery { repo.updateTrainingBackground(userId, any()) } returns null
         coEvery { repo.deleteTrainingBackground(userId) } returns false
 
-        assertNull(service.getTrainingBackground(userId))
-        assertNull(service.updateTrainingBackground(userId, payload.trainingBackground!!))
-        assertFalse(service.deleteTrainingBackground(userId))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.GET))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.UPDATE, updatePayload))
+        assertFalse(service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.DELETE) as Boolean)
     }
 
     @Test
@@ -265,27 +290,32 @@ class UserServiceTest {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
         val row = payload.nutritionHistory!!.toEntity(userId)
+        val updatePayload = json.encodeToJsonElement(payload.nutritionHistory)
 
         coEvery { repo.getNutritionHistory(userId) } returns row
         coEvery { repo.updateNutritionHistory(userId, any()) } returns row
         coEvery { repo.deleteNutritionHistory(userId) } returns true
 
-        assertEquals(payload.nutritionHistory, service.getNutritionHistory(userId))
-        assertEquals(payload.nutritionHistory, service.updateNutritionHistory(userId, payload.nutritionHistory))
-        assertTrue(service.deleteNutritionHistory(userId))
+        assertEquals(payload.nutritionHistory, service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.GET))
+        assertEquals(
+            payload.nutritionHistory,
+            service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.UPDATE, updatePayload)
+        )
+        assertTrue(service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.DELETE) as Boolean)
     }
 
     @Test
     fun settings_nutrition_history_crud_error() = runBlocking {
         val payload = UserProfileTestData.fullRequest()
         val userId = payload.userId
+        val updatePayload = json.encodeToJsonElement(payload.nutritionHistory)
 
         coEvery { repo.getNutritionHistory(userId) } returns null
         coEvery { repo.updateNutritionHistory(userId, any()) } returns null
         coEvery { repo.deleteNutritionHistory(userId) } returns false
 
-        assertNull(service.getNutritionHistory(userId))
-        assertNull(service.updateNutritionHistory(userId, payload.nutritionHistory!!))
-        assertFalse(service.deleteNutritionHistory(userId))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.GET))
+        assertNull(service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.UPDATE, updatePayload))
+        assertFalse(service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.DELETE) as Boolean)
     }
 }

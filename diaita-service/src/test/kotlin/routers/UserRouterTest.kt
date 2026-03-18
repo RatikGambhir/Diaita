@@ -296,12 +296,12 @@ class UserRouterTest {
             testModule()
         }
 
-        val getResponse = client.get("/user/settings/basic-demographics/$userId")
+        val getResponse = client.get("/user/settings/$userId?page=basic-demographics&action=get")
         assertEquals(HttpStatusCode.OK, getResponse.status)
         val getBody = Json.decodeFromString<BasicDemographicsDto>(getResponse.bodyAsText())
         assertEquals(dto, getBody)
 
-        val putResponse = client.put("/user/settings/basic-demographics/$userId") {
+        val putResponse = client.put("/user/settings/$userId?page=basic-demographics&action=update") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(json.encodeToString(dto))
         }
@@ -309,7 +309,7 @@ class UserRouterTest {
         val putBody = Json.decodeFromString<BasicDemographicsDto>(putResponse.bodyAsText())
         assertEquals(dto, putBody)
 
-        val deleteResponse = client.delete("/user/settings/basic-demographics/$userId")
+        val deleteResponse = client.delete("/user/settings/$userId?page=basic-demographics&action=delete")
         assertEquals(HttpStatusCode.OK, deleteResponse.status)
         assertTrue(deleteResponse.bodyAsText().contains("\"status\":\"deleted\""))
 
@@ -337,16 +337,16 @@ class UserRouterTest {
             testModule()
         }
 
-        val getResponse = client.get("/user/settings/basic-demographics/$userId")
+        val getResponse = client.get("/user/settings/$userId?page=basic-demographics&action=get")
         assertEquals(HttpStatusCode.NotFound, getResponse.status)
 
-        val putResponse = client.put("/user/settings/basic-demographics/$userId") {
+        val putResponse = client.put("/user/settings/$userId?page=basic-demographics&action=update") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(json.encodeToString(dto))
         }
         assertEquals(HttpStatusCode.InternalServerError, putResponse.status)
 
-        val deleteResponse = client.delete("/user/settings/basic-demographics/$userId")
+        val deleteResponse = client.delete("/user/settings/$userId?page=basic-demographics&action=delete")
         assertEquals(HttpStatusCode.InternalServerError, deleteResponse.status)
 
         coVerify(exactly = 1) { repo.getBasicDemographics(userId) }
@@ -455,12 +455,42 @@ class UserRouterTest {
             testModule()
         }
 
-        val response = client.put("/user/settings/basic-demographics/$userId") {
+        val response = client.put("/user/settings/$userId?page=basic-demographics&action=update") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody("""{"age":"not-a-number"}""")
         }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    @Test
+    fun settings_returns_400_for_missing_page_query_param() = testApplication {
+        val userId = "missing-page-user"
+
+        application {
+            testModule()
+        }
+
+        val response = client.get("/user/settings/$userId?action=get")
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertTrue(response.bodyAsText().contains("page query parameter"))
+        confirmVerified(repo, gemini, recommendationRepo)
+    }
+
+    @Test
+    fun settings_returns_400_for_missing_action_query_param() = testApplication {
+        val userId = "missing-action-user"
+
+        application {
+            testModule()
+        }
+
+        val response = client.get("/user/settings/$userId?page=basic-demographics")
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertTrue(response.bodyAsText().contains("action query parameter"))
+        confirmVerified(repo, gemini, recommendationRepo)
     }
 
     private fun assertSectionCrudSuccess(
@@ -475,16 +505,16 @@ class UserRouterTest {
             testModule()
         }
 
-        val getResponse = client.get("/user/settings/$section/$userId")
+        val getResponse = client.get("/user/settings/$userId?page=$section&action=get")
         assertEquals(HttpStatusCode.OK, getResponse.status)
 
-        val putResponse = client.put("/user/settings/$section/$userId") {
+        val putResponse = client.put("/user/settings/$userId?page=$section&action=update") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(body)
         }
         assertEquals(HttpStatusCode.OK, putResponse.status)
 
-        val deleteResponse = client.delete("/user/settings/$section/$userId")
+        val deleteResponse = client.delete("/user/settings/$userId?page=$section&action=delete")
         assertEquals(HttpStatusCode.OK, deleteResponse.status)
     }
 
@@ -500,16 +530,16 @@ class UserRouterTest {
             testModule()
         }
 
-        val getResponse = client.get("/user/settings/$section/$userId")
+        val getResponse = client.get("/user/settings/$userId?page=$section&action=get")
         assertEquals(HttpStatusCode.NotFound, getResponse.status)
 
-        val putResponse = client.put("/user/settings/$section/$userId") {
+        val putResponse = client.put("/user/settings/$userId?page=$section&action=update") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(body)
         }
         assertEquals(HttpStatusCode.InternalServerError, putResponse.status)
 
-        val deleteResponse = client.delete("/user/settings/$section/$userId")
+        val deleteResponse = client.delete("/user/settings/$userId?page=$section&action=delete")
         assertEquals(HttpStatusCode.InternalServerError, deleteResponse.status)
     }
 }

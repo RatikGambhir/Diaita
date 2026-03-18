@@ -32,6 +32,9 @@ const workoutTabs = [
     { value: "performance", label: "Performance" },
 ];
 
+const tabPanelMotionClass =
+    "mt-0 data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-right-2 data-[state=active]:duration-300";
+
 watch(viewMode, (val) => {
     if (!val) {
         viewMode.value = 'cards';
@@ -217,51 +220,64 @@ const getCategoryPercent = (
         </header>
 
         <div class="flex-1 overflow-auto p-6">
-            <GenericTabGroup v-model="activeTab" :tabs="workoutTabs" tab-trigger-class="text-base px-5 py-2">
+            <GenericTabGroup
+                v-model="activeTab"
+                :tabs="workoutTabs"
+                tab-trigger-class="text-base px-5 py-2 transition-all duration-300 ease-out hover:text-foreground data-[state=active]:-translate-y-0.5 data-[state=active]:shadow-sm"
+            >
                 <template #leading>
-                    <div v-if="activeTab === 'home'" class="flex flex-1 gap-3">
-                        <div class="relative w-[24rem] max-w-full">
-                            <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                v-model="searchQuery"
-                                placeholder="Search workouts..."
-                                class="pl-10 h-11"
-                            />
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <ToggleGroup v-model="viewMode" type="single" variant="outline" size="sm">
-                                <ToggleGroupItem value="cards" aria-label="Card view">
-                                    <LayoutGrid class="h-4 w-4" />
-                                </ToggleGroupItem>
-                                <ToggleGroupItem value="table" aria-label="Table view">
-                                    <Table2 class="h-4 w-4" />
-                                </ToggleGroupItem>
-                            </ToggleGroup>
+                    <Transition
+                        enter-active-class="transition-all duration-300 ease-out"
+                        enter-from-class="opacity-0 -translate-y-1"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition-all duration-200 ease-in"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-1"
+                    >
+                        <div v-if="activeTab === 'home'" class="flex flex-1 gap-3">
+                            <div class="relative w-[24rem] max-w-full">
+                                <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    v-model="searchQuery"
+                                    placeholder="Search workouts..."
+                                    class="pl-10 h-11"
+                                />
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <ToggleGroup v-model="viewMode" type="single" variant="outline" size="sm">
+                                    <ToggleGroupItem value="cards" aria-label="Card view">
+                                        <LayoutGrid class="h-4 w-4" />
+                                    </ToggleGroupItem>
+                                    <ToggleGroupItem value="table" aria-label="Table view">
+                                        <Table2 class="h-4 w-4" />
+                                    </ToggleGroupItem>
+                                </ToggleGroup>
 
-                            <Button @click="isAddWorkoutModalOpen = true">
-                                <Plus class="h-4 w-4 mr-2" />
-                                Add Workout
-                            </Button>
+                                <Button @click="isAddWorkoutModalOpen = true">
+                                    <Plus class="h-4 w-4 mr-2" />
+                                    Add Workout
+                                </Button>
 
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger as-child>
-                                        <Button variant="ghost" size="icon" class="relative">
-                                            <Bell class="h-5 w-5" />
-                                            <Badge class="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]" variant="destructive">
-                                                3
-                                            </Badge>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Notifications (N)</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <Button variant="ghost" size="icon" class="relative">
+                                                <Bell class="h-5 w-5" />
+                                                <Badge class="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]" variant="destructive">
+                                                    3
+                                                </Badge>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Notifications (N)</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
                         </div>
-                    </div>
+                    </Transition>
                 </template>
-                <GenericTabPanel value="home" class="mt-0 space-y-6">
+                <GenericTabPanel value="home" :class="`${tabPanelMotionClass} space-y-6`">
                     <div
                         v-if="filteredWorkouts.length === 0"
                         class="text-center py-12 text-muted-foreground"
@@ -413,7 +429,7 @@ const getCategoryPercent = (
                     </Transition>
                 </GenericTabPanel>
 
-                <GenericTabPanel value="exercises" class="mt-0">
+                <GenericTabPanel value="exercises" :class="tabPanelMotionClass">
                     <Card>
                         <CardHeader>
                             <h2 class="text-lg font-semibold">Exercises</h2>
@@ -424,7 +440,7 @@ const getCategoryPercent = (
                     </Card>
                 </GenericTabPanel>
 
-                <GenericTabPanel value="performance" class="mt-0">
+                <GenericTabPanel value="performance" :class="tabPanelMotionClass">
                     <Card>
                         <CardHeader>
                             <h2 class="text-lg font-semibold">Performance</h2>
