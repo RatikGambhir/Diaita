@@ -3,6 +3,11 @@ import { ref, computed } from 'vue'
 import { User, Activity, Target, Apple, Dumbbell, FileCheck, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 import Badge from '~/components/ui/badge/Badge.vue'
+import Dialog from '~/components/ui/dialog/Dialog.vue'
+import DialogContent from '~/components/ui/dialog/DialogContent.vue'
+import DialogFooter from '~/components/ui/dialog/DialogFooter.vue'
+import DialogHeader from '~/components/ui/dialog/DialogHeader.vue'
+import DialogTitle from '~/components/ui/dialog/DialogTitle.vue'
 import { userApi } from '~/api/user'
 import { useUserStore } from '~/stores/useUserStore'
 import PersonalInfoStep from '~/components/setup/PersonalInfoStep.vue'
@@ -37,6 +42,7 @@ const steps = [
 
 const currentStep = ref(1)
 const isSubmitting = ref(false)
+const isSkipDialogOpen = ref(false)
 const toast = useToast()
 const router = useRouter()
 const userStore = useUserStore()
@@ -335,11 +341,35 @@ const handleSkip = () => {
     currentStep.value++
   }
 }
+
+const handleSkipForNow = async () => {
+  if (isSubmitting.value) return
+
+  isSkipDialogOpen.value = false
+  toast.add({
+    title: 'Setup skipped for now',
+    description: 'You can complete your profile later from Home.',
+    color: 'info',
+  })
+  await router.push('/')
+}
 </script>
 
 <template>
   <div class="min-h-screen border bg-background py-12 px-4">
     <div class="max-w-7xl mx-auto">
+      <div class="mb-6 flex items-center justify-end">
+        <Button
+          variant="outline"
+          class="gap-2 border-dashed text-muted-foreground hover:text-foreground"
+          :disabled="isSubmitting"
+          @click="isSkipDialogOpen = true"
+        >
+          Skip for now
+          <ChevronRight class="w-4 h-4" />
+        </Button>
+      </div>
+
       <div class="text-center mb-12">
         <Badge variant="outline" class="mb-4 px-4 py-1 bg-primary">
           Diaita
@@ -467,6 +497,14 @@ const handleSkip = () => {
 
               <div class="flex items-center gap-2">
                 <Button
+                  variant="ghost"
+                  class="gap-2 text-muted-foreground hover:text-foreground"
+                  :disabled="isSubmitting"
+                  @click="isSkipDialogOpen = true"
+                >
+                  Skip for now
+                </Button>
+                <Button
                   v-if="isCurrentStepSkippable"
                   variant="outline"
                   class="gap-2"
@@ -505,5 +543,26 @@ const handleSkip = () => {
       :show="isSubmitting"
       message="Setting up your profile..."
     />
+
+    <Dialog v-model:open="isSkipDialogOpen">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Skip setup for now?</DialogTitle>
+        </DialogHeader>
+
+        <p class="py-2 text-sm text-muted-foreground">
+          Your setup progress on this screen will not be saved. You can finish profile setup later from Home.
+        </p>
+
+        <DialogFooter class="flex gap-2 justify-end">
+          <Button variant="outline" @click="isSkipDialogOpen = false">
+            Continue Setup
+          </Button>
+          <Button variant="destructive" @click="handleSkipForNow">
+            Skip for now
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

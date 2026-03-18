@@ -7,28 +7,28 @@ export default defineNuxtPlugin(async () => {
   const { fetchProfile } = useUserProfile();
   userStore.hydrateAuthState();
 
-  const syncSession = async (session: Session | null) => {
-    userStore.addUserSession(session?.user ?? null, session ?? null);
+  // const syncSession = async (session: Session | null) => {
+  //   userStore.addUserSession(session?.user ?? null, session ?? null);
+  //
+  //   if (!session?.user?.id) {
+  //     userStore.resetProfileState();
+  //     return;
+  //   }
+  //
+  //   try {
+  //     await fetchProfile();
+  //   } catch (error) {
+  //     console.error("Error bootstrapping user profile:", error);
+  //   }
+  // };
+  //
+  // const {
+  //   data: { session },
+  // } = await supabase.auth.getSession();
+  //
+  // await syncSession(session);
 
-    if (!session?.user?.id) {
-      userStore.resetProfileState();
-      return;
-    }
-
-    try {
-      await fetchProfile();
-    } catch (error) {
-      console.error("Error bootstrapping user profile:", error);
-    }
-  };
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  await syncSession(session);
-
-  supabase.auth.onAuthStateChange((_event, nextSession) => {
-    void syncSession(nextSession);
-  });
+  // supabase.auth.onAuthStateChange((_event, nextSession) => {
+  //   void syncSession(nextSession);
+  // });
 });
