@@ -20,7 +20,6 @@ import MealCard from "~/components/nutrition/MealCard.vue"
 import NutritionResourcesCard from "~/components/nutrition/NutritionResourcesCard.vue"
 import { CalendarDays, FileText, Lightbulb, Plus, Sun, Moon } from "lucide-vue-next"
 import GenericTabGroup from "~/components/GenericTabGroup.vue"
-import GenericTabPanel from "~/components/GenericTabPanel.vue"
 import { Popover, PopoverTrigger, PopoverContent } from "~/components/ui/popover"
 import { Calendar } from "~/components/ui/calendar"
 import FoodsTab from "~/components/nutrition/FoodsTab.vue"
@@ -446,40 +445,48 @@ const resources = [
                         </Popover>
                     </template>
 
-                    <GenericTabPanel value="today" class="mt-0 space-y-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <NutritionSummaryCard
-                                v-for="card in summaryCards"
-                                :key="card.label"
-                                :label="card.label"
-                                :value="card.value"
-                                :unit="card.unit"
-                                :value-class="card.valueClass"
-                                :dot-class="card.dotClass"
-                            />
+                    <Transition
+                        mode="out-in"
+                        enter-active-class="transition-all duration-300 ease-out"
+                        enter-from-class="opacity-0 translate-x-5"
+                        enter-to-class="opacity-100 translate-x-0"
+                        leave-active-class="transition-all duration-250 ease-in"
+                        leave-from-class="opacity-100 translate-x-0"
+                        leave-to-class="opacity-0 -translate-x-5"
+                    >
+                        <div :key="activeTab" class="mt-0 overflow-hidden">
+                            <div v-if="activeTab === 'today'" class="space-y-6">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <NutritionSummaryCard
+                                        v-for="card in summaryCards"
+                                        :key="card.label"
+                                        :label="card.label"
+                                        :value="card.value"
+                                        :unit="card.unit"
+                                        :value-class="card.valueClass"
+                                        :dot-class="card.dotClass"
+                                    />
+                                </div>
+
+                                <MacroDistributionCard :gradient="pieGradient" :macros="macros" />
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <MealCard
+                                        v-for="meal in meals"
+                                        :key="meal.name"
+                                        :meal="meal"
+                                        @add-foods="(ingredients) => handleAddFoods(meal.mealType, ingredients)"
+                                    />
+                                </div>
+
+                                <NutritionResourcesCard :resources="resources" />
+                            </div>
+
+                            <FoodsTab v-else-if="activeTab === 'foods'" />
+
+                            <MealsTab v-else />
                         </div>
-
-                        <MacroDistributionCard :gradient="pieGradient" :macros="macros" />
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <MealCard
-                                v-for="meal in meals"
-                                :key="meal.name"
-                                :meal="meal"
-                                @add-foods="(ingredients) => handleAddFoods(meal.mealType, ingredients)"
-                            />
-                        </div>
-
-                        <NutritionResourcesCard :resources="resources" />
-                    </GenericTabPanel>
-
-                    <GenericTabPanel value="foods" class="mt-0">
-                        <FoodsTab />
-                    </GenericTabPanel>
-
-                    <GenericTabPanel value="meals" class="mt-0">
-                        <MealsTab />
-                    </GenericTabPanel>
+                    </Transition>
                 </GenericTabGroup>
             </div>
         </div>

@@ -148,7 +148,7 @@ onMounted(async () => {
 
     <div class="flex-1 pr-3 pt-4">
       <!-- Main Content -->
-      <main class="relative z-10 h-[calc(100vh-1rem)] overflow-auto rounded-2xl bg-background shadow-lg">
+      <main class="relative z-10 h-[calc(100vh-1rem)] overflow-x-hidden overflow-y-auto rounded-2xl bg-background shadow-lg">
         <slot />
       </main>
     </div>
