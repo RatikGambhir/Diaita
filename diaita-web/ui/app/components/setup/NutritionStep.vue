@@ -2,75 +2,59 @@
 import { ref } from 'vue'
 import Input from '~/components/ui/input/Input.vue'
 import Label from '~/components/ui/label/Label.vue'
-import Textarea from '~/components/ui/textarea/Textarea.vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
 import Badge from '~/components/ui/badge/Badge.vue'
 import { X } from 'lucide-vue-next'
 
-interface NutritionHistory {
+interface NutritionForm {
   currentDietPattern: string
-  calorieTrackingExperience: boolean | null
-  macronutrientPreferences: string
-  foodAllergies: string[]
   dietaryRestrictions: string[]
-  culturalFoodPreferences: string
-  cookingSkillLevel: string
-  foodBudget: string
+  foodAllergies: string[]
   eatingSchedule: string
-  snackingHabits: string
-  alcoholIntake: string
-  supplementUse: string[]
 }
 
 interface Props {
-  formData: NutritionHistory
+  formData: NutritionForm
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  'update:formData': [data: Partial<NutritionHistory>]
+  'update:formData': [data: Partial<NutritionForm>]
 }>()
 
 const dietPatternOptions = [
   { value: 'standard', label: 'Standard / No specific diet' },
+  { value: 'high_protein', label: 'High Protein' },
   { value: 'vegetarian', label: 'Vegetarian' },
   { value: 'vegan', label: 'Vegan' },
   { value: 'keto', label: 'Keto / Low Carb' },
-  { value: 'paleo', label: 'Paleo' },
   { value: 'mediterranean', label: 'Mediterranean' },
-  { value: 'intermittent_fasting', label: 'Intermittent Fasting' },
-  { value: 'other', label: 'Other' },
-]
-
-const cookingSkillOptions = [
-  { value: 'none', label: 'None - I don\'t cook' },
-  { value: 'basic', label: 'Basic - Simple meals' },
-  { value: 'intermediate', label: 'Intermediate - Comfortable cooking' },
-  { value: 'advanced', label: 'Advanced - Love to cook' },
-]
-
-const budgetOptions = [
-  { value: 'tight', label: 'Tight - Budget conscious' },
-  { value: 'moderate', label: 'Moderate - Some flexibility' },
-  { value: 'flexible', label: 'Flexible - Not a concern' },
-]
-
-const alcoholOptions = [
-  { value: 'none', label: 'None' },
-  { value: 'occasional', label: 'Occasional (1-2 drinks/week)' },
-  { value: 'moderate', label: 'Moderate (3-7 drinks/week)' },
-  { value: 'regular', label: 'Regular (8+ drinks/week)' },
 ]
 
 const commonAllergies = ['Dairy', 'Gluten', 'Nuts', 'Shellfish', 'Eggs', 'Soy', 'Fish']
-const commonRestrictions = ['Halal', 'Kosher', 'No pork', 'No beef', 'No red meat', 'Lactose-free']
+const commonRestrictions = ['Vegetarian', 'Vegan', 'Halal', 'Kosher', 'No pork', 'No beef', 'Lactose-free']
 
 const allergyInput = ref('')
 const restrictionInput = ref('')
-const supplementInput = ref('')
 
-const updateField = (field: keyof NutritionHistory, value: any) => {
+const updateField = (
+  field: keyof NutritionForm,
+  value: NutritionForm[keyof NutritionForm],
+) => {
   emit('update:formData', { [field]: value })
+}
+
+const addItem = (field: 'foodAllergies' | 'dietaryRestrictions', value: string) => {
+  const next = value.trim()
+  if (!next) return
+  const current = props.formData[field]
+  if (!current.includes(next)) {
+    updateField(field, [...current, next])
+  }
+}
+
+const removeItem = (field: 'foodAllergies' | 'dietaryRestrictions', index: number) => {
+  updateField(field, props.formData[field].filter((_, i) => i !== index))
 }
 
 const toggleAllergy = (allergy: string) => {
@@ -91,15 +75,14 @@ const toggleRestriction = (restriction: string) => {
   }
 }
 
-const addSupplement = () => {
-  if (supplementInput.value.trim()) {
-    updateField('supplementUse', [...props.formData.supplementUse, supplementInput.value.trim()])
-    supplementInput.value = ''
-  }
+const addAllergy = () => {
+  addItem('foodAllergies', allergyInput.value)
+  allergyInput.value = ''
 }
 
-const removeSupplement = (index: number) => {
-  updateField('supplementUse', props.formData.supplementUse.filter((_, i) => i !== index))
+const addRestriction = () => {
+  addItem('dietaryRestrictions', restrictionInput.value)
+  restrictionInput.value = ''
 }
 </script>
 
@@ -114,7 +97,7 @@ const removeSupplement = (index: number) => {
           <Label for="currentDietPattern">Current Diet Pattern</Label>
           <Select
             :model-value="formData.currentDietPattern"
-            @update:model-value="updateField('currentDietPattern', $event)"
+            @update:model-value="updateField('currentDietPattern', $event as string)"
           >
             <SelectTrigger>
               <SelectValue placeholder="Select diet pattern" />
@@ -128,79 +111,12 @@ const removeSupplement = (index: number) => {
         </div>
 
         <div class="space-y-2">
-          <Label for="calorieTrackingExperience">Calorie Tracking Experience</Label>
-          <Select
-            :model-value="formData.calorieTrackingExperience === null ? '' : formData.calorieTrackingExperience.toString()"
-            @update:model-value="updateField('calorieTrackingExperience', $event === 'true')"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Have you tracked calories before?" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="true">Yes, I have experience</SelectItem>
-              <SelectItem value="false">No, I'm new to tracking</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div class="space-y-2">
-          <Label for="cookingSkillLevel">Cooking Skill Level</Label>
-          <Select
-            :model-value="formData.cookingSkillLevel"
-            @update:model-value="updateField('cookingSkillLevel', $event)"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select cooking skill" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="option in cookingSkillOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div class="space-y-2">
-          <Label for="foodBudget">Food Budget</Label>
-          <Select
-            :model-value="formData.foodBudget"
-            @update:model-value="updateField('foodBudget', $event)"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select budget" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="option in budgetOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div class="space-y-2">
-          <Label for="alcoholIntake">Alcohol Intake</Label>
-          <Select
-            :model-value="formData.alcoholIntake"
-            @update:model-value="updateField('alcoholIntake', $event)"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select alcohol intake" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="option in alcoholOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div class="space-y-2">
           <Label for="eatingSchedule">Eating Schedule</Label>
           <Input
             id="eatingSchedule"
             :model-value="formData.eatingSchedule"
             @update:model-value="updateField('eatingSchedule', $event)"
-            placeholder="e.g., 3 meals + 2 snacks, IF 16:8"
+            placeholder="e.g., 3 meals + 1 snack"
           />
         </div>
       </div>
@@ -224,6 +140,28 @@ const removeSupplement = (index: number) => {
             {{ allergy }}
           </button>
         </div>
+        <div class="flex gap-2 mt-2">
+          <Input
+            v-model="allergyInput"
+            placeholder="Add custom allergy"
+            @keydown.enter.prevent="addAllergy"
+          />
+          <button
+            type="button"
+            class="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm"
+            @click="addAllergy"
+          >
+            Add
+          </button>
+        </div>
+        <div v-if="formData.foodAllergies.length > 0" class="flex flex-wrap gap-2 mt-2">
+          <Badge v-for="(item, index) in formData.foodAllergies" :key="index" variant="destructive" class="gap-1">
+            {{ item }}
+            <button type="button" @click="removeItem('foodAllergies', index)">
+              <X class="w-3 h-3" />
+            </button>
+          </Badge>
+        </div>
       </div>
 
       <div class="space-y-2">
@@ -245,62 +183,24 @@ const removeSupplement = (index: number) => {
             {{ restriction }}
           </button>
         </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-2">
-          <Label for="culturalFoodPreferences">Cultural Food Preferences</Label>
+        <div class="flex gap-2 mt-2">
           <Input
-            id="culturalFoodPreferences"
-            :model-value="formData.culturalFoodPreferences"
-            @update:model-value="updateField('culturalFoodPreferences', $event)"
-            placeholder="e.g., Mediterranean, Asian, Latin American"
-          />
-        </div>
-
-        <div class="space-y-2">
-          <Label for="macronutrientPreferences">Macronutrient Preferences</Label>
-          <Input
-            id="macronutrientPreferences"
-            :model-value="formData.macronutrientPreferences"
-            @update:model-value="updateField('macronutrientPreferences', $event)"
-            placeholder="e.g., High protein, Low carb"
-          />
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <Label for="snackingHabits">Snacking Habits</Label>
-        <Textarea
-          id="snackingHabits"
-          :model-value="formData.snackingHabits"
-          @update:model-value="updateField('snackingHabits', $event)"
-          placeholder="Describe your typical snacking patterns..."
-          class="min-h-[60px]"
-        />
-      </div>
-
-      <div class="space-y-2">
-        <Label for="supplementUse">Current Supplements</Label>
-        <div class="flex gap-2">
-          <Input
-            id="supplementUse"
-            v-model="supplementInput"
-            placeholder="Add supplements you take"
-            @keydown.enter.prevent="addSupplement"
+            v-model="restrictionInput"
+            placeholder="Add custom restriction"
+            @keydown.enter.prevent="addRestriction"
           />
           <button
             type="button"
             class="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm"
-            @click="addSupplement"
+            @click="addRestriction"
           >
             Add
           </button>
         </div>
-        <div v-if="formData.supplementUse.length > 0" class="flex flex-wrap gap-2 mt-2">
-          <Badge v-for="(supplement, index) in formData.supplementUse" :key="index" variant="secondary" class="gap-1">
-            {{ supplement }}
-            <button type="button" @click="removeSupplement(index)">
+        <div v-if="formData.dietaryRestrictions.length > 0" class="flex flex-wrap gap-2 mt-2">
+          <Badge v-for="(item, index) in formData.dietaryRestrictions" :key="index" variant="secondary" class="gap-1">
+            {{ item }}
+            <button type="button" @click="removeItem('dietaryRestrictions', index)">
               <X class="w-3 h-3" />
             </button>
           </Badge>

@@ -1,16 +1,9 @@
 package com.diaita.repo
 
-import com.diaita.dto.RegisteredUserProfileDto
-import com.diaita.lib.factories.PostgresFactory
-import com.diaita.lib.factories.Result
 import com.diaita.lib.factories.SupabaseManager
-import com.diaita.lib.mappings.toUpsertFullProfilePayload
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import com.diaita.lib.mappings.toEntity
 import com.diaita.testdata.UserProfileTestData
 import io.github.jan.supabase.SupabaseClient
-import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -44,11 +37,11 @@ class UserRepoTest {
         val userRepo = repo()
         val userId = request.userId
 
-        assertNull(userRepo.updateBasicDemographics(userId, request.basicDemographics.toEntity(userId)))
-        assertNull(userRepo.updateActivityLifestyle(userId, request.activityLifestyle.toEntity(userId)))
-        assertNull(userRepo.updateGoalsPriorities(userId, request.goals.toEntity(userId)))
-        assertNull(userRepo.updateTrainingBackground(userId, request.trainingBackground!!.toEntity(userId)))
-        assertNull(userRepo.updateNutritionHistory(userId, request.nutritionHistory!!.toEntity(userId)))
+        assertNull(userRepo.updateBasicDemographics(userId, UserProfileTestData.basicDemographics().toEntity(userId)))
+        assertNull(userRepo.updateActivityLifestyle(userId, UserProfileTestData.activityLifestyle().toEntity(userId)))
+        assertNull(userRepo.updateGoalsPriorities(userId, UserProfileTestData.goals().toEntity(userId)))
+        assertNull(userRepo.updateTrainingBackground(userId, UserProfileTestData.trainingBackground().toEntity(userId)))
+        assertNull(userRepo.updateNutritionHistory(userId, UserProfileTestData.nutritionHistory().toEntity(userId)))
     }
 
     @Test
@@ -64,24 +57,12 @@ class UserRepoTest {
     }
 
     @Test
-    fun upsertFullProfile_returns_null_when_rpc_fails() = runBlocking {
+    fun upsertUserProfile_returns_null_when_upsert_fails() = runBlocking {
         val request = UserProfileTestData.fullRequest()
-        val manager = mockk<SupabaseManager>()
-        val userRepo = repo(manager)
+        val userRepo = repo()
 
-        coEvery {
-            manager.rpcDecoded<RegisteredUserProfileDto>(
-                "upsert_full_profile",
-                buildJsonObject {
-                    put("p_user_id", JsonPrimitive(request.userId))
-                    put("p_payload", request.toUpsertFullProfilePayload())
-                }
-            )
-        } returns Result<RegisteredUserProfileDto>(null, RuntimeException("boom"))
-
-        val result = userRepo.upsertFullProfile(request)
+        val result = userRepo.upsertUserProfile(request)
 
         assertNull(result)
     }
-
 }

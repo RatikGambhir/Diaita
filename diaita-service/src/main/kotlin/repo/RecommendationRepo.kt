@@ -10,16 +10,11 @@ class RecommendationRepo(private val supabaseManager: SupabaseManager) {
 
     suspend fun saveRecommendation(userId: String, recommendation: RecommendationDto): Boolean {
         val payload = recommendation.toStoragePayload(userId)
-        val existing = supabaseManager
-            .selectWhere<RecommendationEntity>("recommendations", "user_id", userId)
-            .body
-            ?.firstOrNull()
-
-        val result = if (existing == null) {
-            supabaseManager.insert("recommendations", payload)
-        } else {
-            supabaseManager.update("recommendations", payload, "user_id", userId)
-        }
+        val result = supabaseManager.upsert(
+            table = "recommendations",
+            data = payload,
+            onConflict = "user_id"
+        )
 
         return result.body != null
     }

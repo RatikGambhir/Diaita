@@ -125,11 +125,27 @@ object RecommendationTestData {
         val request = UserProfileTestData.fullRequest(userId)
         return RegisteredUserProfileDto(
             userId = request.userId,
-            basicDemographics = request.basicDemographics,
-            activityLifestyle = request.activityLifestyle,
-            goals = request.goals,
-            trainingBackground = request.trainingBackground,
-            nutritionHistory = request.nutritionHistory
+            age = request.age,
+            height = request.height,
+            weight = request.weight,
+            primaryGoal = request.primaryGoal,
+            timeframe = request.timeframe,
+            activityLevel = request.activityLevel,
+            sleepDuration = request.sleepDuration,
+            stressLevel = request.stressLevel,
+            trainingHistory = request.trainingHistory,
+            trainingAge = request.trainingAge,
+            equipmentAccess = request.equipmentAccess,
+            daysPerWeek = request.daysPerWeek,
+            timePerSession = request.timePerSession,
+            injuries = request.injuries,
+            chronicConditions = request.chronicConditions,
+            mobilityRestrictions = request.mobilityRestrictions,
+            doctorRestrictions = request.doctorRestrictions,
+            dietaryRestrictions = request.dietaryRestrictions,
+            foodAllergies = request.foodAllergies,
+            currentDietPattern = request.currentDietPattern,
+            eatingSchedule = request.eatingSchedule
         )
     }
 }

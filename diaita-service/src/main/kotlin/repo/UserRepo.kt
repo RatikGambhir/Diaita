@@ -2,33 +2,26 @@ package com.diaita.repo
 
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.RegisteredUserProfileDto
-import com.diaita.entity.*
+import com.diaita.entity.ActivityLifestyleRowEntity
+import com.diaita.entity.BasicDemographicsRowEntity
+import com.diaita.entity.GoalsPrioritiesRowEntity
+import com.diaita.entity.NutritionHistoryRowEntity
+import com.diaita.entity.TrainingBackgroundRowEntity
+import com.diaita.entity.UserProfileRowEntity
 import com.diaita.lib.factories.PostgresFactory
 import com.diaita.lib.factories.SupabaseManager
-import com.diaita.lib.mappings.*
-import kotlinx.serialization.serializer
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.diaita.lib.mappings.toDto
+import com.diaita.lib.mappings.toUserProfileRowEntity
 
 class UserRepo(private val supabaseManager: SupabaseManager) {
-    private val json = Json { ignoreUnknownKeys = true }
 
-    suspend fun upsertFullProfile(request: RegisterUserProfileRequestDto): RegisteredUserProfileDto? {
-        val result = supabaseManager.rpcDecoded<RegisteredUserProfileDto>(
-            functionName = PostgresFactory.UPSERT_FULL_PROFILE_RPC,
-            parameters = buildJsonObject {
-                put("p_user_id", JsonPrimitive(request.userId))
-                put("p_payload", request.toUpsertFullProfilePayload())
-            }
+    suspend fun upsertUserProfile(request: RegisterUserProfileRequestDto): RegisteredUserProfileDto? {
+        val result = supabaseManager.upsert(
+            table = PostgresFactory.USER_PROFILE_TABLE,
+            data = request.toUserProfileRowEntity()
         )
 
-        return result.body
+        return result.body?.toDto()
     }
 
     private suspend inline fun <reified T : Any> getSection(table: String, userId: String): T? {
@@ -102,40 +95,12 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
         deleteSection(PostgresFactory.NUTRITION_HISTORY_TABLE, userId)
 
     suspend fun getFullProfile(userId: String): RegisteredUserProfileDto? {
-        val result = supabaseManager.selectSingle<JsonObject>(
+        val result = supabaseManager.selectSingle<UserProfileRowEntity>(
             table = PostgresFactory.USER_PROFILE_TABLE,
             column = PostgresFactory.USER_ID_COLUMN,
-            value = userId,
-            columns = """
-                user_id,
-                basic_demographics(*),
-                activity_lifestyle(*),
-                goals_priorities(*),
-                training_background(*),
-                nutrition_history(*)
-            """.trimIndent()
+            value = userId
         )
 
-        val row = result.body ?: return null
-
-        return RegisteredUserProfileDto(
-            userId = row["user_id"]?.jsonPrimitive?.content ?: userId,
-            basicDemographics = decodeEmbedded<BasicDemographicsRowEntity>(row, PostgresFactory.BASIC_DEMOGRAPHICS_TABLE)?.toDto(),
-            activityLifestyle = decodeEmbedded<ActivityLifestyleRowEntity>(row, PostgresFactory.ACTIVITY_LIFESTYLE_TABLE)?.toDto(),
-            goals = decodeEmbedded<GoalsPrioritiesRowEntity>(row, PostgresFactory.GOALS_PRIORITIES_TABLE)?.toDto(),
-            trainingBackground = decodeEmbedded<TrainingBackgroundRowEntity>(row, PostgresFactory.TRAINING_BACKGROUND_TABLE)?.toDto(),
-            nutritionHistory = decodeEmbedded<NutritionHistoryRowEntity>(row, PostgresFactory.NUTRITION_HISTORY_TABLE)?.toDto()
-        )
-    }
-
-    private inline fun <reified T : Any> decodeEmbedded(row: JsonObject, key: String): T? {
-        val element = row[key]?.normalizeEmbedded() ?: return null
-        return json.decodeFromJsonElement(serializer<T>(), element)
-    }
-
-    private fun JsonElement.normalizeEmbedded(): JsonElement? = when (this) {
-        JsonNull -> null
-        is JsonArray -> firstOrNull()?.takeUnless { it is JsonNull }
-        else -> this
+        return result.body?.toDto()
     }
 }

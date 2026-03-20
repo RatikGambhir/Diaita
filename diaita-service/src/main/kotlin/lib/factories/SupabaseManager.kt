@@ -174,9 +174,18 @@ class SupabaseManager(val client: SupabaseClient) {
 
 
 
-    suspend inline fun <reified T : Any> upsert(table: String, data: T): Result<T> {
+    suspend inline fun <reified T : Any> upsert(
+        table: String,
+        data: T,
+        onConflict: String? = null,
+        ignoreDuplicates: Boolean = false
+    ): Result<T> {
         return try {
             val result = client.postgrest[table].upsert(data) {
+                if (!onConflict.isNullOrBlank()) {
+                    this.onConflict = onConflict
+                }
+                this.ignoreDuplicates = ignoreDuplicates
                 select()
             }.decodeSingle<T>()
             Result(result, null)

@@ -7,9 +7,43 @@ import kotlinx.serialization.Serializable
 data class UserProfileRowEntity(
     @SerialName("user_id")
     val userId: String,
-    @SerialName("profile_id")
-    val profileId: String,
-    val notes: String? = null
+    val age: Int,
+    val height: Double,
+    val weight: Double,
+    @SerialName("primary_goal")
+    val primaryGoal: String,
+    val timeframe: String? = null,
+    @SerialName("activity_level")
+    val activityLevel: String,
+    @SerialName("sleep_duration")
+    val sleepDuration: Double? = null,
+    @SerialName("stress_level")
+    val stressLevel: String? = null,
+    @SerialName("training_history")
+    val trainingHistory: String? = null,
+    @SerialName("training_age")
+    val trainingAge: String? = null,
+    @SerialName("equipment_access")
+    val equipmentAccess: String? = null,
+    @SerialName("days_per_week")
+    val daysPerWeek: Int? = null,
+    @SerialName("time_per_session")
+    val timePerSession: Int? = null,
+    val injuries: List<String>? = null,
+    @SerialName("chronic_conditions")
+    val chronicConditions: List<String>? = null,
+    @SerialName("mobility_restrictions")
+    val mobilityRestrictions: List<String>? = null,
+    @SerialName("doctor_restrictions")
+    val doctorRestrictions: String? = null,
+    @SerialName("dietary_restrictions")
+    val dietaryRestrictions: List<String>? = null,
+    @SerialName("food_allergies")
+    val foodAllergies: List<String>? = null,
+    @SerialName("current_diet_pattern")
+    val currentDietPattern: String? = null,
+    @SerialName("eating_schedule")
+    val eatingSchedule: String? = null
 )
 
 @Serializable

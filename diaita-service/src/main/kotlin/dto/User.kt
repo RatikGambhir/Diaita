@@ -68,11 +68,26 @@ data class NutritionDietHistoryDto(
 
 @Serializable
 data class RegisterUserProfileRequestDto(
-    val id: String,
     val userId: String,
-    val basicDemographics: BasicDemographicsDto,
-    val activityLifestyle: ActivityLevelLifestyleDto,
-    val goals: GoalsPrioritiesDto,
-    val trainingBackground: TrainingBackgroundDto? = null,
-    val nutritionHistory: NutritionDietHistoryDto? = null
+    val age: Int,
+    val height: Double,
+    val weight: Double,
+    val primaryGoal: String,
+    val timeframe: String? = null,
+    val activityLevel: String,
+    val sleepDuration: Double? = null,
+    val stressLevel: String? = null,
+    val trainingHistory: String? = null,
+    val trainingAge: String? = null,
+    val equipmentAccess: String? = null,
+    val daysPerWeek: Int? = null,
+    val timePerSession: Int? = null,
+    val injuries: List<String>? = null,
+    val chronicConditions: List<String>? = null,
+    val mobilityRestrictions: List<String>? = null,
+    val doctorRestrictions: String? = null,
+    val dietaryRestrictions: List<String>? = null,
+    val foodAllergies: List<String>? = null,
+    val currentDietPattern: String? = null,
+    val eatingSchedule: String? = null
 )

@@ -18,18 +18,35 @@ import NutritionStep from '~/components/setup/NutritionStep.vue'
 import ReviewStep from '~/components/setup/ReviewStep.vue'
 import LoadingScreen from '~/components/ui/LoadingScreen.vue'
 import { cn } from '~/lib/utils'
-import type {
-  ActivityLifestyle,
-  BasicDemographics,
-  GoalsPriorities,
-  NutritionHistory,
-  RegisterUserProfileRequest,
-  TrainingBackground,
-} from '~/types/ProfileTypes'
+import type { RegisterUserProfileRequest } from '~/types/ProfileTypes'
 
 definePageMeta({
   layout: false,
 })
+
+type SetupProfileForm = {
+  age: number | null
+  height: number | null
+  weight: number | null
+  primaryGoal: string
+  timeframe: string
+  activityLevel: string
+  sleepDuration: number | null
+  stressLevel: string
+  trainingHistory: string
+  trainingAge: string
+  equipmentAccess: string
+  daysPerWeek: number | null
+  timePerSession: number | null
+  injuries: string[]
+  chronicConditions: string[]
+  mobilityRestrictions: string[]
+  doctorRestrictions: string
+  dietaryRestrictions: string[]
+  foodAllergies: string[]
+  currentDietPattern: string
+  eatingSchedule: string
+}
 
 const steps = [
   { id: 1, title: 'Personal Info', description: 'Basic demographics', icon: User, skippable: false },
@@ -47,161 +64,88 @@ const toast = useToast()
 const router = useRouter()
 const userStore = useUserStore()
 
-// Form data matching backend entities
-const basicDemographics = ref<BasicDemographics>({
+const form = ref<SetupProfileForm>({
   age: null,
-  sex: '',
-  gender: '',
   height: null,
   weight: null,
-  bodyFatPercentage: null,
-  leanMass: null,
-  biologicalConsiderations: '',
-  menstrualCycleInfo: '',
-})
-
-const activityLifestyle = ref<ActivityLifestyle>({
-  activityLevel: '',
-  dailyStepCount: null,
-  jobType: '',
-  commuteTime: '',
-  sleepDuration: null,
-  sleepQuality: '',
-  stressLevel: '',
-  recoveryCapacity: '',
-})
-
-const goals = ref<GoalsPriorities>({
   primaryGoal: '',
-  secondaryGoals: [],
   timeframe: '',
-  targetWeight: null,
-  performanceMetric: '',
-  aestheticGoals: '',
-  healthGoals: [],
-})
-
-const trainingBackground = ref<TrainingBackground>({
-  trainingAge: '',
+  activityLevel: '',
+  sleepDuration: null,
+  stressLevel: '',
   trainingHistory: '',
-  currentWorkoutRoutine: '',
-  exercisePreferences: [],
-  exerciseDislikes: [],
+  trainingAge: '',
   equipmentAccess: '',
-  timePerSession: null,
   daysPerWeek: null,
-})
-
-const nutritionHistory = ref<NutritionHistory>({
-  currentDietPattern: '',
-  calorieTrackingExperience: null,
-  macronutrientPreferences: '',
-  foodAllergies: [],
+  timePerSession: null,
+  injuries: [],
+  chronicConditions: [],
+  mobilityRestrictions: [],
+  doctorRestrictions: '',
   dietaryRestrictions: [],
-  culturalFoodPreferences: '',
-  cookingSkillLevel: '',
-  foodBudget: '',
+  foodAllergies: [],
+  currentDietPattern: '',
   eatingSchedule: '',
-  snackingHabits: '',
-  alcoholIntake: '',
-  supplementUse: [],
 })
 
-const updateBasicDemographics = (data: Partial<BasicDemographics>) => {
-  basicDemographics.value = { ...basicDemographics.value, ...data }
-}
-
-const updateActivityLifestyle = (data: Partial<ActivityLifestyle>) => {
-  activityLifestyle.value = { ...activityLifestyle.value, ...data }
-}
-
-const updateGoals = (data: Partial<GoalsPriorities>) => {
-  goals.value = { ...goals.value, ...data }
-}
-
-const updateTrainingBackground = (data: Partial<TrainingBackground>) => {
-  trainingBackground.value = { ...trainingBackground.value, ...data }
-}
-
-const updateNutritionHistory = (data: Partial<NutritionHistory>) => {
-  nutritionHistory.value = { ...nutritionHistory.value, ...data }
+const updateForm = (data: Partial<SetupProfileForm>) => {
+  form.value = { ...form.value, ...data }
 }
 
 const basicDemographicsForm = computed(() => ({
-  age: basicDemographics.value.age,
-  sex: basicDemographics.value.sex ?? '',
-  gender: basicDemographics.value.gender ?? '',
-  height: basicDemographics.value.height,
-  weight: basicDemographics.value.weight,
-  bodyFatPercentage: basicDemographics.value.bodyFatPercentage,
-  leanMass: basicDemographics.value.leanMass,
-  biologicalConsiderations: basicDemographics.value.biologicalConsiderations ?? '',
-  menstrualCycleInfo: basicDemographics.value.menstrualCycleInfo ?? '',
+  age: form.value.age,
+  height: form.value.height,
+  weight: form.value.weight,
 }))
 
 const activityLifestyleForm = computed(() => ({
-  activityLevel: activityLifestyle.value.activityLevel,
-  dailyStepCount: activityLifestyle.value.dailyStepCount,
-  jobType: activityLifestyle.value.jobType ?? '',
-  commuteTime: activityLifestyle.value.commuteTime ?? '',
-  sleepDuration: activityLifestyle.value.sleepDuration,
-  sleepQuality: activityLifestyle.value.sleepQuality ?? '',
-  stressLevel: activityLifestyle.value.stressLevel ?? '',
-  recoveryCapacity: activityLifestyle.value.recoveryCapacity ?? '',
+  activityLevel: form.value.activityLevel,
+  sleepDuration: form.value.sleepDuration,
+  stressLevel: form.value.stressLevel,
 }))
 
 const goalsForm = computed(() => ({
-  primaryGoal: goals.value.primaryGoal,
-  secondaryGoals: goals.value.secondaryGoals ?? [],
-  timeframe: goals.value.timeframe ?? '',
-  targetWeight: goals.value.targetWeight,
-  performanceMetric: goals.value.performanceMetric ?? '',
-  aestheticGoals: goals.value.aestheticGoals ?? '',
-  healthGoals: goals.value.healthGoals ?? [],
+  primaryGoal: form.value.primaryGoal,
+  timeframe: form.value.timeframe,
 }))
 
 const trainingBackgroundForm = computed(() => ({
-  trainingAge: trainingBackground.value.trainingAge ?? '',
-  trainingHistory: trainingBackground.value.trainingHistory ?? '',
-  currentWorkoutRoutine: trainingBackground.value.currentWorkoutRoutine ?? '',
-  exercisePreferences: trainingBackground.value.exercisePreferences ?? [],
-  exerciseDislikes: trainingBackground.value.exerciseDislikes ?? [],
-  equipmentAccess: trainingBackground.value.equipmentAccess ?? '',
-  timePerSession: trainingBackground.value.timePerSession,
-  daysPerWeek: trainingBackground.value.daysPerWeek,
+  trainingAge: form.value.trainingAge,
+  trainingHistory: form.value.trainingHistory,
+  equipmentAccess: form.value.equipmentAccess,
+  daysPerWeek: form.value.daysPerWeek,
+  timePerSession: form.value.timePerSession,
+  injuries: form.value.injuries,
+  chronicConditions: form.value.chronicConditions,
+  mobilityRestrictions: form.value.mobilityRestrictions,
+  doctorRestrictions: form.value.doctorRestrictions,
 }))
 
 const nutritionHistoryForm = computed(() => ({
-  currentDietPattern: nutritionHistory.value.currentDietPattern ?? '',
-  calorieTrackingExperience: nutritionHistory.value.calorieTrackingExperience,
-  macronutrientPreferences: nutritionHistory.value.macronutrientPreferences ?? '',
-  foodAllergies: nutritionHistory.value.foodAllergies ?? [],
-  dietaryRestrictions: nutritionHistory.value.dietaryRestrictions ?? [],
-  culturalFoodPreferences: nutritionHistory.value.culturalFoodPreferences ?? '',
-  cookingSkillLevel: nutritionHistory.value.cookingSkillLevel ?? '',
-  foodBudget: nutritionHistory.value.foodBudget ?? '',
-  eatingSchedule: nutritionHistory.value.eatingSchedule ?? '',
-  snackingHabits: nutritionHistory.value.snackingHabits ?? '',
-  alcoholIntake: nutritionHistory.value.alcoholIntake ?? '',
-  supplementUse: nutritionHistory.value.supplementUse ?? [],
+  currentDietPattern: form.value.currentDietPattern,
+  dietaryRestrictions: form.value.dietaryRestrictions,
+  foodAllergies: form.value.foodAllergies,
+  eatingSchedule: form.value.eatingSchedule,
 }))
 
-// Validation for required fields
 const isStep1Valid = computed(() => {
-  return basicDemographics.value.age !== null &&
-    basicDemographics.value.age > 0 &&
-    basicDemographics.value.height !== null &&
-    basicDemographics.value.height > 0 &&
-    basicDemographics.value.weight !== null &&
-    basicDemographics.value.weight > 0
+  return form.value.age !== null
+    && form.value.age >= 13
+    && form.value.age <= 120
+    && form.value.height !== null
+    && form.value.height > 0
+    && form.value.weight !== null
+    && form.value.weight > 0
 })
 
 const isStep2Valid = computed(() => {
-  return activityLifestyle.value.activityLevel !== ''
+  const sleep = form.value.sleepDuration
+  return form.value.activityLevel.trim() !== ''
+    && (sleep === null || (sleep >= 0 && sleep <= 24))
 })
 
 const isStep3Valid = computed(() => {
-  return goals.value.primaryGoal !== ''
+  return form.value.primaryGoal.trim() !== ''
 })
 
 const handleNext = () => {
@@ -216,6 +160,18 @@ const handleBack = () => {
   }
 }
 
+const normalizeString = (value: string): string | null => {
+  const trimmed = value.trim()
+  return trimmed === '' ? null : trimmed
+}
+
+const normalizeArray = (value: string[]): string[] | null => {
+  const normalized = value
+    .map(item => item.trim())
+    .filter(item => item !== '')
+  return normalized.length > 0 ? normalized : null
+}
+
 const handleSubmit = async () => {
   const userId = userStore.getUser?.id?.trim()
 
@@ -228,77 +184,72 @@ const handleSubmit = async () => {
     return
   }
 
-  const payload: RegisterUserProfileRequest = {
-    id: crypto.randomUUID(),
-    userId,
-    basicDemographics: {
-      age: basicDemographics.value.age!,
-      sex: basicDemographics.value.sex || null,
-      gender: basicDemographics.value.gender || null,
-      height: basicDemographics.value.height!,
-      weight: basicDemographics.value.weight!,
-      bodyFatPercentage: basicDemographics.value.bodyFatPercentage,
-      leanMass: basicDemographics.value.leanMass,
-      biologicalConsiderations: basicDemographics.value.biologicalConsiderations || null,
-      menstrualCycleInfo: basicDemographics.value.menstrualCycleInfo || null,
-    },
-    activityLifestyle: {
-      activityLevel: activityLifestyle.value.activityLevel,
-      dailyStepCount: activityLifestyle.value.dailyStepCount,
-      jobType: activityLifestyle.value.jobType || null,
-      commuteTime: activityLifestyle.value.commuteTime || null,
-      sleepDuration: activityLifestyle.value.sleepDuration,
-      sleepQuality: activityLifestyle.value.sleepQuality || null,
-      stressLevel: activityLifestyle.value.stressLevel || null,
-      recoveryCapacity: activityLifestyle.value.recoveryCapacity || null,
-    },
-    goals: {
-      primaryGoal: goals.value.primaryGoal,
-      secondaryGoals: goals.value.secondaryGoals && goals.value.secondaryGoals.length > 0 ? goals.value.secondaryGoals : null,
-      timeframe: goals.value.timeframe || null,
-      targetWeight: goals.value.targetWeight,
-      performanceMetric: goals.value.performanceMetric || null,
-      aestheticGoals: goals.value.aestheticGoals || null,
-      healthGoals: goals.value.healthGoals && goals.value.healthGoals.length > 0 ? goals.value.healthGoals : null,
-    },
-    trainingBackground: {
-      trainingAge: trainingBackground.value.trainingAge || null,
-      trainingHistory: trainingBackground.value.trainingHistory || null,
-      currentWorkoutRoutine: trainingBackground.value.currentWorkoutRoutine || null,
-      exercisePreferences: trainingBackground.value.exercisePreferences && trainingBackground.value.exercisePreferences.length > 0 ? trainingBackground.value.exercisePreferences : null,
-      exerciseDislikes: trainingBackground.value.exerciseDislikes && trainingBackground.value.exerciseDislikes.length > 0 ? trainingBackground.value.exerciseDislikes : null,
-      equipmentAccess: trainingBackground.value.equipmentAccess || null,
-      timePerSession: trainingBackground.value.timePerSession,
-      daysPerWeek: trainingBackground.value.daysPerWeek,
-    },
-    nutritionHistory: {
-      currentDietPattern: nutritionHistory.value.currentDietPattern || null,
-      calorieTrackingExperience: nutritionHistory.value.calorieTrackingExperience,
-      macronutrientPreferences: nutritionHistory.value.macronutrientPreferences || null,
-      foodAllergies: nutritionHistory.value.foodAllergies && nutritionHistory.value.foodAllergies.length > 0 ? nutritionHistory.value.foodAllergies : null,
-      dietaryRestrictions: nutritionHistory.value.dietaryRestrictions && nutritionHistory.value.dietaryRestrictions.length > 0 ? nutritionHistory.value.dietaryRestrictions : null,
-      culturalFoodPreferences: nutritionHistory.value.culturalFoodPreferences || null,
-      cookingSkillLevel: nutritionHistory.value.cookingSkillLevel || null,
-      foodBudget: nutritionHistory.value.foodBudget || null,
-      eatingSchedule: nutritionHistory.value.eatingSchedule || null,
-      snackingHabits: nutritionHistory.value.snackingHabits || null,
-      alcoholIntake: nutritionHistory.value.alcoholIntake || null,
-      supplementUse: nutritionHistory.value.supplementUse && nutritionHistory.value.supplementUse.length > 0 ? nutritionHistory.value.supplementUse : null,
-    },
-    // TODO: Re-add medicalHistory, behavioralFactors, metricsTracking, and notes when those setup steps return.
+  if (!isStep1Valid.value || !isStep2Valid.value || !isStep3Valid.value) {
+    toast.add({
+      title: 'Missing required fields',
+      description: 'Please complete required fields before submitting.',
+      color: 'error',
+    })
+    return
   }
-  const hasTrainingData = Object.values(payload.trainingBackground ?? {}).some((value) => {
-    if (Array.isArray(value)) return value.length > 0
-    return value !== null && value !== ''
-  })
-  const hasNutritionData = Object.values(payload.nutritionHistory ?? {}).some((value) => {
-    if (Array.isArray(value)) return value.length > 0
-    return value !== null && value !== ''
-  })
 
-  payload.trainingBackground = hasTrainingData ? payload.trainingBackground : null
-  payload.nutritionHistory = hasNutritionData ? payload.nutritionHistory : null
+  if (form.value.daysPerWeek !== null && (form.value.daysPerWeek < 0 || form.value.daysPerWeek > 14)) {
+    toast.add({
+      title: 'Invalid days per week',
+      description: 'Days per week must be between 0 and 14.',
+      color: 'error',
+    })
+    return
+  }
+
+  if (form.value.timePerSession !== null && (form.value.timePerSession < 0 || form.value.timePerSession > 1440)) {
+    toast.add({
+      title: 'Invalid time per session',
+      description: 'Time per session must be between 0 and 1440 minutes.',
+      color: 'error',
+    })
+    return
+  }
+
+  const trainingHistory = normalizeString(form.value.trainingHistory)
+  const trainingAge = normalizeString(form.value.trainingAge)
+
+  if (!trainingHistory && !trainingAge) {
+    toast.add({
+      title: 'Training background required',
+      description: 'Please provide either training history or training age.',
+      color: 'error',
+    })
+    return
+  }
+
+  const payload: RegisterUserProfileRequest = {
+    userId,
+    age: form.value.age!,
+    height: form.value.height!,
+    weight: form.value.weight!,
+    primaryGoal: form.value.primaryGoal.trim(),
+    timeframe: normalizeString(form.value.timeframe),
+    activityLevel: form.value.activityLevel.trim(),
+    sleepDuration: form.value.sleepDuration,
+    stressLevel: normalizeString(form.value.stressLevel),
+    trainingHistory,
+    trainingAge,
+    equipmentAccess: normalizeString(form.value.equipmentAccess),
+    daysPerWeek: form.value.daysPerWeek,
+    timePerSession: form.value.timePerSession,
+    injuries: normalizeArray(form.value.injuries),
+    chronicConditions: normalizeArray(form.value.chronicConditions),
+    mobilityRestrictions: normalizeArray(form.value.mobilityRestrictions),
+    doctorRestrictions: normalizeString(form.value.doctorRestrictions),
+    dietaryRestrictions: normalizeArray(form.value.dietaryRestrictions),
+    foodAllergies: normalizeArray(form.value.foodAllergies),
+    currentDietPattern: normalizeString(form.value.currentDietPattern),
+    eatingSchedule: normalizeString(form.value.eatingSchedule),
+  }
+
   isSubmitting.value = true
+
   try {
     const response = await userApi.createUserProfile(payload)
 
@@ -314,7 +265,6 @@ const handleSubmit = async () => {
 
     await router.push('/profile')
   } catch (error) {
-    isSubmitting.value = false
     console.error('Error submitting profile:', error)
     toast.add({
       title: 'Could not save profile',
@@ -425,47 +375,28 @@ const handleSkipForNow = async () => {
             <PersonalInfoStep
               v-if="currentStep === 1"
               :form-data="basicDemographicsForm"
-              @update:form-data="updateBasicDemographics"
+              @update:form-data="updateForm"
             />
             <LifestyleStep
               v-if="currentStep === 2"
               :form-data="activityLifestyleForm"
-              @update:form-data="updateActivityLifestyle"
+              @update:form-data="updateForm"
             />
             <GoalsStep
               v-if="currentStep === 3"
               :form-data="goalsForm"
-              @update:form-data="updateGoals"
+              @update:form-data="updateForm"
             />
             <TrainingStep
               v-if="currentStep === 4"
               :form-data="trainingBackgroundForm"
-              @update:form-data="updateTrainingBackground"
+              @update:form-data="updateForm"
             />
             <NutritionStep
               v-if="currentStep === 5"
               :form-data="nutritionHistoryForm"
-              @update:form-data="updateNutritionHistory"
+              @update:form-data="updateForm"
             />
-            <!-- TODO: Re-enable the Medical, Behavioral, and Metrics setup steps when those features are added back.
-            <MedicalStep
-              v-if="currentStep === 6"
-              :form-data="medicalHistory"
-              @update:form-data="(data) => medicalHistory = { ...medicalHistory, ...data }"
-            />
-            <BehavioralStep
-              v-if="currentStep === 7"
-              :form-data="behavioralFactors"
-              @update:form-data="(data) => behavioralFactors = { ...behavioralFactors, ...data }"
-            />
-            <MetricsStep
-              v-if="currentStep === 8"
-              :form-data="metricsTracking"
-              :notes="notes"
-              @update:form-data="(data) => metricsTracking = { ...metricsTracking, ...data }"
-              @update:notes="(val) => notes = val"
-            />
-            -->
             <ReviewStep
               v-if="currentStep === 6"
               :basic-demographics="basicDemographicsForm"
@@ -539,7 +470,7 @@ const handleSkipForNow = async () => {
     </div>
 
     <LoadingScreen
-        v-if="isSubmitting"
+      v-if="isSubmitting"
       :show="isSubmitting"
       message="Setting up your profile..."
     />

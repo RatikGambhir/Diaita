@@ -35,12 +35,12 @@ class UserService(
     private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): ServiceResult<RegisterUserProfileResponseDto> = coroutineScope {
-        val upsertResult = async { runCatching { userRepo.upsertFullProfile(request) } }.await()
+        val upsertResult = async { runCatching { userRepo.upsertUserProfile(request) } }.await()
         val profile = upsertResult.getOrElse {
-            return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: ${it.message}")
+            return@coroutineScope ServiceResult.Failure("upsertUserProfile failed: ${it.message}")
         }
         if (profile == null) {
-            return@coroutineScope ServiceResult.Failure("upsertFullProfile failed: returned null")
+            return@coroutineScope ServiceResult.Failure("upsertUserProfile failed: returned null")
         }
 
         val recommendationResult = async { runCatching { genRecommendations(profile) } }.await()
@@ -70,16 +70,6 @@ class UserService(
         systemInstruction: String? = null
     ): RecommendationDto? = genRecommendations(
         promptVariables = request.toPromptVariables(),
-        config = config,
-        systemInstruction = systemInstruction
-    )
-
-    suspend fun genRecommendations(
-        profile: RegisteredUserProfileDto,
-        config: GenerationConfigDto? = null,
-        systemInstruction: String? = null
-    ): RecommendationDto? = genRecommendations(
-        promptVariables = profile.toPromptVariables(),
         config = config,
         systemInstruction = systemInstruction
     )
@@ -207,11 +197,11 @@ class UserService(
 
     private fun buildStructuredRecommendationPrompt(promptVariables: Map<String, Any>): String {
         val prompt = PromptFactory.getPromptWithVariables("registerUserMetadata", promptVariables)
-        return "$prompt\n\nReturn only valid JSON that matches the provided response schema."
+        return "$prompt\n\nReturn only strict RFC 8259 JSON that matches the provided response schema. Do not use trailing commas."
     }
 
     private companion object {
         const val STRUCTURED_OUTPUT_SYSTEM_INSTRUCTION =
-            "Return only JSON that matches the provided response schema. Do not include markdown or prose."
+            "Return only strict RFC 8259 JSON that matches the provided response schema. Do not include markdown, comments, or prose. Do not include trailing commas."
     }
 }

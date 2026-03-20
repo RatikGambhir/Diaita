@@ -2,63 +2,49 @@
 import ReviewCard from '~/components/setup/ReviewCard.vue'
 
 interface Props {
-  basicDemographics: Record<string, any>
-  activityLifestyle: Record<string, any>
-  goals: Record<string, any>
-  trainingBackground: Record<string, any>
-  nutritionHistory: Record<string, any>
+  basicDemographics: Record<string, unknown>
+  activityLifestyle: Record<string, unknown>
+  goals: Record<string, unknown>
+  trainingBackground: Record<string, unknown>
+  nutritionHistory: Record<string, unknown>
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
-// Field configurations for each section
 const personalInfoFields = [
   { key: 'age', label: 'Age', suffix: 'years' },
-  { key: 'height', label: 'Height', suffix: 'in' },
-  { key: 'weight', label: 'Weight', suffix: 'lbs' },
-  { key: 'sex', label: 'Sex' },
-  { key: 'gender', label: 'Gender' },
-  { key: 'bodyFatPercentage', label: 'Body Fat %' },
-  { key: 'leanMass', label: 'Lean Mass', suffix: 'lbs' },
+  { key: 'height', label: 'Height', suffix: 'cm' },
+  { key: 'weight', label: 'Weight', suffix: 'kg' },
 ]
 
 const lifestyleFields = [
   { key: 'activityLevel', label: 'Activity Level' },
-  { key: 'dailyStepCount', label: 'Daily Steps' },
-  { key: 'jobType', label: 'Job Type' },
   { key: 'sleepDuration', label: 'Sleep Duration', suffix: 'hrs' },
-  { key: 'sleepQuality', label: 'Sleep Quality' },
   { key: 'stressLevel', label: 'Stress Level' },
-  { key: 'recoveryCapacity', label: 'Recovery' },
 ]
 
 const goalsFields = [
   { key: 'primaryGoal', label: 'Primary Goal' },
   { key: 'timeframe', label: 'Timeframe' },
-  { key: 'targetWeight', label: 'Target Weight', suffix: 'lbs' },
-  { key: 'performanceMetric', label: 'Performance Metric' },
-  { key: 'secondaryGoals', label: 'Secondary Goals', type: 'badges' as const },
-  { key: 'healthGoals', label: 'Health Goals', type: 'badges' as const, badgeVariant: 'outline' as const },
 ]
 
 const trainingFields = [
   { key: 'trainingAge', label: 'Experience' },
+  { key: 'trainingHistory', label: 'Training History' },
   { key: 'equipmentAccess', label: 'Equipment' },
   { key: 'daysPerWeek', label: 'Days/Week' },
   { key: 'timePerSession', label: 'Time/Session', suffix: 'min' },
-  { key: 'exercisePreferences', label: 'Preferred Exercises', type: 'badges' as const },
-  { key: 'exerciseDislikes', label: 'Dislikes', type: 'badges' as const, badgeVariant: 'outline' as const },
+  { key: 'injuries', label: 'Injuries', type: 'badges' as const },
+  { key: 'chronicConditions', label: 'Chronic Conditions', type: 'badges' as const },
+  { key: 'mobilityRestrictions', label: 'Mobility Restrictions', type: 'badges' as const },
+  { key: 'doctorRestrictions', label: 'Doctor Restrictions' },
 ]
 
 const nutritionFields = [
   { key: 'currentDietPattern', label: 'Diet Pattern' },
-  { key: 'cookingSkillLevel', label: 'Cooking Skill' },
-  { key: 'foodBudget', label: 'Budget' },
-  { key: 'alcoholIntake', label: 'Alcohol' },
-  { key: 'calorieTrackingExperience', label: 'Tracked Calories Before', type: 'boolean' as const },
+  { key: 'eatingSchedule', label: 'Eating Schedule' },
   { key: 'foodAllergies', label: 'Allergies', type: 'badges' as const, badgeVariant: 'destructive' as const },
   { key: 'dietaryRestrictions', label: 'Dietary Restrictions', type: 'badges' as const },
-  { key: 'supplementUse', label: 'Supplements', type: 'badges' as const, badgeVariant: 'outline' as const },
 ]
 </script>
 
@@ -100,7 +86,6 @@ const nutritionFields = [
         :data="nutritionHistory"
         :fields="nutritionFields"
       />
-      <!-- TODO: Re-add the deferred medical, behavioral, metrics, and notes review sections when those features return. -->
     </div>
   </div>
 </template>

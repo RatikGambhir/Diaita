@@ -88,5 +88,6 @@ data class GeminiErrorDto(
 
 @Serializable
 data class GeminiCandidateDto(
-    val content: GeminiContentDto? = null
+    val content: GeminiContentDto? = null,
+    val finishReason: String? = null
 )

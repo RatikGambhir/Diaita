@@ -1,80 +1,29 @@
-export type BasicDemographics = {
-  age: number | null;
-  sex: string | null;
-  gender: string | null;
-  height: number | null;
-  weight: number | null;
-  bodyFatPercentage: number | null;
-  leanMass: number | null;
-  biologicalConsiderations: string | null;
-  menstrualCycleInfo: string | null;
-};
-
-export type ActivityLifestyle = {
-  activityLevel: string;
-  dailyStepCount: number | null;
-  jobType: string | null;
-  commuteTime: string | null;
-  sleepDuration: number | null;
-  sleepQuality: string | null;
-  stressLevel: string | null;
-  recoveryCapacity: string | null;
-};
-
-export type GoalsPriorities = {
-  primaryGoal: string;
-  secondaryGoals: string[] | null;
-  timeframe: string | null;
-  targetWeight: number | null;
-  performanceMetric: string | null;
-  aestheticGoals: string | null;
-  healthGoals: string[] | null;
-};
-
-export type TrainingBackground = {
-  trainingAge: string | null;
-  trainingHistory: string | null;
-  currentWorkoutRoutine: string | null;
-  exercisePreferences: string[] | null;
-  exerciseDislikes: string[] | null;
-  equipmentAccess: string | null;
-  timePerSession: number | null;
-  daysPerWeek: number | null;
-};
-
-export type NutritionHistory = {
-  currentDietPattern: string | null;
-  calorieTrackingExperience: boolean | null;
-  macronutrientPreferences: string | null;
-  foodAllergies: string[] | null;
-  dietaryRestrictions: string[] | null;
-  culturalFoodPreferences: string | null;
-  cookingSkillLevel: string | null;
-  foodBudget: string | null;
-  eatingSchedule: string | null;
-  snackingHabits: string | null;
-  alcoholIntake: string | null;
-  supplementUse: string[] | null;
-};
-
 export type RegisterUserProfileRequest = {
-  id: string;
   userId: string;
-  basicDemographics: BasicDemographics;
-  activityLifestyle: ActivityLifestyle;
-  goals: GoalsPriorities;
-  trainingBackground: TrainingBackground | null;
-  nutritionHistory: NutritionHistory | null;
+  age: number;
+  height: number;
+  weight: number;
+  primaryGoal: string;
+  timeframe: string | null;
+  activityLevel: string;
+  sleepDuration: number | null;
+  stressLevel: string | null;
+  trainingHistory: string | null;
+  trainingAge: string | null;
+  equipmentAccess: string | null;
+  daysPerWeek: number | null;
+  timePerSession: number | null;
+  injuries: string[] | null;
+  chronicConditions: string[] | null;
+  mobilityRestrictions: string[] | null;
+  doctorRestrictions: string | null;
+  dietaryRestrictions: string[] | null;
+  foodAllergies: string[] | null;
+  currentDietPattern: string | null;
+  eatingSchedule: string | null;
 };
 
-export type RegisteredUserProfile = {
-  userId: string;
-  basicDemographics: BasicDemographics | null;
-  activityLifestyle: ActivityLifestyle | null;
-  goals: GoalsPriorities | null;
-  trainingBackground: TrainingBackground | null;
-  nutritionHistory: NutritionHistory | null;
-};
+export type RegisteredUserProfile = RegisterUserProfileRequest;
 
 export type RecommendationExercise = {
   name: string;

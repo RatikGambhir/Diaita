@@ -15,6 +15,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.utils.io.readUTF8Line
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -27,6 +28,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         ignoreUnknownKeys = true
         explicitNulls = false
     }
+    private val normalizedApiKey = apiKey.trim()
 
 
 
@@ -44,7 +46,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
             client.preparePost(streamUrl) {
                 contentType(ContentType.Application.Json)
                 headers {
-                    append("x-goog-api-key", apiKey)
+                    append("x-goog-api-key", normalizedApiKey)
                     append("Accept", "text/event-stream")
                 }
                 setBody(request)
@@ -84,44 +86,91 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         systemInstruction: String? = null,
         config: GenerationConfigDto? = null
     ): T? {
+        val strictSystemInstruction = buildStrictStructuredInstruction(systemInstruction)
+        val baseRequest = buildStructuredRequest(
+            prompt = prompt,
+            responseSchema = responseSchema,
+            systemInstruction = strictSystemInstruction,
+            config = config
+        )
+
         try {
-            val request = GeminiRequestDto.fromPrompt(
-                prompt = prompt,
-                config = config?.copy(
-                    responseMimeType = "application/json",
-                    responseSchema = responseSchema
-                ) ?: GenerationConfigDto(
-                    temperature = 0.7,
-                    topP = 0.95,
-                    topK = 40,
-                    maxOutputTokens = 8192,
-                    responseMimeType = "application/json",
-                    responseSchema = responseSchema
-                ),
-                systemInstruction = systemInstruction
-            )
+            val firstResponse = executeStructuredRequest(baseRequest) ?: return null
+            val firstPayload = extractStructuredPayload(firstResponse) ?: return null
 
-            val response = client.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }.body<GeminiResponseDto>()
+            return try {
+                json.decodeFromString(serializer, firstPayload)
+            } catch (e: SerializationException) {
+                println("Structured JSON parse failed, retrying once with stricter instruction: ${e.message}")
 
-            if (response.error != null) {
-                println("Gemini API error (${response.error.code} ${response.error.status}): ${response.error.message}")
-                return null
+                val retryRequest = buildStructuredRequest(
+                    prompt = "$prompt\n\n$STRICT_JSON_RETRY_PROMPT_SUFFIX",
+                    responseSchema = responseSchema,
+                    systemInstruction = strictSystemInstruction,
+                    config = config
+                )
+                val retryResponse = executeStructuredRequest(retryRequest) ?: return null
+                val retryPayload = extractStructuredPayload(retryResponse) ?: return null
+                json.decodeFromString(serializer, retryPayload)
             }
-
-            return response.candidates
-                .firstOrNull()
-                ?.content
-                ?.parts
-                ?.firstOrNull()
-                ?.text
-                ?.let { json.decodeFromString(serializer, it) }
         } catch (e: Exception) {
             println("Error calling Gemini Structured API: ${e.message}")
             return null
         }
+    }
+
+    private suspend fun executeStructuredRequest(request: GeminiRequestDto): GeminiResponseDto? {
+        val response = client.post {
+            contentType(ContentType.Application.Json)
+            headers {
+                append("x-goog-api-key", normalizedApiKey)
+            }
+            setBody(request)
+        }.body<GeminiResponseDto>()
+
+        if (response.error != null) {
+            println("Gemini API error (${response.error.code} ${response.error.status}): ${response.error.message}")
+            return null
+        }
+
+        return response
+    }
+
+    private fun buildStructuredRequest(
+        prompt: String,
+        responseSchema: ResponseSchemaDto,
+        systemInstruction: String?,
+        config: GenerationConfigDto?
+    ): GeminiRequestDto {
+        return GeminiRequestDto.fromPrompt(
+            prompt = prompt,
+            config = config?.copy(
+                responseMimeType = "application/json",
+                responseSchema = responseSchema
+            ) ?: GenerationConfigDto(
+                temperature = 0.7,
+                topP = 0.95,
+                topK = 40,
+                maxOutputTokens = 65536,
+                responseMimeType = "application/json",
+                responseSchema = responseSchema
+            ),
+            systemInstruction = systemInstruction
+        )
+    }
+
+    private fun buildStrictStructuredInstruction(systemInstruction: String?): String {
+        return listOfNotNull(systemInstruction?.trim()?.takeIf { it.isNotBlank() }, STRICT_JSON_SYSTEM_SUFFIX)
+            .joinToString(separator = "\n\n")
+    }
+
+    private fun extractStructuredPayload(response: GeminiResponseDto): String? {
+        val candidate = response.candidates.firstOrNull() ?: return null
+        if (candidate.finishReason == "MAX_TOKENS") {
+            println("Gemini response truncated: finishReason=MAX_TOKENS. Increase maxOutputTokens.")
+            return null
+        }
+        return candidate.content?.parts?.firstOrNull()?.text
     }
 
     private fun buildStreamUrl(): String {
@@ -157,5 +206,12 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
                 part["text"]?.jsonPrimitive?.contentOrNull ?: ""
             }
         }
+    }
+
+    private companion object {
+        const val STRICT_JSON_SYSTEM_SUFFIX =
+            "Return strictly valid RFC 8259 JSON only. Do not include markdown, comments, trailing commas, code fences, or extra text."
+        const val STRICT_JSON_RETRY_PROMPT_SUFFIX =
+            "Regenerate the response as strict RFC 8259 JSON. Ensure there are no trailing commas and no text outside JSON."
     }
 }

@@ -67,7 +67,7 @@ class UserRouterTest {
         val payload = UserProfileTestData.fullRequest()
         val profile = RecommendationTestData.registeredProfile(payload.userId)
         val recommendation = RecommendationTestData.recommendation()
-        coEvery { repo.upsertFullProfile(payload) } returns profile
+        coEvery { repo.upsertUserProfile(payload) } returns profile
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -86,7 +86,7 @@ class UserRouterTest {
         val body = Json.decodeFromString<RegisterUserProfileResponseDto>(response.bodyAsText())
         assertEquals(profile, body.profile)
         assertEquals(recommendation, body.recommendation)
-        coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
+        coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
         coVerify(exactly = 1) {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         }
@@ -112,10 +112,64 @@ class UserRouterTest {
     }
 
     @Test
+    fun user_profile_returns_400_for_invalid_age_range() = testApplication {
+        val invalidPayload = UserProfileTestData.fullRequest().copy(age = 10)
+
+        application {
+            testModule()
+        }
+
+        val response = client.post("/user/profile") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            setBody(json.encodeToString(invalidPayload))
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertTrue(response.bodyAsText().contains("age"))
+        confirmVerified(repo, gemini, recommendationRepo)
+    }
+
+    @Test
+    fun user_profile_returns_400_for_missing_primary_goal_or_activity_level() = testApplication {
+        val invalidPayload = UserProfileTestData.fullRequest().copy(primaryGoal = "", activityLevel = "")
+
+        application {
+            testModule()
+        }
+
+        val response = client.post("/user/profile") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            setBody(json.encodeToString(invalidPayload))
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertTrue(response.bodyAsText().contains("primaryGoal"))
+        confirmVerified(repo, gemini, recommendationRepo)
+    }
+
+    @Test
+    fun user_profile_returns_400_when_training_background_missing() = testApplication {
+        val invalidPayload = UserProfileTestData.fullRequest().copy(trainingHistory = null, trainingAge = null)
+
+        application {
+            testModule()
+        }
+
+        val response = client.post("/user/profile") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            setBody(json.encodeToString(invalidPayload))
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertTrue(response.bodyAsText().contains("trainingHistory"))
+        confirmVerified(repo, gemini, recommendationRepo)
+    }
+
+    @Test
     fun user_profile_returns_500_when_controller_reports_failure() = testApplication {
         val payload = UserProfileTestData.fullRequest()
         val recommendation = RecommendationTestData.recommendation()
-        coEvery { repo.upsertFullProfile(payload) } returns null
+        coEvery { repo.upsertUserProfile(payload) } returns null
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -130,8 +184,8 @@ class UserRouterTest {
         }
 
         assertEquals(HttpStatusCode.InternalServerError, response.status)
-        assertTrue(response.bodyAsText().contains("upsertFullProfile failed"))
-        coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
+        assertTrue(response.bodyAsText().contains("upsertUserProfile failed"))
+        coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
     }
 
     @Test
@@ -139,7 +193,7 @@ class UserRouterTest {
         val payload = UserProfileTestData.fullRequest()
         val profile = RecommendationTestData.registeredProfile(payload.userId)
         val recommendation = RecommendationTestData.recommendation()
-        coEvery { repo.upsertFullProfile(payload) } returns profile
+        coEvery { repo.upsertUserProfile(payload) } returns profile
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -158,7 +212,7 @@ class UserRouterTest {
         val body = Json.decodeFromString<RegisterUserProfileResponseDto>(response.bodyAsText())
         assertEquals(profile, body.profile)
         assertEquals(recommendation, body.recommendation)
-        coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
+        coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
         coVerify(exactly = 1) {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         }
@@ -186,7 +240,7 @@ class UserRouterTest {
         val profile = RecommendationTestData.registeredProfile(payload.userId)
         val recommendation = RecommendationTestData.recommendation()
 
-        coEvery { repo.upsertFullProfile(payload) } returns profile
+        coEvery { repo.upsertUserProfile(payload) } returns profile
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -202,7 +256,7 @@ class UserRouterTest {
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
-        coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
+        coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
         coVerify(exactly = 1) {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         }
@@ -214,7 +268,7 @@ class UserRouterTest {
         val payload = UserProfileTestData.fullRequest()
         val recommendation = RecommendationTestData.recommendation()
 
-        coEvery { repo.upsertFullProfile(payload) } returns null
+        coEvery { repo.upsertUserProfile(payload) } returns null
         coEvery {
             gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
         } returns recommendation
@@ -229,8 +283,8 @@ class UserRouterTest {
         }
 
         assertEquals(HttpStatusCode.InternalServerError, response.status)
-        assertTrue(response.bodyAsText().contains("upsertFullProfile failed"))
-        coVerify(exactly = 1) { repo.upsertFullProfile(payload) }
+        assertTrue(response.bodyAsText().contains("upsertUserProfile failed"))
+        coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
     }
 
     @Test
@@ -274,7 +328,7 @@ class UserRouterTest {
     @Test
     fun settings_basic_demographics_get_put_delete_follow_expected_behavior() = testApplication {
         val userId = "user-123"
-        val dto = UserProfileTestData.fullRequest().basicDemographics
+        val dto = UserProfileTestData.basicDemographics()
         val row = BasicDemographicsRowEntity(
             userId = userId,
             age = dto.age,
@@ -327,7 +381,7 @@ class UserRouterTest {
     @Test
     fun settings_basic_demographics_maps_failures_to_expected_status_codes() = testApplication {
         val userId = "user-404"
-        val dto = UserProfileTestData.fullRequest().basicDemographics
+        val dto = UserProfileTestData.basicDemographics()
 
         coEvery { repo.getBasicDemographics(userId) } returns null
         coEvery { repo.updateBasicDemographics(userId, any()) } returns null
@@ -358,9 +412,9 @@ class UserRouterTest {
     @Test
     fun settings_activity_lifestyle_crud_success() = assertSectionCrudSuccess(
         section = "activity-lifestyle",
-        body = json.encodeToString(UserProfileTestData.fullRequest().activityLifestyle),
+        body = json.encodeToString(UserProfileTestData.activityLifestyle()),
         setup = { userId ->
-            val entity = UserProfileTestData.fullRequest().activityLifestyle.toEntity(userId)
+            val entity = UserProfileTestData.activityLifestyle().toEntity(userId)
             coEvery { repo.getActivityLifestyle(userId) } returns entity
             coEvery { repo.updateActivityLifestyle(userId, any()) } returns entity
             coEvery { repo.deleteActivityLifestyle(userId) } returns true
@@ -370,9 +424,9 @@ class UserRouterTest {
     @Test
     fun settings_goals_priorities_crud_success() = assertSectionCrudSuccess(
         section = "goals-priorities",
-        body = json.encodeToString(UserProfileTestData.fullRequest().goals),
+        body = json.encodeToString(UserProfileTestData.goals()),
         setup = { userId ->
-            val entity = UserProfileTestData.fullRequest().goals.toEntity(userId)
+            val entity = UserProfileTestData.goals().toEntity(userId)
             coEvery { repo.getGoalsPriorities(userId) } returns entity
             coEvery { repo.updateGoalsPriorities(userId, any()) } returns entity
             coEvery { repo.deleteGoalsPriorities(userId) } returns true
@@ -382,9 +436,9 @@ class UserRouterTest {
     @Test
     fun settings_training_background_crud_success() = assertSectionCrudSuccess(
         section = "training-background",
-        body = json.encodeToString(UserProfileTestData.fullRequest().trainingBackground!!),
+        body = json.encodeToString(UserProfileTestData.trainingBackground()),
         setup = { userId ->
-            val entity = UserProfileTestData.fullRequest().trainingBackground!!.toEntity(userId)
+            val entity = UserProfileTestData.trainingBackground().toEntity(userId)
             coEvery { repo.getTrainingBackground(userId) } returns entity
             coEvery { repo.updateTrainingBackground(userId, any()) } returns entity
             coEvery { repo.deleteTrainingBackground(userId) } returns true
@@ -394,9 +448,9 @@ class UserRouterTest {
     @Test
     fun settings_nutrition_history_crud_success() = assertSectionCrudSuccess(
         section = "nutrition-history",
-        body = json.encodeToString(UserProfileTestData.fullRequest().nutritionHistory!!),
+        body = json.encodeToString(UserProfileTestData.nutritionHistory()),
         setup = { userId ->
-            val entity = UserProfileTestData.fullRequest().nutritionHistory!!.toEntity(userId)
+            val entity = UserProfileTestData.nutritionHistory().toEntity(userId)
             coEvery { repo.getNutritionHistory(userId) } returns entity
             coEvery { repo.updateNutritionHistory(userId, any()) } returns entity
             coEvery { repo.deleteNutritionHistory(userId) } returns true
@@ -406,7 +460,7 @@ class UserRouterTest {
     @Test
     fun settings_activity_lifestyle_crud_errors() = assertSectionCrudErrors(
         section = "activity-lifestyle",
-        body = json.encodeToString(UserProfileTestData.fullRequest().activityLifestyle),
+        body = json.encodeToString(UserProfileTestData.activityLifestyle()),
         setup = { userId ->
             coEvery { repo.getActivityLifestyle(userId) } returns null
             coEvery { repo.updateActivityLifestyle(userId, any()) } returns null
@@ -417,7 +471,7 @@ class UserRouterTest {
     @Test
     fun settings_goals_priorities_crud_errors() = assertSectionCrudErrors(
         section = "goals-priorities",
-        body = json.encodeToString(UserProfileTestData.fullRequest().goals),
+        body = json.encodeToString(UserProfileTestData.goals()),
         setup = { userId ->
             coEvery { repo.getGoalsPriorities(userId) } returns null
             coEvery { repo.updateGoalsPriorities(userId, any()) } returns null
@@ -428,7 +482,7 @@ class UserRouterTest {
     @Test
     fun settings_training_background_crud_errors() = assertSectionCrudErrors(
         section = "training-background",
-        body = json.encodeToString(UserProfileTestData.fullRequest().trainingBackground!!),
+        body = json.encodeToString(UserProfileTestData.trainingBackground()),
         setup = { userId ->
             coEvery { repo.getTrainingBackground(userId) } returns null
             coEvery { repo.updateTrainingBackground(userId, any()) } returns null
@@ -439,7 +493,7 @@ class UserRouterTest {
     @Test
     fun settings_nutrition_history_crud_errors() = assertSectionCrudErrors(
         section = "nutrition-history",
-        body = json.encodeToString(UserProfileTestData.fullRequest().nutritionHistory!!),
+        body = json.encodeToString(UserProfileTestData.nutritionHistory()),
         setup = { userId ->
             coEvery { repo.getNutritionHistory(userId) } returns null
             coEvery { repo.updateNutritionHistory(userId, any()) } returns null
