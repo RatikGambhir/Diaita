@@ -33,6 +33,11 @@ class NutritionService(
     private val nutritionRepo: NutritionRepo,
     private val nutritionClient: NutritionRestClient
 ) {
+    enum class FoodSource {
+        INGREDIENT,
+        PRODUCT,
+        MENU_ITEM
+    }
 
     suspend fun getNutritionDaySummary(userId: String, date: String): NutritionDaySummaryResponseDto? {
         val normalizedUserId = userId.trim()
@@ -84,30 +89,35 @@ class NutritionService(
         )
     }
 
-    suspend fun autocompleteIngredients(filters: IngredientAutocompleteFiltersDto): FoodAutocompleteResponseDto? {
+    suspend fun autocomplete(
+        source: FoodSource,
+        ingredientFilters: IngredientAutocompleteFiltersDto? = null,
+        productFilters: ProductSuggestFiltersDto? = null
+    ): FoodAutocompleteResponseDto? {
         return try {
-            val suggestions = nutritionClient.autocompleteIngredients(filters.query, filters) ?: return null
+            when (source) {
+                FoodSource.INGREDIENT -> {
+                    val filters = ingredientFilters ?: return null
+                    val suggestions = nutritionClient.autocompleteIngredients(filters.query, filters) ?: return null
+                    FoodAutocompleteResponseDto(
+                        suggestions = suggestions.map { it.toFoodAutocompleteSuggestionDto() },
+                        number = suggestions.size
+                    )
+                }
 
-            FoodAutocompleteResponseDto(
-                suggestions = suggestions.map { it.toFoodAutocompleteSuggestionDto() },
-                number = suggestions.size
-            )
+                FoodSource.PRODUCT -> {
+                    val filters = productFilters ?: return null
+                    val suggestions = nutritionClient.suggestProducts(filters.query, filters)?.results ?: return null
+                    FoodAutocompleteResponseDto(
+                        suggestions = suggestions.map { it.toFoodAutocompleteSuggestionDto() },
+                        number = suggestions.size
+                    )
+                }
+
+                FoodSource.MENU_ITEM -> null
+            }
         } catch (e: Exception) {
-            println("Error autocompleting ingredients in service: ${e.message}")
-            null
-        }
-    }
-
-    suspend fun autocompleteProducts(filters: ProductSuggestFiltersDto): FoodAutocompleteResponseDto? {
-        return try {
-            val suggestions = nutritionClient.suggestProducts(filters.query, filters)?.results ?: return null
-
-            FoodAutocompleteResponseDto(
-                suggestions = suggestions.map { it.toFoodAutocompleteSuggestionDto() },
-                number = suggestions.size
-            )
-        } catch (e: Exception) {
-            println("Error autocompleting products in service: ${e.message}")
+            println("Error autocompleting $source in service: ${e.message}")
             null
         }
     }
@@ -144,70 +154,97 @@ class NutritionService(
         )
     }
 
-    suspend fun searchIngredients(filters: IngredientSearchFiltersDto): FoodSearchResponseDto? {
+    suspend fun search(
+        source: FoodSource,
+        ingredientFilters: IngredientSearchFiltersDto? = null,
+        productFilters: ProductSearchFiltersDto? = null,
+        menuItemFilters: MenuItemSearchFiltersDto? = null
+    ): FoodSearchResponseDto? {
         return try {
-            val searchResponse = nutritionClient.searchIngredients(filters.query, filters) ?: return null
+            when (source) {
+                FoodSource.INGREDIENT -> {
+                    val filters = ingredientFilters ?: return null
+                    val searchResponse = nutritionClient.searchIngredients(filters.query, filters) ?: return null
+                    buildSearchResponse(
+                        items = searchResponse.results,
+                        totalResults = searchResponse.totalResults,
+                        offset = searchResponse.offset,
+                        number = searchResponse.number
+                    ) { result ->
+                        nutritionClient.getIngredientInformation(result.id)?.toFoodDto()
+                    }
+                }
 
-            buildSearchResponse(
-                items = searchResponse.results,
-                totalResults = searchResponse.totalResults,
-                offset = searchResponse.offset,
-                number = searchResponse.number
-            ) { result ->
-                nutritionClient.getIngredientInformation(result.id)?.toFoodDto()
+                FoodSource.PRODUCT -> {
+                    val filters = productFilters ?: return null
+                    val searchResponse = nutritionClient.searchProducts(filters.query, filters) ?: return null
+                    buildSearchResponse(
+                        items = searchResponse.products,
+                        totalResults = searchResponse.totalProducts,
+                        offset = searchResponse.offset,
+                        number = searchResponse.number
+                    ) { result ->
+                        nutritionClient.getProductInformation(result.id)?.toFoodDto()
+                    }
+                }
+
+                FoodSource.MENU_ITEM -> {
+                    val filters = menuItemFilters ?: return null
+                    val searchResponse = nutritionClient.searchMenuItems(filters.query, filters) ?: return null
+                    buildSearchResponse(
+                        items = searchResponse.menuItems,
+                        totalResults = searchResponse.totalMenuItems,
+                        offset = searchResponse.offset,
+                        number = searchResponse.number
+                    ) { result ->
+                        nutritionClient.getMenuItemInformation(result.id)?.toFoodDto()
+                    }
+                }
             }
         } catch (e: Exception) {
-            println("Error searching ingredients in service: ${e.message}")
+            println("Error searching $source in service: ${e.message}")
             null
         }
+    }
+
+    suspend fun getFoodById(source: FoodSource, id: Int): FoodDto? {
+        return when (source) {
+            FoodSource.INGREDIENT -> nutritionClient.getIngredientInformation(id)?.toFoodDto()
+            FoodSource.PRODUCT -> nutritionClient.getProductInformation(id)?.toFoodDto()
+            FoodSource.MENU_ITEM -> nutritionClient.getMenuItemInformation(id)?.toFoodDto()
+        }
+    }
+
+    suspend fun autocompleteIngredients(filters: IngredientAutocompleteFiltersDto): FoodAutocompleteResponseDto? {
+        return autocomplete(source = FoodSource.INGREDIENT, ingredientFilters = filters)
+    }
+
+    suspend fun autocompleteProducts(filters: ProductSuggestFiltersDto): FoodAutocompleteResponseDto? {
+        return autocomplete(source = FoodSource.PRODUCT, productFilters = filters)
+    }
+
+    suspend fun searchIngredients(filters: IngredientSearchFiltersDto): FoodSearchResponseDto? {
+        return search(source = FoodSource.INGREDIENT, ingredientFilters = filters)
     }
 
     suspend fun searchProducts(filters: ProductSearchFiltersDto): FoodSearchResponseDto? {
-        return try {
-            val searchResponse = nutritionClient.searchProducts(filters.query, filters) ?: return null
-
-            buildSearchResponse(
-                items = searchResponse.products,
-                totalResults = searchResponse.totalProducts,
-                offset = searchResponse.offset,
-                number = searchResponse.number
-            ) { result ->
-                nutritionClient.getProductInformation(result.id)?.toFoodDto()
-            }
-        } catch (e: Exception) {
-            println("Error searching products in service: ${e.message}")
-            null
-        }
+        return search(source = FoodSource.PRODUCT, productFilters = filters)
     }
 
     suspend fun searchMenuItems(filters: MenuItemSearchFiltersDto): FoodSearchResponseDto? {
-        return try {
-            val searchResponse = nutritionClient.searchMenuItems(filters.query, filters) ?: return null
-
-            buildSearchResponse(
-                items = searchResponse.menuItems,
-                totalResults = searchResponse.totalMenuItems,
-                offset = searchResponse.offset,
-                number = searchResponse.number
-            ) { result ->
-                nutritionClient.getMenuItemInformation(result.id)?.toFoodDto()
-            }
-        } catch (e: Exception) {
-            println("Error searching menu items in service: ${e.message}")
-            null
-        }
+        return search(source = FoodSource.MENU_ITEM, menuItemFilters = filters)
     }
 
     suspend fun getIngredientById(id: Int): FoodDto? {
-        return nutritionClient.getIngredientInformation(id)?.toFoodDto()
+        return getFoodById(FoodSource.INGREDIENT, id)
     }
 
     suspend fun getProductById(id: Int): FoodDto? {
-        return nutritionClient.getProductInformation(id)?.toFoodDto()
+        return getFoodById(FoodSource.PRODUCT, id)
     }
 
     suspend fun getMenuItemById(id: Int): FoodDto? {
-        return nutritionClient.getMenuItemInformation(id)?.toFoodDto()
+        return getFoodById(FoodSource.MENU_ITEM, id)
     }
 
     private fun buildMealBucket(
