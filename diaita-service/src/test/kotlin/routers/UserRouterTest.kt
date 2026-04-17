@@ -342,9 +342,9 @@ class UserRouterTest {
             menstrualCycleInfo = dto.menstrualCycleInfo
         )
 
-        coEvery { repo.getBasicDemographics(userId) } returns row
-        coEvery { repo.updateBasicDemographics(userId, any()) } returns row
-        coEvery { repo.deleteBasicDemographics(userId) } returns true
+        coEvery { repo.getSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) } returns row
+        coEvery { repo.updateSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId, any()) } returns row
+        coEvery { repo.deleteSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) } returns true
 
         application {
             testModule()
@@ -367,14 +367,15 @@ class UserRouterTest {
         assertEquals(HttpStatusCode.OK, deleteResponse.status)
         assertTrue(deleteResponse.bodyAsText().contains("\"status\":\"deleted\""))
 
-        coVerify(exactly = 1) { repo.getBasicDemographics(userId) }
+        coVerify(exactly = 1) { repo.getSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) }
         coVerify(exactly = 1) {
-            repo.updateBasicDemographics(
+            repo.updateSettingsSection(
+                UserSettingsPage.BASIC_DEMOGRAPHICS,
                 userId,
-                match { it.userId == userId && it.age == dto.age && it.height == dto.height }
+                match<BasicDemographicsRowEntity> { it.userId == userId && it.age == dto.age && it.height == dto.height }
             )
         }
-        coVerify(exactly = 1) { repo.deleteBasicDemographics(userId) }
+        coVerify(exactly = 1) { repo.deleteSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) }
         confirmVerified(gemini, recommendationRepo)
     }
 
@@ -383,9 +384,9 @@ class UserRouterTest {
         val userId = "user-404"
         val dto = UserProfileTestData.basicDemographics()
 
-        coEvery { repo.getBasicDemographics(userId) } returns null
-        coEvery { repo.updateBasicDemographics(userId, any()) } returns null
-        coEvery { repo.deleteBasicDemographics(userId) } returns false
+        coEvery { repo.getSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) } returns null
+        coEvery { repo.updateSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId, any()) } returns null
+        coEvery { repo.deleteSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) } returns false
 
         application {
             testModule()
@@ -403,9 +404,9 @@ class UserRouterTest {
         val deleteResponse = client.delete("/user/settings/$userId?page=basic-demographics&action=delete")
         assertEquals(HttpStatusCode.InternalServerError, deleteResponse.status)
 
-        coVerify(exactly = 1) { repo.getBasicDemographics(userId) }
-        coVerify(exactly = 1) { repo.updateBasicDemographics(userId, any()) }
-        coVerify(exactly = 1) { repo.deleteBasicDemographics(userId) }
+        coVerify(exactly = 1) { repo.getSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) }
+        coVerify(exactly = 1) { repo.updateSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId, any()) }
+        coVerify(exactly = 1) { repo.deleteSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) }
         confirmVerified(gemini, recommendationRepo)
     }
 
@@ -415,9 +416,9 @@ class UserRouterTest {
         body = json.encodeToString(UserProfileTestData.activityLifestyle()),
         setup = { userId ->
             val entity = UserProfileTestData.activityLifestyle().toEntity(userId)
-            coEvery { repo.getActivityLifestyle(userId) } returns entity
-            coEvery { repo.updateActivityLifestyle(userId, any()) } returns entity
-            coEvery { repo.deleteActivityLifestyle(userId) } returns true
+            coEvery { repo.getSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId) } returns entity
+            coEvery { repo.updateSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId, any()) } returns entity
+            coEvery { repo.deleteSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId) } returns true
         }
     )
 
@@ -427,9 +428,9 @@ class UserRouterTest {
         body = json.encodeToString(UserProfileTestData.goals()),
         setup = { userId ->
             val entity = UserProfileTestData.goals().toEntity(userId)
-            coEvery { repo.getGoalsPriorities(userId) } returns entity
-            coEvery { repo.updateGoalsPriorities(userId, any()) } returns entity
-            coEvery { repo.deleteGoalsPriorities(userId) } returns true
+            coEvery { repo.getSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId) } returns entity
+            coEvery { repo.updateSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId, any()) } returns entity
+            coEvery { repo.deleteSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId) } returns true
         }
     )
 
@@ -439,9 +440,9 @@ class UserRouterTest {
         body = json.encodeToString(UserProfileTestData.trainingBackground()),
         setup = { userId ->
             val entity = UserProfileTestData.trainingBackground().toEntity(userId)
-            coEvery { repo.getTrainingBackground(userId) } returns entity
-            coEvery { repo.updateTrainingBackground(userId, any()) } returns entity
-            coEvery { repo.deleteTrainingBackground(userId) } returns true
+            coEvery { repo.getSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId) } returns entity
+            coEvery { repo.updateSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId, any()) } returns entity
+            coEvery { repo.deleteSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId) } returns true
         }
     )
 
@@ -451,9 +452,9 @@ class UserRouterTest {
         body = json.encodeToString(UserProfileTestData.nutritionHistory()),
         setup = { userId ->
             val entity = UserProfileTestData.nutritionHistory().toEntity(userId)
-            coEvery { repo.getNutritionHistory(userId) } returns entity
-            coEvery { repo.updateNutritionHistory(userId, any()) } returns entity
-            coEvery { repo.deleteNutritionHistory(userId) } returns true
+            coEvery { repo.getSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId) } returns entity
+            coEvery { repo.updateSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId, any()) } returns entity
+            coEvery { repo.deleteSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId) } returns true
         }
     )
 
@@ -462,9 +463,9 @@ class UserRouterTest {
         section = "activity-lifestyle",
         body = json.encodeToString(UserProfileTestData.activityLifestyle()),
         setup = { userId ->
-            coEvery { repo.getActivityLifestyle(userId) } returns null
-            coEvery { repo.updateActivityLifestyle(userId, any()) } returns null
-            coEvery { repo.deleteActivityLifestyle(userId) } returns false
+            coEvery { repo.getSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId) } returns null
+            coEvery { repo.updateSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId, any()) } returns null
+            coEvery { repo.deleteSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId) } returns false
         }
     )
 
@@ -473,9 +474,9 @@ class UserRouterTest {
         section = "goals-priorities",
         body = json.encodeToString(UserProfileTestData.goals()),
         setup = { userId ->
-            coEvery { repo.getGoalsPriorities(userId) } returns null
-            coEvery { repo.updateGoalsPriorities(userId, any()) } returns null
-            coEvery { repo.deleteGoalsPriorities(userId) } returns false
+            coEvery { repo.getSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId) } returns null
+            coEvery { repo.updateSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId, any()) } returns null
+            coEvery { repo.deleteSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId) } returns false
         }
     )
 
@@ -484,9 +485,9 @@ class UserRouterTest {
         section = "training-background",
         body = json.encodeToString(UserProfileTestData.trainingBackground()),
         setup = { userId ->
-            coEvery { repo.getTrainingBackground(userId) } returns null
-            coEvery { repo.updateTrainingBackground(userId, any()) } returns null
-            coEvery { repo.deleteTrainingBackground(userId) } returns false
+            coEvery { repo.getSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId) } returns null
+            coEvery { repo.updateSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId, any()) } returns null
+            coEvery { repo.deleteSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId) } returns false
         }
     )
 
@@ -495,9 +496,9 @@ class UserRouterTest {
         section = "nutrition-history",
         body = json.encodeToString(UserProfileTestData.nutritionHistory()),
         setup = { userId ->
-            coEvery { repo.getNutritionHistory(userId) } returns null
-            coEvery { repo.updateNutritionHistory(userId, any()) } returns null
-            coEvery { repo.deleteNutritionHistory(userId) } returns false
+            coEvery { repo.getSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId) } returns null
+            coEvery { repo.updateSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId, any()) } returns null
+            coEvery { repo.deleteSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId) } returns false
         }
     )
 

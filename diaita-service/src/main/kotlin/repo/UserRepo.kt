@@ -2,6 +2,7 @@ package com.diaita.repo
 
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.RegisteredUserProfileDto
+import com.diaita.dto.UserSettingsPage
 import com.diaita.entity.ActivityLifestyleRowEntity
 import com.diaita.entity.BasicDemographicsRowEntity
 import com.diaita.entity.GoalsPrioritiesRowEntity
@@ -39,60 +40,48 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
         return result.error == null
     }
 
-    suspend fun getBasicDemographics(userId: String): BasicDemographicsRowEntity? =
-        getSection(PostgresFactory.BASIC_DEMOGRAPHICS_TABLE, userId)
+    suspend fun getSettingsSection(page: UserSettingsPage, userId: String): Any? = when (page) {
+        UserSettingsPage.BASIC_DEMOGRAPHICS -> getSection<BasicDemographicsRowEntity>(resolveSettingsTable(page), userId)
+        UserSettingsPage.ACTIVITY_LIFESTYLE -> getSection<ActivityLifestyleRowEntity>(resolveSettingsTable(page), userId)
+        UserSettingsPage.GOALS_PRIORITIES -> getSection<GoalsPrioritiesRowEntity>(resolveSettingsTable(page), userId)
+        UserSettingsPage.TRAINING_BACKGROUND -> getSection<TrainingBackgroundRowEntity>(resolveSettingsTable(page), userId)
+        UserSettingsPage.NUTRITION_HISTORY -> getSection<NutritionHistoryRowEntity>(resolveSettingsTable(page), userId)
+    }
 
-    suspend fun updateBasicDemographics(
+    suspend fun updateSettingsSection(
+        page: UserSettingsPage,
         userId: String,
-        data: BasicDemographicsRowEntity
-    ): BasicDemographicsRowEntity? = updateSection(PostgresFactory.BASIC_DEMOGRAPHICS_TABLE, data, userId)
+        data: Any
+    ): Any? = when (page) {
+        UserSettingsPage.BASIC_DEMOGRAPHICS -> updateSection(
+            resolveSettingsTable(page),
+            castPayload<BasicDemographicsRowEntity>(page, data),
+            userId
+        )
+        UserSettingsPage.ACTIVITY_LIFESTYLE -> updateSection(
+            resolveSettingsTable(page),
+            castPayload<ActivityLifestyleRowEntity>(page, data),
+            userId
+        )
+        UserSettingsPage.GOALS_PRIORITIES -> updateSection(
+            resolveSettingsTable(page),
+            castPayload<GoalsPrioritiesRowEntity>(page, data),
+            userId
+        )
+        UserSettingsPage.TRAINING_BACKGROUND -> updateSection(
+            resolveSettingsTable(page),
+            castPayload<TrainingBackgroundRowEntity>(page, data),
+            userId
+        )
+        UserSettingsPage.NUTRITION_HISTORY -> updateSection(
+            resolveSettingsTable(page),
+            castPayload<NutritionHistoryRowEntity>(page, data),
+            userId
+        )
+    }
 
-    suspend fun deleteBasicDemographics(userId: String): Boolean =
-        deleteSection(PostgresFactory.BASIC_DEMOGRAPHICS_TABLE, userId)
-
-    suspend fun getActivityLifestyle(userId: String): ActivityLifestyleRowEntity? =
-        getSection(PostgresFactory.ACTIVITY_LIFESTYLE_TABLE, userId)
-
-    suspend fun updateActivityLifestyle(
-        userId: String,
-        data: ActivityLifestyleRowEntity
-    ): ActivityLifestyleRowEntity? = updateSection(PostgresFactory.ACTIVITY_LIFESTYLE_TABLE, data, userId)
-
-    suspend fun deleteActivityLifestyle(userId: String): Boolean =
-        deleteSection(PostgresFactory.ACTIVITY_LIFESTYLE_TABLE, userId)
-
-    suspend fun getGoalsPriorities(userId: String): GoalsPrioritiesRowEntity? =
-        getSection(PostgresFactory.GOALS_PRIORITIES_TABLE, userId)
-
-    suspend fun updateGoalsPriorities(
-        userId: String,
-        data: GoalsPrioritiesRowEntity
-    ): GoalsPrioritiesRowEntity? = updateSection(PostgresFactory.GOALS_PRIORITIES_TABLE, data, userId)
-
-    suspend fun deleteGoalsPriorities(userId: String): Boolean =
-        deleteSection(PostgresFactory.GOALS_PRIORITIES_TABLE, userId)
-
-    suspend fun getTrainingBackground(userId: String): TrainingBackgroundRowEntity? =
-        getSection(PostgresFactory.TRAINING_BACKGROUND_TABLE, userId)
-
-    suspend fun updateTrainingBackground(
-        userId: String,
-        data: TrainingBackgroundRowEntity
-    ): TrainingBackgroundRowEntity? = updateSection(PostgresFactory.TRAINING_BACKGROUND_TABLE, data, userId)
-
-    suspend fun deleteTrainingBackground(userId: String): Boolean =
-        deleteSection(PostgresFactory.TRAINING_BACKGROUND_TABLE, userId)
-
-    suspend fun getNutritionHistory(userId: String): NutritionHistoryRowEntity? =
-        getSection(PostgresFactory.NUTRITION_HISTORY_TABLE, userId)
-
-    suspend fun updateNutritionHistory(
-        userId: String,
-        data: NutritionHistoryRowEntity
-    ): NutritionHistoryRowEntity? = updateSection(PostgresFactory.NUTRITION_HISTORY_TABLE, data, userId)
-
-    suspend fun deleteNutritionHistory(userId: String): Boolean =
-        deleteSection(PostgresFactory.NUTRITION_HISTORY_TABLE, userId)
+    suspend fun deleteSettingsSection(page: UserSettingsPage, userId: String): Boolean =
+        deleteSection(resolveSettingsTable(page), userId)
 
     suspend fun getFullProfile(userId: String): RegisteredUserProfileDto? {
         val result = supabaseManager.selectSingle<UserProfileRowEntity>(
@@ -102,5 +91,20 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
         )
 
         return result.body?.toDto()
+    }
+
+    private fun resolveSettingsTable(page: UserSettingsPage): String = when (page) {
+        UserSettingsPage.BASIC_DEMOGRAPHICS -> PostgresFactory.BASIC_DEMOGRAPHICS_TABLE
+        UserSettingsPage.ACTIVITY_LIFESTYLE -> PostgresFactory.ACTIVITY_LIFESTYLE_TABLE
+        UserSettingsPage.GOALS_PRIORITIES -> PostgresFactory.GOALS_PRIORITIES_TABLE
+        UserSettingsPage.TRAINING_BACKGROUND -> PostgresFactory.TRAINING_BACKGROUND_TABLE
+        UserSettingsPage.NUTRITION_HISTORY -> PostgresFactory.NUTRITION_HISTORY_TABLE
+    }
+
+    private inline fun <reified T : Any> castPayload(page: UserSettingsPage, data: Any): T {
+        require(data is T) {
+            "Invalid payload type for page=$page. Expected ${T::class.simpleName}, got ${data::class.simpleName}"
+        }
+        return data
     }
 }

@@ -108,76 +108,87 @@ class UserService(
         payload: JsonElement? = null
     ): Any? = when (page) {
         UserSettingsPage.BASIC_DEMOGRAPHICS -> runSettingsAction(
+            page = page,
             action = action,
             userId = userId,
             payload = payload,
-            getter = userRepo::getBasicDemographics,
-            updater = userRepo::updateBasicDemographics,
-            deleter = userRepo::deleteBasicDemographics,
             decodeDto = { json.decodeFromJsonElement<BasicDemographicsDto>(it) },
             toEntity = { payload, id -> payload.toEntity(id) },
             toDto = { entity -> entity.toDto() }
         )
         UserSettingsPage.ACTIVITY_LIFESTYLE -> runSettingsAction(
+            page = page,
             action = action,
             userId = userId,
             payload = payload,
-            getter = userRepo::getActivityLifestyle,
-            updater = userRepo::updateActivityLifestyle,
-            deleter = userRepo::deleteActivityLifestyle,
             decodeDto = { json.decodeFromJsonElement<ActivityLevelLifestyleDto>(it) },
             toEntity = { payload, id -> payload.toEntity(id) },
             toDto = { entity -> entity.toDto() }
         )
         UserSettingsPage.GOALS_PRIORITIES -> runSettingsAction(
+            page = page,
             action = action,
             userId = userId,
             payload = payload,
-            getter = userRepo::getGoalsPriorities,
-            updater = userRepo::updateGoalsPriorities,
-            deleter = userRepo::deleteGoalsPriorities,
             decodeDto = { json.decodeFromJsonElement<GoalsPrioritiesDto>(it) },
             toEntity = { payload, id -> payload.toEntity(id) },
             toDto = { entity -> entity.toDto() }
         )
         UserSettingsPage.TRAINING_BACKGROUND -> runSettingsAction(
+            page = page,
             action = action,
             userId = userId,
             payload = payload,
-            getter = userRepo::getTrainingBackground,
-            updater = userRepo::updateTrainingBackground,
-            deleter = userRepo::deleteTrainingBackground,
             decodeDto = { json.decodeFromJsonElement<TrainingBackgroundDto>(it) },
             toEntity = { payload, id -> payload.toEntity(id) },
             toDto = { entity -> entity.toDto() }
         )
         UserSettingsPage.NUTRITION_HISTORY -> runSettingsAction(
+            page = page,
             action = action,
             userId = userId,
             payload = payload,
-            getter = userRepo::getNutritionHistory,
-            updater = userRepo::updateNutritionHistory,
-            deleter = userRepo::deleteNutritionHistory,
             decodeDto = { json.decodeFromJsonElement<NutritionDietHistoryDto>(it) },
             toEntity = { payload, id -> payload.toEntity(id) },
             toDto = { entity -> entity.toDto() }
         )
     }
 
-    private suspend fun <TDto : Any, TEntity : Any> runSettingsAction(
+    private suspend inline fun <TDto : Any, reified TEntity : Any> runSettingsAction(
+        page: UserSettingsPage,
         action: UserSettingsAction,
         userId: String,
         payload: JsonElement?,
-        getter: suspend (String) -> TEntity?,
-        updater: suspend (String, TEntity) -> TEntity?,
-        deleter: suspend (String) -> Boolean,
         decodeDto: (JsonElement) -> TDto,
         toEntity: (TDto, String) -> TEntity,
         toDto: (TEntity) -> TDto
-    ): Any? = when (action) {
-        UserSettingsAction.GET -> getter(userId)?.let(toDto)
-        UserSettingsAction.UPDATE -> payload?.let(decodeDto)?.let { updater(userId, toEntity(it, userId))?.let(toDto) }
-        UserSettingsAction.DELETE -> deleter(userId)
+    ): Any? {
+        val updateEntity = if (action == UserSettingsAction.UPDATE) {
+            payload?.let(decodeDto)?.let { dto -> toEntity(dto, userId) }
+        } else {
+            null
+        }
+
+        val result = genAction(action)(page, userId, updateEntity)
+        return when (action) {
+            UserSettingsAction.DELETE -> result as? Boolean ?: false
+            UserSettingsAction.GET,
+            UserSettingsAction.UPDATE -> (result as? TEntity)?.let(toDto)
+        }
+    }
+
+    private fun genAction(
+        action: UserSettingsAction
+    ): suspend (UserSettingsPage, String, Any?) -> Any? = when (action) {
+        UserSettingsAction.GET -> { page, userId, _ ->
+            userRepo.getSettingsSection(page, userId)
+        }
+        UserSettingsAction.UPDATE -> { page, userId, entity ->
+            entity?.let { userRepo.updateSettingsSection(page, userId, it) }
+        }
+        UserSettingsAction.DELETE -> { page, userId, _ ->
+            userRepo.deleteSettingsSection(page, userId)
+        }
     }
 
     private suspend fun genRecommendations(

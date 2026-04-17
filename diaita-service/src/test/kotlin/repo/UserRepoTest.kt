@@ -1,5 +1,6 @@
 package com.diaita.repo
 
+import com.diaita.dto.UserSettingsPage
 import com.diaita.lib.factories.SupabaseManager
 import com.diaita.lib.mappings.toEntity
 import com.diaita.testdata.UserProfileTestData
@@ -24,11 +25,11 @@ class UserRepoTest {
         val userRepo = repo()
         val userId = "user-get-fail"
 
-        assertNull(userRepo.getBasicDemographics(userId))
-        assertNull(userRepo.getActivityLifestyle(userId))
-        assertNull(userRepo.getGoalsPriorities(userId))
-        assertNull(userRepo.getTrainingBackground(userId))
-        assertNull(userRepo.getNutritionHistory(userId))
+        assertNull(userRepo.getSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId))
+        assertNull(userRepo.getSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId))
+        assertNull(userRepo.getSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId))
+        assertNull(userRepo.getSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId))
+        assertNull(userRepo.getSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId))
     }
 
     @Test
@@ -37,11 +38,11 @@ class UserRepoTest {
         val userRepo = repo()
         val userId = request.userId
 
-        assertNull(userRepo.updateBasicDemographics(userId, UserProfileTestData.basicDemographics().toEntity(userId)))
-        assertNull(userRepo.updateActivityLifestyle(userId, UserProfileTestData.activityLifestyle().toEntity(userId)))
-        assertNull(userRepo.updateGoalsPriorities(userId, UserProfileTestData.goals().toEntity(userId)))
-        assertNull(userRepo.updateTrainingBackground(userId, UserProfileTestData.trainingBackground().toEntity(userId)))
-        assertNull(userRepo.updateNutritionHistory(userId, UserProfileTestData.nutritionHistory().toEntity(userId)))
+        assertNull(userRepo.updateSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId, UserProfileTestData.basicDemographics().toEntity(userId)))
+        assertNull(userRepo.updateSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId, UserProfileTestData.activityLifestyle().toEntity(userId)))
+        assertNull(userRepo.updateSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId, UserProfileTestData.goals().toEntity(userId)))
+        assertNull(userRepo.updateSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId, UserProfileTestData.trainingBackground().toEntity(userId)))
+        assertNull(userRepo.updateSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId, UserProfileTestData.nutritionHistory().toEntity(userId)))
     }
 
     @Test
@@ -49,11 +50,11 @@ class UserRepoTest {
         val userRepo = repo()
         val userId = "user-delete-fail"
 
-        assertFalse(userRepo.deleteBasicDemographics(userId))
-        assertFalse(userRepo.deleteActivityLifestyle(userId))
-        assertFalse(userRepo.deleteGoalsPriorities(userId))
-        assertFalse(userRepo.deleteTrainingBackground(userId))
-        assertFalse(userRepo.deleteNutritionHistory(userId))
+        assertFalse(userRepo.deleteSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId))
+        assertFalse(userRepo.deleteSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId))
+        assertFalse(userRepo.deleteSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId))
+        assertFalse(userRepo.deleteSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId))
+        assertFalse(userRepo.deleteSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId))
     }
 
     @Test
