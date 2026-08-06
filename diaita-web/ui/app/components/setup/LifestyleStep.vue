@@ -78,8 +78,8 @@ const handleNumberInput = (field: keyof LifestyleForm, value: string | number) =
           max="24"
           step="0.5"
           :model-value="formData.sleepDuration?.toString() ?? ''"
-          @update:model-value="handleNumberInput('sleepDuration', $event)"
           placeholder="7.5"
+          @update:model-value="handleNumberInput('sleepDuration', $event)"
         />
       </div>
 

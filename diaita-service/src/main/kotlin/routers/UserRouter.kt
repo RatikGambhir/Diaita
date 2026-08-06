@@ -31,64 +31,44 @@ fun Application.configureUserRoutes(userController: UserController) {
         }
 
         get("/user/profile/{userId}") {
-            val userId = call.parameters["userId"]
-            if (userId.isNullOrBlank()) {
-                call.respondText("Missing userId parameter", status = HttpStatusCode.BadRequest)
-                return@get
-            }
+            val userId = call.requiredPathParam("userId") ?: return@get
 
-            val profile = userController.getUserProfile(userId)
-            if (profile != null) {
-                call.respond(HttpStatusCode.OK, profile)
-                return@get
-            }
-
-            call.respondText("Profile not found", status = HttpStatusCode.NotFound)
+            call.respondOrFail(
+                userController.getUserProfile(userId),
+                "Profile not found",
+                HttpStatusCode.NotFound
+            )
         }
 
         post("/users/{userId}/recommendations/generate") {
-            val userId = call.parameters["userId"]
-            if (userId.isNullOrBlank()) {
-                call.respondText("Missing userId parameter", status = HttpStatusCode.BadRequest)
-                return@post
-            }
+            val userId = call.requiredPathParam("userId") ?: return@post
 
-            when (val result = userController.generateAndSaveRecommendations(userId)) {
-                is ServiceResult.Success -> call.respond(HttpStatusCode.OK, result.data)
-                is ServiceResult.Failure -> call.respondText(result.error, status = HttpStatusCode.InternalServerError)
-            }
+            call.respondToServiceResult(userController.generateAndSaveRecommendations(userId))
         }
 
         get("/users/{userId}/recommendations") {
-            val userId = call.parameters["userId"]
-            if (userId.isNullOrBlank()) {
-                call.respondText("Missing userId parameter", status = HttpStatusCode.BadRequest)
-                return@get
-            }
+            val userId = call.requiredPathParam("userId") ?: return@get
 
-            val recommendation = userController.getRecommendations(userId)
-            if (recommendation != null) {
-                call.respond(HttpStatusCode.OK, recommendation)
-                return@get
-            }
-
-            call.respondText("No recommendations found", status = HttpStatusCode.NotFound)
+            call.respondOrFail(
+                userController.getRecommendations(userId),
+                "No recommendations found",
+                HttpStatusCode.NotFound
+            )
         }
 
         route("/user/settings/{userId}") {
-            get {
-                call.handleUserSettingsRequest(userController)
-            }
-            put {
-                call.handleUserSettingsRequest(userController)
-            }
-            delete {
-                call.handleUserSettingsRequest(userController)
-            }
-            post {
-                call.handleUserSettingsRequest(userController)
-            }
+            get { call.handleUserSettingsRequest(userController) }
+            put { call.handleUserSettingsRequest(userController) }
+            delete { call.handleUserSettingsRequest(userController) }
+            post { call.handleUserSettingsRequest(userController) }
         }
+    }
+}
+
+private suspend fun ApplicationCall.respondToServiceResult(result: ServiceResult<Any>) {
+    when (result) {
+        is ServiceResult.Success -> respond(HttpStatusCode.OK, result.data)
+        is ServiceResult.Failure -> respondText(result.error, status = HttpStatusCode.InternalServerError)
     }
 }
 
@@ -106,55 +86,39 @@ private suspend fun ApplicationCall.handleProfileUpsert(userController: UserCont
         return
     }
 
-    when (val result = userController.registerUserProfile(user)) {
-        is ServiceResult.Success -> respond(HttpStatusCode.OK, result.data)
-        is ServiceResult.Failure -> respondText(result.error, status = HttpStatusCode.InternalServerError)
-    }
+    respondToServiceResult(userController.registerUserProfile(user))
 }
 
-private fun RegisterUserProfileRequestDto.validationError(): String? {
-    if (userId.isBlank()) {
-        return "Invalid request, request body is invalid"
-    }
+private fun RegisterUserProfileRequestDto.validationError(): String? = when {
+    userId.isBlank() ->
+        "Invalid request, request body is invalid"
 
-    if (age !in 13..120) {
-        return "Invalid request: age must be between 13 and 120"
-    }
+    age !in 13..120 ->
+        "Invalid request: age must be between 13 and 120"
 
-    if (height <= 0.0 || weight <= 0.0) {
-        return "Invalid request: height and weight must be greater than 0"
-    }
+    height <= 0.0 || weight <= 0.0 ->
+        "Invalid request: height and weight must be greater than 0"
 
-    if (primaryGoal.isBlank() || activityLevel.isBlank()) {
-        return "Invalid request: primaryGoal and activityLevel are required"
-    }
+    primaryGoal.isBlank() || activityLevel.isBlank() ->
+        "Invalid request: primaryGoal and activityLevel are required"
 
-    if (sleepDuration != null && sleepDuration !in 0.0..24.0) {
-        return "Invalid request: sleepDuration must be between 0 and 24"
-    }
+    sleepDuration != null && sleepDuration !in 0.0..24.0 ->
+        "Invalid request: sleepDuration must be between 0 and 24"
 
-    if (daysPerWeek != null && daysPerWeek !in 0..14) {
-        return "Invalid request: daysPerWeek must be between 0 and 14"
-    }
+    daysPerWeek != null && daysPerWeek !in 0..14 ->
+        "Invalid request: daysPerWeek must be between 0 and 14"
 
-    if (timePerSession != null && timePerSession !in 0..1440) {
-        return "Invalid request: timePerSession must be between 0 and 1440"
-    }
+    timePerSession != null && timePerSession !in 0..1440 ->
+        "Invalid request: timePerSession must be between 0 and 1440"
 
-    val hasTrainingBackground = !trainingHistory.isNullOrBlank() || !trainingAge.isNullOrBlank()
-    if (!hasTrainingBackground) {
-        return "Invalid request: at least one of trainingHistory or trainingAge is required"
-    }
+    trainingHistory.isNullOrBlank() && trainingAge.isNullOrBlank() ->
+        "Invalid request: at least one of trainingHistory or trainingAge is required"
 
-    return null
+    else -> null
 }
 
 private suspend fun ApplicationCall.handleUserSettingsRequest(userController: UserController) {
-    val userId = parameters["userId"]
-    if (userId.isNullOrBlank()) {
-        respondText("Missing userId", status = HttpStatusCode.BadRequest)
-        return
-    }
+    val userId = requiredPathParam("userId", missingMessage = "Missing userId") ?: return
 
     val page = UserSettingsPage.fromQuery(request.queryParameters["page"])
     if (page == null) {
@@ -192,27 +156,17 @@ private suspend fun ApplicationCall.handleUserSettingsRequest(userController: Us
     }
 
     when (action) {
-        UserSettingsAction.GET -> {
-            if (result == null) {
-                respondText("Not found", status = HttpStatusCode.NotFound)
-                return
-            }
-            respond(HttpStatusCode.OK, result)
-        }
-        UserSettingsAction.UPDATE -> {
-            if (result == null) {
-                respondText("Update failed", status = HttpStatusCode.InternalServerError)
-                return
-            }
-            respond(HttpStatusCode.OK, result)
-        }
-        UserSettingsAction.DELETE -> {
-            val success = result as? Boolean ?: false
-            if (!success) {
+        UserSettingsAction.GET ->
+            respondOrFail(result, "Not found", HttpStatusCode.NotFound)
+
+        UserSettingsAction.UPDATE ->
+            respondOrFail(result, "Update failed")
+
+        UserSettingsAction.DELETE ->
+            if (result as? Boolean == true) {
+                respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
+            } else {
                 respondText("Delete failed", status = HttpStatusCode.InternalServerError)
-                return
             }
-            respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
-        }
     }
 }

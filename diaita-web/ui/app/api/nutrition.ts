@@ -58,13 +58,6 @@ type AutocompleteFoodsParams = {
   number?: number;
 };
 
-const roundNutritionValue = (value: number) => Math.round(value * 10) / 10;
-
-const formatServingAmount = (value: number) => {
-  const roundedValue = roundNutritionValue(value);
-  return Number.isInteger(roundedValue) ? `${roundedValue}` : `${roundedValue}`;
-};
-
 const formatServingSize = (food: FoodDto) => {
   const unit = food.servingUnit?.trim();
   const normalizedUnit = unit && unit.toLowerCase() !== "not found" ? unit : null;
@@ -78,10 +71,10 @@ const formatServingSize = (food: FoodDto) => {
   }
 
   if (!normalizedUnit) {
-    return formatServingAmount(food.servingSize);
+    return formatNutritionValue(food.servingSize);
   }
 
-  return `${formatServingAmount(food.servingSize)} ${normalizedUnit}`;
+  return `${formatNutritionValue(food.servingSize)} ${normalizedUnit}`;
 };
 
 const normalizeFoodCategory = (

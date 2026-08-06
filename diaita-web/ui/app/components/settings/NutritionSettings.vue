@@ -11,11 +11,12 @@ import SelectTrigger from '~/components/ui/select/SelectTrigger.vue'
 import SelectValue from '~/components/ui/select/SelectValue.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Label from '~/components/ui/label/Label.vue'
-import type { IsSelected, Option, PlaceholderFor, SettingsFormDefaults, SettingsFormState } from '~/components/settings/types'
+import type { IsSelected, NutritionSection, Option, PlaceholderFor } from '~/components/settings/types'
+
+const form = defineModel<NutritionSection>({ required: true });
 
 defineProps<{
-    formState: SettingsFormState;
-    formDefaults: SettingsFormDefaults;
+    defaults: NutritionSection;
     placeholderFor: PlaceholderFor;
     isSelected: IsSelected;
     yesNoOptions: Option[];
@@ -43,9 +44,9 @@ defineProps<{
                     <div class="space-y-2">
                         <Label>Current Diet Pattern</Label>
                         <p class="text-xs text-muted-foreground">What dietary pattern do you currently follow?</p>
-                        <Select v-model="formState.nutrition.dietPattern">
+                        <Select v-model="form.dietPattern">
                             <SelectTrigger>
-                                <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.dietPattern, 'Select a diet pattern')" />
+                                <SelectValue :placeholder="placeholderFor(defaults.dietPattern, 'Select a diet pattern')" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem v-for="option in dietPatterns" :key="option.value" :value="option.value">
@@ -57,9 +58,9 @@ defineProps<{
                     <div class="space-y-2">
                         <Label>Cooking Skill Level</Label>
                         <p class="text-xs text-muted-foreground">How would you rate your cooking skills?</p>
-                        <Select v-model="formState.nutrition.cookingSkill">
+                        <Select v-model="form.cookingSkill">
                             <SelectTrigger>
-                                <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.cookingSkill, 'Select skill level')" />
+                                <SelectValue :placeholder="placeholderFor(defaults.cookingSkill, 'Select skill level')" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem v-for="option in skillLevels" :key="option.value" :value="option.value">
@@ -76,9 +77,9 @@ defineProps<{
                     <div class="space-y-2">
                         <Label>Food Budget</Label>
                         <p class="text-xs text-muted-foreground">Your weekly/monthly food budget.</p>
-                        <Select v-model="formState.nutrition.foodBudget">
+                        <Select v-model="form.foodBudget">
                             <SelectTrigger>
-                                <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.foodBudget, 'Select budget range')" />
+                                <SelectValue :placeholder="placeholderFor(defaults.foodBudget, 'Select budget range')" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem v-for="option in budgetOptions" :key="option.value" :value="option.value">
@@ -90,9 +91,9 @@ defineProps<{
                     <div class="space-y-2">
                         <Label>Alcohol Intake</Label>
                         <p class="text-xs text-muted-foreground">How often do you consume alcohol?</p>
-                        <Select v-model="formState.nutrition.alcoholIntake">
+                        <Select v-model="form.alcoholIntake">
                             <SelectTrigger>
-                                <SelectValue :placeholder="placeholderFor(formDefaults.nutrition.alcoholIntake, 'Select frequency')" />
+                                <SelectValue :placeholder="placeholderFor(defaults.alcoholIntake, 'Select frequency')" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem v-for="option in alcoholOptions" :key="option.value" :value="option.value">
@@ -113,16 +114,16 @@ defineProps<{
                             <Button
                                 variant="outline"
                                 class="h-10 w-20"
-                                :class="isSelected(formState.nutrition.calorieTracking, formDefaults.nutrition.calorieTracking, 'yes') ? 'border-foreground text-foreground' : ''"
-                                @click="formState.nutrition.calorieTracking = 'yes'"
+                                :class="isSelected(form.calorieTracking, defaults.calorieTracking, 'yes') ? 'border-foreground text-foreground' : ''"
+                                @click="form.calorieTracking = 'yes'"
                             >
                                 {{ yesNoOptions[0].label }}
                             </Button>
                             <Button
                                 variant="outline"
                                 class="h-10 w-20"
-                                :class="isSelected(formState.nutrition.calorieTracking, formDefaults.nutrition.calorieTracking, 'no') ? 'border-foreground text-foreground' : ''"
-                                @click="formState.nutrition.calorieTracking = 'no'"
+                                :class="isSelected(form.calorieTracking, defaults.calorieTracking, 'no') ? 'border-foreground text-foreground' : ''"
+                                @click="form.calorieTracking = 'no'"
                             >
                                 {{ yesNoOptions[1].label }}
                             </Button>
@@ -132,8 +133,8 @@ defineProps<{
                         <Label>Cultural Food Preferences</Label>
                         <p class="text-xs text-muted-foreground">Any cultural or regional food preferences?</p>
                         <Input
-                            v-model="formState.nutrition.culturalPreferences"
-                            :placeholder="placeholderFor(formDefaults.nutrition.culturalPreferences, 'e.g., Mediterranean, Asian, Indian')"
+                            v-model="form.culturalPreferences"
+                            :placeholder="placeholderFor(defaults.culturalPreferences, 'e.g., Mediterranean, Asian, Indian')"
                         />
                     </div>
                 </div>
@@ -145,16 +146,16 @@ defineProps<{
                         <Label>Food Allergies</Label>
                         <p class="text-xs text-muted-foreground">List any food allergies you have.</p>
                         <Input
-                            v-model="formState.nutrition.allergies"
-                            :placeholder="placeholderFor(formDefaults.nutrition.allergies, 'Add a food allergy...')"
+                            v-model="form.allergies"
+                            :placeholder="placeholderFor(defaults.allergies, 'Add a food allergy...')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Dietary Restrictions</Label>
                         <p class="text-xs text-muted-foreground">Any dietary restrictions or foods you avoid?</p>
                         <Input
-                            v-model="formState.nutrition.dietaryRestrictions"
-                            :placeholder="placeholderFor(formDefaults.nutrition.dietaryRestrictions, 'Add a dietary restriction...')"
+                            v-model="form.dietaryRestrictions"
+                            :placeholder="placeholderFor(defaults.dietaryRestrictions, 'Add a dietary restriction...')"
                         />
                     </div>
                 </div>
@@ -166,8 +167,8 @@ defineProps<{
                         <Label>Macronutrient Preferences</Label>
                         <p class="text-xs text-muted-foreground">Any specific preferences for protein, carbs, or fats?</p>
                         <Textarea
-                            v-model="formState.nutrition.macroPreferences"
-                            :placeholder="placeholderFor(formDefaults.nutrition.macroPreferences, 'e.g., High protein, moderate carbs, low fat')"
+                            v-model="form.macroPreferences"
+                            :placeholder="placeholderFor(defaults.macroPreferences, 'e.g., High protein, moderate carbs, low fat')"
                             :rows="3"
                         />
                     </div>

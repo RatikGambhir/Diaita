@@ -4,6 +4,7 @@ import {useUserStore} from "~/stores/useUserStore";
 import Button from '~/components/ui/button/Button.vue'
 import type { RegisteredUserProfile } from "~/types/ProfileTypes";
 
+const supabase = useSupabaseClient();
 const userStore = useUserStore();
 
 definePageMeta({

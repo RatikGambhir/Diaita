@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { nutritionApi } from "~/api/nutrition";
 import type { NutritionFood, NutritionSearchFilter } from "~/types/NutritionTypes";
 
@@ -10,9 +10,6 @@ export function useNutritionSearch(
 ) {
   const query = ref("");
   const filter = ref<NutritionSearchFilter>(initialFilter);
-  const results = ref<NutritionFood[]>([]);
-  const isSearching = ref(false);
-  const error = ref<string | null>(null);
   const hasSearched = ref(false);
   const normalizedQuery = computed(() => query.value.trim());
   const searchPlaceholder = computed(() =>
@@ -21,109 +18,35 @@ export function useNutritionSearch(
       : "Search products...",
   );
 
-  let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
-  let latestRequestId = 0;
-
-  const clearSearchState = () => {
-    results.value = [];
-    isSearching.value = false;
-    error.value = null;
-    hasSearched.value = false;
-  };
+  const {
+    data: results,
+    isLoading: isSearching,
+    error,
+    reset: resetRequest,
+  } = useDebouncedRequest<[string, NutritionSearchFilter], NutritionFood[]>({
+    sources: [normalizedQuery, filter],
+    shouldRun: nextQuery => nextQuery.length >= MIN_QUERY_LENGTH,
+    request: (nextQuery, nextFilter) =>
+      nutritionApi.searchFoods({ query: nextQuery, filter: nextFilter }),
+    emptyValue: [],
+    errorMessage: "Unable to search foods right now.",
+    debounceMs: SEARCH_DEBOUNCE_MS,
+    onReset: () => {
+      hasSearched.value = false;
+    },
+    onSuccess: () => {
+      hasSearched.value = true;
+    },
+    onError: () => {
+      hasSearched.value = true;
+    },
+  });
 
   const reset = () => {
-    latestRequestId++;
-
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout);
-      debounceTimeout = null;
-    }
-
     query.value = "";
     filter.value = initialFilter;
-    clearSearchState();
+    resetRequest();
   };
-
-  const executeSearch = async (
-    nextQuery: string,
-    nextFilter: NutritionSearchFilter,
-  ) => {
-    const requestId = ++latestRequestId;
-    isSearching.value = true;
-    error.value = null;
-
-    try {
-      const foods = await nutritionApi.searchFoods({
-        query: nextQuery,
-        filter: nextFilter,
-      });
-
-      if (requestId !== latestRequestId) {
-        return;
-      }
-
-      results.value = foods;
-      hasSearched.value = true;
-    } catch {
-      if (requestId !== latestRequestId) {
-        return;
-      }
-
-      results.value = [];
-      error.value = "Unable to search foods right now.";
-      hasSearched.value = true;
-    } finally {
-      if (requestId === latestRequestId) {
-        isSearching.value = false;
-      }
-    }
-  };
-
-  watch(
-    [normalizedQuery, filter],
-    ([nextQuery, nextFilter], _, onCleanup) => {
-      if (debounceTimeout) {
-        clearTimeout(debounceTimeout);
-        debounceTimeout = null;
-      }
-
-      if (!nextQuery) {
-        latestRequestId++;
-        clearSearchState();
-        return;
-      }
-
-      if (nextQuery.length < MIN_QUERY_LENGTH) {
-        latestRequestId++;
-        results.value = [];
-        isSearching.value = false;
-        error.value = null;
-        hasSearched.value = false;
-        return;
-      }
-
-      debounceTimeout = setTimeout(() => {
-        debounceTimeout = null;
-        void executeSearch(nextQuery, nextFilter);
-      }, SEARCH_DEBOUNCE_MS);
-
-      onCleanup(() => {
-        if (debounceTimeout) {
-          clearTimeout(debounceTimeout);
-          debounceTimeout = null;
-        }
-      });
-    },
-    { immediate: true },
-  );
-
-  onBeforeUnmount(() => {
-    latestRequestId++;
-
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout);
-    }
-  });
 
   return {
     query,

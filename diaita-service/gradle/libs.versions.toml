@@ -2,10 +2,8 @@
 kotlin   = "2.1.10"
 ktor     = "3.2.3"
 logback  = "1.4.14"
-postgres = "42.7.7"
-h2       = "2.3.232"
-koin     = "3.5.6"
-hikari   = "5.1.0"
+supabase = "3.1.1"
+mockk    = "1.13.8"
 
 [libraries]
 # Ktor Server (all -jvm)
@@ -22,24 +20,23 @@ ktor-server-auth-jwt             = { module = "io.ktor:ktor-server-auth-jwt-jvm"
 ktor-server-config-yaml          = { module = "io.ktor:ktor-server-config-yaml-jvm",          version.ref = "ktor" }
 ktor-server-test-host            = { module = "io.ktor:ktor-server-test-host-jvm",            version.ref = "ktor" }
 
-# Ktor Client (if you actually need it in this module)
+# Ktor Client
 ktor-client-core                 = { module = "io.ktor:ktor-client-core-jvm",                 version.ref = "ktor" }
+ktor-client-cio                  = { module = "io.ktor:ktor-client-cio-jvm",                  version.ref = "ktor" }
 ktor-client-apache               = { module = "io.ktor:ktor-client-apache-jvm",               version.ref = "ktor" }
 
-# Logging / DB
-logback-classic                  = { module = "ch.qos.logback:logback-classic",               version.ref = "logback" }
-postgresql                       = { module = "org.postgresql:postgresql",                    version.ref = "postgres" }
-h2                               = { module = "com.h2database:h2",                            version.ref = "h2" }
-hikariCP                         = { module = "com.zaxxer:HikariCP",                          version.ref = "hikari" }
+# Supabase
+supabase-bom                     = { module = "io.github.jan-tennert.supabase:bom",           version.ref = "supabase" }
+supabase-postgrest               = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
 
-# (Optional) Koin — only if you plan to use it
-koin-ktor                        = { module = "io.insert-koin:koin-ktor",                     version.ref = "koin" }
-koin-logger-slf4j                = { module = "io.insert-koin:koin-logger-slf4j",             version.ref = "koin" }
+# Logging
+logback-classic                  = { module = "ch.qos.logback:logback-classic",               version.ref = "logback" }
 
 # Tests
 kotlin-test-junit                = { module = "org.jetbrains.kotlin:kotlin-test-junit",       version.ref = "kotlin" }
+mockk                            = { module = "io.mockk:mockk",                               version.ref = "mockk" }
 
 [plugins]
-kotlin-jvm                = { id = "org.jetbrains.kotlin.jvm",                 version.ref = "kotlin" }
-kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-ktor                     = { id = "io.ktor.plugin",                           version.ref = "ktor" }
+kotlin-jvm                  = { id = "org.jetbrains.kotlin.jvm",                     version.ref = "kotlin" }
+kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization",    version.ref = "kotlin" }
+ktor                        = { id = "io.ktor.plugin",                               version.ref = "ktor" }

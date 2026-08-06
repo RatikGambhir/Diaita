@@ -11,11 +11,12 @@ import SelectTrigger from '~/components/ui/select/SelectTrigger.vue'
 import SelectValue from '~/components/ui/select/SelectValue.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Label from '~/components/ui/label/Label.vue'
-import type { PlaceholderFor, SettingsFormDefaults, SettingsFormState } from '~/components/settings/types'
+import type { PlaceholderFor, ProfileSection } from '~/components/settings/types'
+
+const form = defineModel<ProfileSection>({ required: true });
 
 defineProps<{
-    formState: SettingsFormState;
-    formDefaults: SettingsFormDefaults;
+    defaults: ProfileSection;
     placeholderFor: PlaceholderFor;
 }>();
 </script>
@@ -38,32 +39,32 @@ defineProps<{
                         <Label>Age</Label>
                         <p class="text-xs text-muted-foreground">Your current age.</p>
                         <Input
-                            v-model="formState.profile.age"
-                            :placeholder="placeholderFor(formDefaults.profile.age, 'e.g., 28')"
+                            v-model="form.age"
+                            :placeholder="placeholderFor(defaults.age, 'e.g., 28')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Height</Label>
                         <p class="text-xs text-muted-foreground">Your height in centimeters.</p>
                         <Input
-                            v-model="formState.profile.height"
-                            :placeholder="placeholderFor(formDefaults.profile.height, 'e.g., 175')"
+                            v-model="form.height"
+                            :placeholder="placeholderFor(defaults.height, 'e.g., 175')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Weight</Label>
                         <p class="text-xs text-muted-foreground">Your weight in kilograms.</p>
                         <Input
-                            v-model="formState.profile.weight"
-                            :placeholder="placeholderFor(formDefaults.profile.weight, 'e.g., 70')"
+                            v-model="form.weight"
+                            :placeholder="placeholderFor(defaults.weight, 'e.g., 70')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Body Fat Percentage</Label>
                         <p class="text-xs text-muted-foreground">Your body fat percentage (optional).</p>
                         <Input
-                            v-model="formState.profile.bodyFat"
-                            :placeholder="placeholderFor(formDefaults.profile.bodyFat, 'e.g., 18.5')"
+                            v-model="form.bodyFat"
+                            :placeholder="placeholderFor(defaults.bodyFat, 'e.g., 18.5')"
                         />
                     </div>
                 </div>
@@ -75,16 +76,16 @@ defineProps<{
                         <Label>Lean Mass</Label>
                         <p class="text-xs text-muted-foreground">Your lean body mass in kg (optional).</p>
                         <Input
-                            v-model="formState.profile.leanMass"
-                            :placeholder="placeholderFor(formDefaults.profile.leanMass, 'e.g., 57.0')"
+                            v-model="form.leanMass"
+                            :placeholder="placeholderFor(defaults.leanMass, 'e.g., 57.0')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Sex</Label>
                         <p class="text-xs text-muted-foreground">Biological sex assigned at birth.</p>
-                        <Select v-model="formState.profile.sex">
+                        <Select v-model="form.sex">
                             <SelectTrigger>
-                                <SelectValue :placeholder="placeholderFor(formDefaults.profile.sex, 'Select sex')" />
+                                <SelectValue :placeholder="placeholderFor(defaults.sex, 'Select sex')" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="female">Female</SelectItem>
@@ -102,8 +103,8 @@ defineProps<{
                         <Label>Gender</Label>
                         <p class="text-xs text-muted-foreground">Your gender identity.</p>
                         <Input
-                            v-model="formState.profile.gender"
-                            :placeholder="placeholderFor(formDefaults.profile.gender, 'e.g., Woman, Man, Non-binary, etc.')"
+                            v-model="form.gender"
+                            :placeholder="placeholderFor(defaults.gender, 'e.g., Woman, Man, Non-binary, etc.')"
                         />
                     </div>
                 </div>
@@ -115,9 +116,9 @@ defineProps<{
                         <Label>Biological Considerations</Label>
                         <p class="text-xs text-muted-foreground">Any factors that may affect training or nutrition.</p>
                         <Textarea
-                            v-model="formState.profile.biological"
+                            v-model="form.biological"
                             :rows="3"
-                            :placeholder="placeholderFor(formDefaults.profile.biological, 'e.g., Post-pregnancy, recovering from injury, thyroid condition...')"
+                            :placeholder="placeholderFor(defaults.biological, 'e.g., Post-pregnancy, recovering from injury, thyroid condition...')"
                         />
                     </div>
                 </div>
@@ -129,9 +130,9 @@ defineProps<{
                         <Label>Menstrual Cycle Info</Label>
                         <p class="text-xs text-muted-foreground">Information about your menstrual cycle if applicable.</p>
                         <Textarea
-                            v-model="formState.profile.menstrual"
+                            v-model="form.menstrual"
                             :rows="3"
-                            :placeholder="placeholderFor(formDefaults.profile.menstrual, 'e.g., Regular 28-day cycle, tracking symptoms for training adjustments...')"
+                            :placeholder="placeholderFor(defaults.menstrual, 'e.g., Regular 28-day cycle, tracking symptoms for training adjustments...')"
                         />
                     </div>
                 </div>

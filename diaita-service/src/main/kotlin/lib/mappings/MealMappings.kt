@@ -3,6 +3,7 @@ package com.diaita.lib.mappings
 import com.diaita.dto.MealBucketItemResponseDto
 import com.diaita.dto.MealBucketResponseDto
 import com.diaita.dto.MealItemOperationsRequestDto
+import com.diaita.dto.NutritionDaySummaryResponseDto
 import com.diaita.dto.UpsertMealItemRequestDto
 import com.diaita.dto.UpsertMealRequestDto
 import com.diaita.dto.UpsertMealsRequestDto
@@ -44,4 +45,14 @@ fun UpsertMealItemRequestDto.toNormalizedItem(): UpsertMealItemRequestDto {
 
 fun MealBucketResponseDto.sortedByFoodName(): MealBucketResponseDto {
     return copy(items = items.sortedBy(MealBucketItemResponseDto::foodName))
+}
+
+/** Presents every meal bucket in a stable, alphabetical order. */
+fun NutritionDaySummaryResponseDto.withSortedBuckets(): NutritionDaySummaryResponseDto {
+    return copy(
+        breakfast = breakfast.sortedByFoodName(),
+        lunch = lunch.sortedByFoodName(),
+        dinner = dinner.sortedByFoodName(),
+        snacks = snacks.sortedByFoodName()
+    )
 }

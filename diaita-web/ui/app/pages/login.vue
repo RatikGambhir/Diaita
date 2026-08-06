@@ -2,7 +2,6 @@
 import * as z from "zod";
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm, Field as FormField } from 'vee-validate'
-import { supabase } from "~/utils";
 import { useUserStore } from "~/stores/useUserStore";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
@@ -23,6 +22,7 @@ export interface UserSession {
   session: Session | null
 }
 
+const supabase = useSupabaseClient();
 const userStore = useUserStore();
 
 const toast = useToast();

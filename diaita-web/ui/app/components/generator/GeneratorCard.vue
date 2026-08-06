@@ -1,29 +1,25 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Dumbbell, UtensilsCrossed, Sparkles } from 'lucide-vue-next'
+import { Dumbbell, UtensilsCrossed } from 'lucide-vue-next'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import WorkoutForm from './WorkoutForm.vue'
 import MealPlanForm from './MealPlanForm.vue'
+import type { MealPlanFormData, WorkoutFormData } from './types'
 
 const activeTab = ref('workout')
 const isLoading = ref(false)
 
-const handleWorkoutSubmit = (data: any) => {
+// TODO: replace the simulated delay with the real generation endpoints.
+const simulateGeneration = () => {
   isLoading.value = true
-  // Simulate API call
   setTimeout(() => {
     isLoading.value = false
-    console.log('Workout form submitted:', data)
   }, 2000)
 }
 
-const handleMealPlanSubmit = (data: any) => {
-  isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-    console.log('Meal plan form submitted:', data)
-  }, 2000)
-}
+const handleWorkoutSubmit = (_data: WorkoutFormData) => simulateGeneration()
+
+const handleMealPlanSubmit = (_data: MealPlanFormData) => simulateGeneration()
 </script>
 
 <template>

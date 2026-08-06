@@ -14,155 +14,123 @@ import com.diaita.dto.ProductSearchResponseDto
 import com.diaita.dto.ProductSuggestFiltersDto
 import com.diaita.dto.ProductSuggestResponseDto
 import io.ktor.client.call.body
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 
+/** Client for the Spoonacular food API. */
 open class NutritionRestClient(
     private val apiKey: String,
     url: String
-) : RestClient(apiKey, url) {
-
-
+) : RestClient(url) {
 
     open suspend fun searchIngredients(
         query: String,
         filters: IngredientSearchFiltersDto
-    ): IngredientSearchResponseDto? {
-        return try {
-            client.get("/food/ingredients/search") {
-                parameter("apiKey", apiKey)
-                parameter("query", query)
-                filters.minProteinPercent?.let { parameter("minProteinPercent", it) }
-                filters.maxProteinPercent?.let { parameter("maxProteinPercent", it) }
-                filters.minFatPercent?.let { parameter("minFatPercent", it) }
-                filters.maxFatPercent?.let { parameter("maxFatPercent", it) }
-                filters.minCarbsPercent?.let { parameter("minCarbsPercent", it) }
-                filters.maxCarbsPercent?.let { parameter("maxCarbsPercent", it) }
-                filters.intolerances?.takeIf { it.isNotEmpty() }
-                    ?.let { parameter("intolerances", it.joinToString(",")) }
-                parameter("offset", filters.offset)
-                parameter("number", filters.number)
-            }.body<IngredientSearchResponseDto>()
-        } catch (e: Exception) {
-            println("Error searching ingredients: ${e.message}")
-            null
-        }
+    ): IngredientSearchResponseDto? = callOrNull("Ingredient search") {
+        client.get("/food/ingredients/search") {
+            authorizedQuery(query)
+            optionalParameter("minProteinPercent", filters.minProteinPercent)
+            optionalParameter("maxProteinPercent", filters.maxProteinPercent)
+            optionalParameter("minFatPercent", filters.minFatPercent)
+            optionalParameter("maxFatPercent", filters.maxFatPercent)
+            optionalParameter("minCarbsPercent", filters.minCarbsPercent)
+            optionalParameter("maxCarbsPercent", filters.maxCarbsPercent)
+            csvParameter("intolerances", filters.intolerances)
+            parameter("offset", filters.offset)
+            parameter("number", filters.number)
+        }.body<IngredientSearchResponseDto>()
     }
 
     open suspend fun autocompleteIngredients(
         query: String,
         filters: IngredientAutocompleteFiltersDto
-    ): List<IngredientAutocompleteItemDto>? {
-        return try {
-            client.get("/food/ingredients/autocomplete") {
-                parameter("apiKey", apiKey)
-                parameter("query", query)
-                parameter("number", filters.number)
-                parameter("language", filters.language)
-                parameter("metaInformation", filters.metaInformation)
-                filters.intolerances?.takeIf { it.isNotEmpty() }
-                    ?.let { parameter("intolerances", it.joinToString(",")) }
-            }.body<List<IngredientAutocompleteItemDto>>()
-        } catch (e: Exception) {
-            println("Error autocompleting ingredients: ${e.message}")
-            null
-        }
+    ): List<IngredientAutocompleteItemDto>? = callOrNull("Ingredient autocomplete") {
+        client.get("/food/ingredients/autocomplete") {
+            authorizedQuery(query)
+            parameter("number", filters.number)
+            parameter("language", filters.language)
+            parameter("metaInformation", filters.metaInformation)
+            csvParameter("intolerances", filters.intolerances)
+        }.body<List<IngredientAutocompleteItemDto>>()
     }
 
     open suspend fun getIngredientInformation(
         id: Int,
         amount: Double? = 100.0,
         unit: String? = "grams"
-    ): IngredientInformationDto? {
-        return try {
-            client.get("/food/ingredients/$id/information") {
-                parameter("apiKey", apiKey)
-                amount?.let { parameter("amount", it) }
-                unit?.let { parameter("unit", it) }
-            }.body<IngredientInformationDto>()
-        } catch (e: Exception) {
-            println("Error getting ingredient information: ${e.message}")
-            null
-        }
+    ): IngredientInformationDto? = callOrNull("Ingredient information lookup for id=$id") {
+        client.get("/food/ingredients/$id/information") {
+            parameter("apiKey", apiKey)
+            optionalParameter("amount", amount)
+            optionalParameter("unit", unit)
+        }.body<IngredientInformationDto>()
     }
 
     open suspend fun searchProducts(
         query: String,
         filters: ProductSearchFiltersDto
-    ): ProductSearchResponseDto? {
-        return try {
-            client.get("/food/products/search") {
-                parameter("apiKey", apiKey)
-                parameter("query", query)
-                filters.minCalories?.let { parameter("minCalories", it) }
-                filters.maxCalories?.let { parameter("maxCalories", it) }
-                filters.minCarbs?.let { parameter("minCarbs", it) }
-                filters.maxCarbs?.let { parameter("maxCarbs", it) }
-                filters.minProtein?.let { parameter("minProtein", it) }
-                filters.maxProtein?.let { parameter("maxProtein", it) }
-                filters.minFat?.let { parameter("minFat", it) }
-                filters.maxFat?.let { parameter("maxFat", it) }
-                parameter("offset", filters.offset)
-                parameter("number", filters.number)
-            }.body<ProductSearchResponseDto>()
-        } catch (e: Exception) {
-            println("Error searching products: ${e.message}")
-            null
-        }
+    ): ProductSearchResponseDto? = callOrNull("Product search") {
+        client.get("/food/products/search") {
+            authorizedQuery(query)
+            optionalParameter("minCalories", filters.minCalories)
+            optionalParameter("maxCalories", filters.maxCalories)
+            optionalParameter("minCarbs", filters.minCarbs)
+            optionalParameter("maxCarbs", filters.maxCarbs)
+            optionalParameter("minProtein", filters.minProtein)
+            optionalParameter("maxProtein", filters.maxProtein)
+            optionalParameter("minFat", filters.minFat)
+            optionalParameter("maxFat", filters.maxFat)
+            parameter("offset", filters.offset)
+            parameter("number", filters.number)
+        }.body<ProductSearchResponseDto>()
     }
 
-    open suspend fun getProductInformation(id: Int): ProductInformationDto? {
-        return try {
+    open suspend fun getProductInformation(id: Int): ProductInformationDto? =
+        callOrNull("Product information lookup for id=$id") {
             client.get("/food/products/$id") {
                 parameter("apiKey", apiKey)
             }.body<ProductInformationDto>()
-        } catch (e: Exception) {
-            println("Error getting product information: ${e.message}")
-            null
         }
-    }
 
     open suspend fun suggestProducts(
         query: String,
         filters: ProductSuggestFiltersDto
-    ): ProductSuggestResponseDto? {
-        return try {
-            client.get("/food/products/suggest") {
-                parameter("apiKey", apiKey)
-                parameter("query", query)
-                parameter("number", filters.number)
-            }.body<ProductSuggestResponseDto>()
-        } catch (e: Exception) {
-            println("Error suggesting products: ${e.message}")
-            null
-        }
+    ): ProductSuggestResponseDto? = callOrNull("Product suggest") {
+        client.get("/food/products/suggest") {
+            authorizedQuery(query)
+            parameter("number", filters.number)
+        }.body<ProductSuggestResponseDto>()
     }
 
     open suspend fun searchMenuItems(
         query: String,
         filters: MenuItemSearchFiltersDto
-    ): MenuItemSearchResponseDto? {
-        return try {
-            client.get("/food/menuItems/search") {
-                parameter("apiKey", apiKey)
-                parameter("query", query)
-                parameter("offset", filters.offset)
-                parameter("number", filters.number)
-            }.body<MenuItemSearchResponseDto>()
-        } catch (e: Exception) {
-            println("Error searching menu items: ${e.message}")
-            null
-        }
+    ): MenuItemSearchResponseDto? = callOrNull("Menu item search") {
+        client.get("/food/menuItems/search") {
+            authorizedQuery(query)
+            parameter("offset", filters.offset)
+            parameter("number", filters.number)
+        }.body<MenuItemSearchResponseDto>()
     }
 
-    open suspend fun getMenuItemInformation(id: Int): MenuItemInformationDto? {
-        return try {
+    open suspend fun getMenuItemInformation(id: Int): MenuItemInformationDto? =
+        callOrNull("Menu item information lookup for id=$id") {
             client.get("/food/menuItems/$id") {
                 parameter("apiKey", apiKey)
             }.body<MenuItemInformationDto>()
-        } catch (e: Exception) {
-            println("Error getting menu item information: ${e.message}")
-            null
         }
+
+    private fun HttpRequestBuilder.authorizedQuery(query: String) {
+        parameter("apiKey", apiKey)
+        parameter("query", query)
+    }
+
+    private fun HttpRequestBuilder.optionalParameter(name: String, value: Any?) {
+        value?.let { parameter(name, it) }
+    }
+
+    private fun HttpRequestBuilder.csvParameter(name: String, values: List<String>?) {
+        values?.takeIf { it.isNotEmpty() }?.let { parameter(name, it.joinToString(",")) }
     }
 }

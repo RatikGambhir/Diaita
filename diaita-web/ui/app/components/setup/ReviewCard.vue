@@ -14,7 +14,7 @@ interface FieldConfig {
 
 interface Props {
   title: string
-  data: Record<string, any>
+  data: Record<string, unknown>
   fields: FieldConfig[]
   showEmpty?: boolean
 }
@@ -23,7 +23,7 @@ const props = withDefaults(defineProps<Props>(), {
   showEmpty: false,
 })
 
-const formatValue = (value: any, field: FieldConfig): string => {
+const formatValue = (value: unknown, field: FieldConfig): string => {
   if (value === null || value === undefined || value === '') return '—'
   if (field.type === 'boolean') return value ? 'Yes' : 'No'
   if (field.type === 'array' && Array.isArray(value)) {

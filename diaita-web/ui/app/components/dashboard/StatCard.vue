@@ -14,7 +14,8 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   iconColor: 'text-primary',
-  blobColor: 'bg-primary/10'
+  blobColor: 'bg-primary/10',
+  class: undefined
 })
 </script>
 

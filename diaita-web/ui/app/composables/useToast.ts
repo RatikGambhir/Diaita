@@ -28,9 +28,6 @@ export function useToast() {
       }, newToast.timeout)
     }
 
-    // Also log to console for debugging
-    console.log(`[Toast] ${toast.title}: ${toast.description || ''}`)
-
     return id
   }
 

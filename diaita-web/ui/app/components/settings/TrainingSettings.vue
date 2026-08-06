@@ -11,11 +11,12 @@ import SelectTrigger from '~/components/ui/select/SelectTrigger.vue'
 import SelectValue from '~/components/ui/select/SelectValue.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Label from '~/components/ui/label/Label.vue'
-import type { Option, PlaceholderFor, SettingsFormDefaults, SettingsFormState } from '~/components/settings/types'
+import type { Option, PlaceholderFor, TrainingSection } from '~/components/settings/types'
+
+const form = defineModel<TrainingSection>({ required: true });
 
 defineProps<{
-    formState: SettingsFormState;
-    formDefaults: SettingsFormDefaults;
+    defaults: TrainingSection;
     placeholderFor: PlaceholderFor;
     trainingAgeOptions: Option[];
     equipmentOptions: Option[];
@@ -39,9 +40,9 @@ defineProps<{
                     <div class="space-y-2">
                         <Label>Training Age</Label>
                         <p class="text-xs text-muted-foreground">How long have you been training?</p>
-                        <Select v-model="formState.training.trainingAge">
+                        <Select v-model="form.trainingAge">
                             <SelectTrigger>
-                                <SelectValue :placeholder="placeholderFor(formDefaults.training.trainingAge, 'Select training age')" />
+                                <SelectValue :placeholder="placeholderFor(defaults.trainingAge, 'Select training age')" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem v-for="option in trainingAgeOptions" :key="option.value" :value="option.value">
@@ -54,9 +55,9 @@ defineProps<{
                     <div class="space-y-2">
                         <Label>Equipment Access</Label>
                         <p class="text-xs text-muted-foreground">What equipment do you have access to?</p>
-                        <Select v-model="formState.training.equipmentAccess">
+                        <Select v-model="form.equipmentAccess">
                             <SelectTrigger>
-                                <SelectValue :placeholder="placeholderFor(formDefaults.training.equipmentAccess, 'Select equipment access')" />
+                                <SelectValue :placeholder="placeholderFor(defaults.equipmentAccess, 'Select equipment access')" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem v-for="option in equipmentOptions" :key="option.value" :value="option.value">
@@ -74,16 +75,16 @@ defineProps<{
                         <Label>Time Per Session</Label>
                         <p class="text-xs text-muted-foreground">Average workout duration in minutes.</p>
                         <Input
-                            v-model="formState.training.timePerSession"
-                            :placeholder="placeholderFor(formDefaults.training.timePerSession, 'e.g., 60')"
+                            v-model="form.timePerSession"
+                            :placeholder="placeholderFor(defaults.timePerSession, 'e.g., 60')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Days Per Week</Label>
                         <p class="text-xs text-muted-foreground">How many days per week do you train?</p>
                         <Input
-                            v-model="formState.training.daysPerWeek"
-                            :placeholder="placeholderFor(formDefaults.training.daysPerWeek, 'e.g., 4')"
+                            v-model="form.daysPerWeek"
+                            :placeholder="placeholderFor(defaults.daysPerWeek, 'e.g., 4')"
                         />
                     </div>
                 </div>
@@ -95,16 +96,16 @@ defineProps<{
                         <Label>Exercise Preferences</Label>
                         <p class="text-xs text-muted-foreground">Exercises you enjoy and prefer to include.</p>
                         <Input
-                            v-model="formState.training.exercisePreferences"
-                            :placeholder="placeholderFor(formDefaults.training.exercisePreferences, '+ Add preference')"
+                            v-model="form.exercisePreferences"
+                            :placeholder="placeholderFor(defaults.exercisePreferences, '+ Add preference')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Exercise Dislikes</Label>
                         <p class="text-xs text-muted-foreground">Exercises you prefer to avoid.</p>
                         <Input
-                            v-model="formState.training.exerciseDislikes"
-                            :placeholder="placeholderFor(formDefaults.training.exerciseDislikes, '+ Add dislike')"
+                            v-model="form.exerciseDislikes"
+                            :placeholder="placeholderFor(defaults.exerciseDislikes, '+ Add dislike')"
                         />
                     </div>
                 </div>
@@ -116,9 +117,9 @@ defineProps<{
                         <Label>Training History</Label>
                         <p class="text-xs text-muted-foreground">Describe your training background and experience.</p>
                         <Textarea
-                            v-model="formState.training.trainingHistory"
+                            v-model="form.trainingHistory"
                             :rows="3"
-                            :placeholder="placeholderFor(formDefaults.training.trainingHistory, 'e.g., Started with bodyweight training, then moved to weightlifting...')"
+                            :placeholder="placeholderFor(defaults.trainingHistory, 'e.g., Started with bodyweight training, then moved to weightlifting...')"
                         />
                     </div>
                 </div>
@@ -130,9 +131,9 @@ defineProps<{
                         <Label>Current Workout Routine</Label>
                         <p class="text-xs text-muted-foreground">Describe your current workout routine.</p>
                         <Textarea
-                            v-model="formState.training.workoutRoutine"
+                            v-model="form.workoutRoutine"
                             :rows="3"
-                            :placeholder="placeholderFor(formDefaults.training.workoutRoutine, 'e.g., PPL split 6 days per week, focusing on compound movements...')"
+                            :placeholder="placeholderFor(defaults.workoutRoutine, 'e.g., PPL split 6 days per week, focusing on compound movements...')"
                         />
                     </div>
                 </div>

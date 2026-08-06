@@ -6,11 +6,12 @@ import Input from '~/components/ui/input/Input.vue'
 import Textarea from '~/components/ui/textarea/Textarea.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Label from '~/components/ui/label/Label.vue'
-import type { PlaceholderFor, SettingsFormDefaults, SettingsFormState } from '~/components/settings/types'
+import type { GoalsSection, PlaceholderFor } from '~/components/settings/types'
+
+const form = defineModel<GoalsSection>({ required: true });
 
 defineProps<{
-    formState: SettingsFormState;
-    formDefaults: SettingsFormDefaults;
+    defaults: GoalsSection;
     placeholderFor: PlaceholderFor;
 }>();
 </script>
@@ -33,16 +34,16 @@ defineProps<{
                         <Label>Primary Goal</Label>
                         <p class="text-xs text-muted-foreground">Your main fitness objective.</p>
                         <Input
-                            v-model="formState.goals.primaryGoal"
-                            :placeholder="placeholderFor(formDefaults.goals.primaryGoal, 'Add your primary goal...')"
+                            v-model="form.primaryGoal"
+                            :placeholder="placeholderFor(defaults.primaryGoal, 'Add your primary goal...')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Secondary Goals</Label>
                         <p class="text-xs text-muted-foreground">Additional objectives you want to achieve.</p>
                         <Input
-                            v-model="formState.goals.secondaryGoals"
-                            :placeholder="placeholderFor(formDefaults.goals.secondaryGoals, 'Add a secondary goal...')"
+                            v-model="form.secondaryGoals"
+                            :placeholder="placeholderFor(defaults.secondaryGoals, 'Add a secondary goal...')"
                         />
                     </div>
                 </div>
@@ -54,16 +55,16 @@ defineProps<{
                         <Label>Timeframe</Label>
                         <p class="text-xs text-muted-foreground">When do you want to achieve your goals?</p>
                         <Input
-                            v-model="formState.goals.timeframe"
-                            :placeholder="placeholderFor(formDefaults.goals.timeframe, 'Add a target timeframe...')"
+                            v-model="form.timeframe"
+                            :placeholder="placeholderFor(defaults.timeframe, 'Add a target timeframe...')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Target Weight</Label>
                         <p class="text-xs text-muted-foreground">Your desired weight goal.</p>
                         <Input
-                            v-model="formState.goals.targetWeight"
-                            :placeholder="placeholderFor(formDefaults.goals.targetWeight, 'Add a target weight...')"
+                            v-model="form.targetWeight"
+                            :placeholder="placeholderFor(defaults.targetWeight, 'Add a target weight...')"
                         />
                     </div>
                 </div>
@@ -75,16 +76,16 @@ defineProps<{
                         <Label>Performance Metric</Label>
                         <p class="text-xs text-muted-foreground">Track a specific performance indicator.</p>
                         <Input
-                            v-model="formState.goals.performanceMetric"
-                            :placeholder="placeholderFor(formDefaults.goals.performanceMetric, 'Add a performance metric...')"
+                            v-model="form.performanceMetric"
+                            :placeholder="placeholderFor(defaults.performanceMetric, 'Add a performance metric...')"
                         />
                     </div>
                     <div class="space-y-2">
                         <Label>Health Goals</Label>
                         <p class="text-xs text-muted-foreground">Specific health improvements you're targeting.</p>
                         <Input
-                            v-model="formState.goals.healthGoals"
-                            :placeholder="placeholderFor(formDefaults.goals.healthGoals, 'Add a health goal...')"
+                            v-model="form.healthGoals"
+                            :placeholder="placeholderFor(defaults.healthGoals, 'Add a health goal...')"
                         />
                     </div>
                 </div>
@@ -96,8 +97,8 @@ defineProps<{
                         <Label>Aesthetic Goals</Label>
                         <p class="text-xs text-muted-foreground">Describe your desired physical appearance goals.</p>
                         <Textarea
-                            v-model="formState.goals.aestheticGoals"
-                            :placeholder="placeholderFor(formDefaults.goals.aestheticGoals, 'Add your aesthetic goals...')"
+                            v-model="form.aestheticGoals"
+                            :placeholder="placeholderFor(defaults.aestheticGoals, 'Add your aesthetic goals...')"
                             :rows="3"
                         />
                     </div>

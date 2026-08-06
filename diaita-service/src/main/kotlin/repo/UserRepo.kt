@@ -40,12 +40,15 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
         return result.error == null
     }
 
-    suspend fun getSettingsSection(page: UserSettingsPage, userId: String): Any? = when (page) {
-        UserSettingsPage.BASIC_DEMOGRAPHICS -> getSection<BasicDemographicsRowEntity>(resolveSettingsTable(page), userId)
-        UserSettingsPage.ACTIVITY_LIFESTYLE -> getSection<ActivityLifestyleRowEntity>(resolveSettingsTable(page), userId)
-        UserSettingsPage.GOALS_PRIORITIES -> getSection<GoalsPrioritiesRowEntity>(resolveSettingsTable(page), userId)
-        UserSettingsPage.TRAINING_BACKGROUND -> getSection<TrainingBackgroundRowEntity>(resolveSettingsTable(page), userId)
-        UserSettingsPage.NUTRITION_HISTORY -> getSection<NutritionHistoryRowEntity>(resolveSettingsTable(page), userId)
+    suspend fun getSettingsSection(page: UserSettingsPage, userId: String): Any? {
+        val table = page.tableName()
+        return when (page) {
+            UserSettingsPage.BASIC_DEMOGRAPHICS -> getSection<BasicDemographicsRowEntity>(table, userId)
+            UserSettingsPage.ACTIVITY_LIFESTYLE -> getSection<ActivityLifestyleRowEntity>(table, userId)
+            UserSettingsPage.GOALS_PRIORITIES -> getSection<GoalsPrioritiesRowEntity>(table, userId)
+            UserSettingsPage.TRAINING_BACKGROUND -> getSection<TrainingBackgroundRowEntity>(table, userId)
+            UserSettingsPage.NUTRITION_HISTORY -> getSection<NutritionHistoryRowEntity>(table, userId)
+        }
     }
 
     suspend fun updateSettingsSection(
@@ -53,35 +56,15 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
         userId: String,
         data: Any
     ): Any? = when (page) {
-        UserSettingsPage.BASIC_DEMOGRAPHICS -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<BasicDemographicsRowEntity>(page, data),
-            userId
-        )
-        UserSettingsPage.ACTIVITY_LIFESTYLE -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<ActivityLifestyleRowEntity>(page, data),
-            userId
-        )
-        UserSettingsPage.GOALS_PRIORITIES -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<GoalsPrioritiesRowEntity>(page, data),
-            userId
-        )
-        UserSettingsPage.TRAINING_BACKGROUND -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<TrainingBackgroundRowEntity>(page, data),
-            userId
-        )
-        UserSettingsPage.NUTRITION_HISTORY -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<NutritionHistoryRowEntity>(page, data),
-            userId
-        )
+        UserSettingsPage.BASIC_DEMOGRAPHICS -> updateTypedSection<BasicDemographicsRowEntity>(page, userId, data)
+        UserSettingsPage.ACTIVITY_LIFESTYLE -> updateTypedSection<ActivityLifestyleRowEntity>(page, userId, data)
+        UserSettingsPage.GOALS_PRIORITIES -> updateTypedSection<GoalsPrioritiesRowEntity>(page, userId, data)
+        UserSettingsPage.TRAINING_BACKGROUND -> updateTypedSection<TrainingBackgroundRowEntity>(page, userId, data)
+        UserSettingsPage.NUTRITION_HISTORY -> updateTypedSection<NutritionHistoryRowEntity>(page, userId, data)
     }
 
     suspend fun deleteSettingsSection(page: UserSettingsPage, userId: String): Boolean =
-        deleteSection(resolveSettingsTable(page), userId)
+        deleteSection(page.tableName(), userId)
 
     suspend fun getFullProfile(userId: String): RegisteredUserProfileDto? {
         val result = supabaseManager.selectSingle<UserProfileRowEntity>(
@@ -93,7 +76,7 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
         return result.body?.toDto()
     }
 
-    private fun resolveSettingsTable(page: UserSettingsPage): String = when (page) {
+    private fun UserSettingsPage.tableName(): String = when (this) {
         UserSettingsPage.BASIC_DEMOGRAPHICS -> PostgresFactory.BASIC_DEMOGRAPHICS_TABLE
         UserSettingsPage.ACTIVITY_LIFESTYLE -> PostgresFactory.ACTIVITY_LIFESTYLE_TABLE
         UserSettingsPage.GOALS_PRIORITIES -> PostgresFactory.GOALS_PRIORITIES_TABLE
@@ -101,10 +84,18 @@ class UserRepo(private val supabaseManager: SupabaseManager) {
         UserSettingsPage.NUTRITION_HISTORY -> PostgresFactory.NUTRITION_HISTORY_TABLE
     }
 
-    private inline fun <reified T : Any> castPayload(page: UserSettingsPage, data: Any): T {
+    /**
+     * Updates one settings section, rejecting a payload whose runtime type does
+     * not match the row entity the page maps to.
+     */
+    private suspend inline fun <reified T : Any> updateTypedSection(
+        page: UserSettingsPage,
+        userId: String,
+        data: Any
+    ): T? {
         require(data is T) {
             "Invalid payload type for page=$page. Expected ${T::class.simpleName}, got ${data::class.simpleName}"
         }
-        return data
+        return updateSection(page.tableName(), data, userId)
     }
 }

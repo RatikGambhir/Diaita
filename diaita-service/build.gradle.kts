@@ -11,12 +11,15 @@ application {
     mainClass.set("io.ktor.server.netty.EngineMain")
 }
 
-kotlin {
-    jvmToolchain(23)
-}
+// Overridable so the project can be built against a locally available JDK, e.g.
+// `./gradlew build -PjavaToolchainVersion=21`, without editing this file.
+val javaToolchainVersion = (findProperty("javaToolchainVersion") as String? ?: "23").toInt()
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions { jvmTarget = "23" }
+kotlin {
+    jvmToolchain(javaToolchainVersion)
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(javaToolchainVersion.toString()))
+    }
 }
 
 tasks.withType<Test>().configureEach {
@@ -37,37 +40,20 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.config.yaml)
 
-    // --- DB / pool / logging ---
-    implementation(libs.postgresql)
-    implementation(libs.h2)
-    implementation(libs.hikariCP)
+    // --- Logging ---
     implementation(libs.logback.classic)
-    implementation("com.google.genai:google-genai:1.0.0")
 
     // --- Supabase Kotlin Client ---
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    implementation("io.ktor:ktor-client-cio:3.1.1")
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.postgrest)
 
-
-    // --- Ktor client (optional in a server module) ---
+    // --- Ktor client ---
     implementation(libs.ktor.client.core)
-    implementation("io.ktor:ktor-client-cio:<latest_version>")
+    implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.apache)
-
-    // --- Koin (optional; remove if doing manual DI) ---
-    implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
-    implementation("io.ktor:ktor-server-content-negotiation:3.2.3")
-    implementation("io.ktor:ktor-server-core:3.2.3")
-    implementation("io.ktor:ktor-server-core:3.2.3")
-    implementation("io.ktor:ktor-serialization-gson:3.2.3")
-    implementation("io.ktor:ktor-server-content-negotiation:3.2.3")
-    implementation("io.ktor:ktor-server-core:3.2.3")
-
 
     // --- Tests ---
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
-    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation(libs.mockk)
 }

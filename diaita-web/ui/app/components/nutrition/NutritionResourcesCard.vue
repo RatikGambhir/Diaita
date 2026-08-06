@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { FunctionalComponent } from "vue"
+import type { LucideProps } from "lucide-vue-next"
 import Card from "~/components/ui/card/Card.vue"
 import CardContent from "~/components/ui/card/CardContent.vue"
 import CardHeader from "~/components/ui/card/CardHeader.vue"
@@ -8,7 +10,7 @@ defineProps<{
     resources: Array<{
         label: string;
         value: number;
-        icon: any;
+        icon: FunctionalComponent<LucideProps>;
         iconBg: string;
         iconColor: string;
     }>;

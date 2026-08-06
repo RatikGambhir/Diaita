@@ -13,8 +13,17 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
   ],
 
+  // Values are overridden at runtime by NUXT_PUBLIC_* environment variables.
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: "http://localhost:8080",
+      supabaseUrl: "",
+      supabaseKey: "",
+    },
+  },
+
   pinia: {
-    storesDirs: ["./stores/**", "./custom-folder/stores/**"],
+    storesDirs: ["./stores/**"],
   },
 
   css: ["~/assets/css/main.css"],
@@ -23,20 +32,15 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
 
-  components: {
-    dirs: [
-      {
-        path: '~/components',
-        extensions: ['.vue'],
-        pathPrefix: false,
-      },
-      {
-        path: '~/components/ui',
-        extensions: ['.vue'],
-        pathPrefix: false,
-      },
-    ],
-  },
+  // `pathPrefix: false` keeps component names flat (WorkoutCard, not WorkoutsWorkoutCard)
+  // regardless of which subdirectory they live in.
+  components: [
+    {
+      path: "~/components",
+      extensions: [".vue"],
+      pathPrefix: false,
+    },
+  ],
 
   compatibilityDate: "2025-07-16",
 });

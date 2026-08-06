@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Home, Dumbbell, Utensils, Settings, MessageCircle, LogOut, Search, PanelLeftClose, PanelLeft, UserCircle } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
-import { supabase } from '~/utils'
 import { useUserStore } from '~/stores/useUserStore'
 
+const supabase = useSupabaseClient()
 const route = useRoute()
 const toast = useToast()
 const userStore = useUserStore()

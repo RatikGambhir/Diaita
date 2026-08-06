@@ -22,7 +22,10 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
-class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent") : RestClient(apiKey, baseUrl) {
+class GeminiRestClient(
+    val apiKey: String,
+    val baseUrl: String = DEFAULT_BASE_URL
+) : RestClient(baseUrl) {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -74,7 +77,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
 
             return fullResponse.toString()
         } catch (e: Exception) {
-            println("Error calling Gemini Streaming API: ${e.message}")
+            log.error("Gemini streaming request failed: {}", e.message, e)
             return null
         }
     }
@@ -101,7 +104,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
             return try {
                 json.decodeFromString(serializer, firstPayload)
             } catch (e: SerializationException) {
-                println("Structured JSON parse failed, retrying once with stricter instruction: ${e.message}")
+                log.warn("Gemini structured JSON parse failed, retrying once with a stricter instruction: {}", e.message)
 
                 val retryRequest = buildStructuredRequest(
                     prompt = "$prompt\n\n$STRICT_JSON_RETRY_PROMPT_SUFFIX",
@@ -114,7 +117,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
                 json.decodeFromString(serializer, retryPayload)
             }
         } catch (e: Exception) {
-            println("Error calling Gemini Structured API: ${e.message}")
+            log.error("Gemini structured request failed: {}", e.message, e)
             return null
         }
     }
@@ -129,7 +132,12 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         }.body<GeminiResponseDto>()
 
         if (response.error != null) {
-            println("Gemini API error (${response.error.code} ${response.error.status}): ${response.error.message}")
+            log.error(
+                "Gemini API error ({} {}): {}",
+                response.error.code,
+                response.error.status,
+                response.error.message
+            )
             return null
         }
 
@@ -167,7 +175,7 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
     private fun extractStructuredPayload(response: GeminiResponseDto): String? {
         val candidate = response.candidates.firstOrNull() ?: return null
         if (candidate.finishReason == "MAX_TOKENS") {
-            println("Gemini response truncated: finishReason=MAX_TOKENS. Increase maxOutputTokens.")
+            log.error("Gemini response truncated: finishReason=MAX_TOKENS. Increase maxOutputTokens.")
             return null
         }
         return candidate.content?.parts?.firstOrNull()?.text
@@ -208,7 +216,10 @@ class GeminiRestClient(val apiKey: String, val baseUrl: String = "https://genera
         }
     }
 
-    private companion object {
+    companion object {
+        const val DEFAULT_BASE_URL =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+
         const val STRICT_JSON_SYSTEM_SUFFIX =
             "Return strictly valid RFC 8259 JSON only. Do not include markdown, comments, trailing commas, code fences, or extra text."
         const val STRICT_JSON_RETRY_PROMPT_SUFFIX =

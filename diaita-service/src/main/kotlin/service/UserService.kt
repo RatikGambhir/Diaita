@@ -15,13 +15,17 @@ import com.diaita.dto.ServiceResult
 import com.diaita.dto.TrainingBackgroundDto
 import com.diaita.dto.UserSettingsAction
 import com.diaita.dto.UserSettingsPage
+import com.diaita.entity.ActivityLifestyleRowEntity
+import com.diaita.entity.BasicDemographicsRowEntity
+import com.diaita.entity.GoalsPrioritiesRowEntity
+import com.diaita.entity.NutritionHistoryRowEntity
+import com.diaita.entity.TrainingBackgroundRowEntity
 import com.diaita.lib.factories.PromptFactory
+import com.diaita.lib.logging.logger
 import com.diaita.lib.mappings.*
 import com.diaita.lib.prompt_extensions.toPromptVariables
 import com.diaita.repo.RecommendationRepo
 import com.diaita.repo.UserRepo
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -33,36 +37,42 @@ class UserService(
     private val recommendationRepo: RecommendationRepo
 ) {
     private val json = Json { ignoreUnknownKeys = true }
+    private val log = logger()
 
-    suspend fun registerUserProfile(request: RegisterUserProfileRequestDto): ServiceResult<RegisterUserProfileResponseDto> = coroutineScope {
-        val upsertResult = async { runCatching { userRepo.upsertUserProfile(request) } }.await()
-        val profile = upsertResult.getOrElse {
-            return@coroutineScope ServiceResult.Failure("upsertUserProfile failed: ${it.message}")
-        }
-        if (profile == null) {
-            return@coroutineScope ServiceResult.Failure("upsertUserProfile failed: returned null")
-        }
+    /**
+     * Persists the profile, then generates and stores recommendations for it.
+     * Each step depends on the previous one, so they run sequentially; any
+     * failure short-circuits with the step that caused it.
+     */
+    suspend fun registerUserProfile(
+        request: RegisterUserProfileRequestDto
+    ): ServiceResult<RegisterUserProfileResponseDto> {
+        val profile = runStep("upsertUserProfile") { userRepo.upsertUserProfile(request) }
+            ?: return ServiceResult.Failure("upsertUserProfile failed")
 
-        val recommendationResult = async { runCatching { genRecommendations(profile) } }.await()
+        val recommendation = runStep("genRecommendations") { genRecommendations(profile) }
+            ?: return ServiceResult.Failure("genRecommendations failed")
 
-        val recommendation = recommendationResult.getOrElse {
-            return@coroutineScope ServiceResult.Failure("genRecommendations failed: ${it.message}")
-        }
-        if (recommendation == null) {
-            return@coroutineScope ServiceResult.Failure("genRecommendations failed: returned null")
-        }
-
-        val saved = try {
+        val saved = runStep("saveUserRecommendations") {
             saveUserRecommendations(request.userId, recommendation)
-        } catch (e: Exception) {
-            return@coroutineScope ServiceResult.Failure("saveUserRecommendations failed: ${e.message}")
         }
-        if (!saved) {
-            return@coroutineScope ServiceResult.Failure("saveUserRecommendations failed: save returned false")
+        if (saved != true) {
+            return ServiceResult.Failure("saveUserRecommendations failed")
         }
 
-        ServiceResult.Success(RegisterUserProfileResponseDto(profile = profile, recommendation = recommendation))
+        return ServiceResult.Success(
+            RegisterUserProfileResponseDto(profile = profile, recommendation = recommendation)
+        )
     }
+
+    /** Runs one registration step, logging and swallowing failures into `null`. */
+    private suspend fun <T> runStep(name: String, block: suspend () -> T?): T? =
+        try {
+            block() ?: null.also { log.error("{} failed: returned null", name) }
+        } catch (e: Exception) {
+            log.error("{} failed: {}", name, e.message, e)
+            null
+        }
 
     suspend fun genRecommendations(
         request: RegisterUserProfileRequestDto,
@@ -107,64 +117,35 @@ class UserService(
         action: UserSettingsAction,
         payload: JsonElement? = null
     ): Any? = when (page) {
-        UserSettingsPage.BASIC_DEMOGRAPHICS -> runSettingsAction(
-            page = page,
-            action = action,
-            userId = userId,
-            payload = payload,
-            decodeDto = { json.decodeFromJsonElement<BasicDemographicsDto>(it) },
-            toEntity = { payload, id -> payload.toEntity(id) },
-            toDto = { entity -> entity.toDto() }
-        )
-        UserSettingsPage.ACTIVITY_LIFESTYLE -> runSettingsAction(
-            page = page,
-            action = action,
-            userId = userId,
-            payload = payload,
-            decodeDto = { json.decodeFromJsonElement<ActivityLevelLifestyleDto>(it) },
-            toEntity = { payload, id -> payload.toEntity(id) },
-            toDto = { entity -> entity.toDto() }
-        )
-        UserSettingsPage.GOALS_PRIORITIES -> runSettingsAction(
-            page = page,
-            action = action,
-            userId = userId,
-            payload = payload,
-            decodeDto = { json.decodeFromJsonElement<GoalsPrioritiesDto>(it) },
-            toEntity = { payload, id -> payload.toEntity(id) },
-            toDto = { entity -> entity.toDto() }
-        )
-        UserSettingsPage.TRAINING_BACKGROUND -> runSettingsAction(
-            page = page,
-            action = action,
-            userId = userId,
-            payload = payload,
-            decodeDto = { json.decodeFromJsonElement<TrainingBackgroundDto>(it) },
-            toEntity = { payload, id -> payload.toEntity(id) },
-            toDto = { entity -> entity.toDto() }
-        )
-        UserSettingsPage.NUTRITION_HISTORY -> runSettingsAction(
-            page = page,
-            action = action,
-            userId = userId,
-            payload = payload,
-            decodeDto = { json.decodeFromJsonElement<NutritionDietHistoryDto>(it) },
-            toEntity = { payload, id -> payload.toEntity(id) },
-            toDto = { entity -> entity.toDto() }
-        )
+        UserSettingsPage.BASIC_DEMOGRAPHICS ->
+            runSettingsAction(page, action, userId, payload, BasicDemographicsDto::toEntity, BasicDemographicsRowEntity::toDto)
+        UserSettingsPage.ACTIVITY_LIFESTYLE ->
+            runSettingsAction(page, action, userId, payload, ActivityLevelLifestyleDto::toEntity, ActivityLifestyleRowEntity::toDto)
+        UserSettingsPage.GOALS_PRIORITIES ->
+            runSettingsAction(page, action, userId, payload, GoalsPrioritiesDto::toEntity, GoalsPrioritiesRowEntity::toDto)
+        UserSettingsPage.TRAINING_BACKGROUND ->
+            runSettingsAction(page, action, userId, payload, TrainingBackgroundDto::toEntity, TrainingBackgroundRowEntity::toDto)
+        UserSettingsPage.NUTRITION_HISTORY ->
+            runSettingsAction(page, action, userId, payload, NutritionDietHistoryDto::toEntity, NutritionHistoryRowEntity::toDto)
     }
 
-    private suspend inline fun <TDto : Any, reified TEntity : Any> runSettingsAction(
+    /**
+     * Decodes the payload into [TDto], hands the corresponding row entity to the
+     * repository, and maps whatever comes back to [TDto] again. `DELETE` returns
+     * a boolean instead of a DTO.
+     */
+    private suspend inline fun <reified TDto : Any, reified TEntity : Any> runSettingsAction(
         page: UserSettingsPage,
         action: UserSettingsAction,
         userId: String,
         payload: JsonElement?,
-        decodeDto: (JsonElement) -> TDto,
         toEntity: (TDto, String) -> TEntity,
         toDto: (TEntity) -> TDto
     ): Any? {
         val updateEntity = if (action == UserSettingsAction.UPDATE) {
-            payload?.let(decodeDto)?.let { dto -> toEntity(dto, userId) }
+            payload
+                ?.let { json.decodeFromJsonElement<TDto>(it) }
+                ?.let { dto -> toEntity(dto, userId) }
         } else {
             null
         }

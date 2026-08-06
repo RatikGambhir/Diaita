@@ -115,8 +115,8 @@ const addRestriction = () => {
           <Input
             id="eatingSchedule"
             :model-value="formData.eatingSchedule"
-            @update:model-value="updateField('eatingSchedule', $event)"
             placeholder="e.g., 3 meals + 1 snack"
+            @update:model-value="updateField('eatingSchedule', $event)"
           />
         </div>
       </div>

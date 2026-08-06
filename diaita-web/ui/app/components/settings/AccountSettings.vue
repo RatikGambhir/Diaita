@@ -5,16 +5,16 @@ import CardContent from '~/components/ui/card/CardContent.vue'
 import Input from '~/components/ui/input/Input.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Label from '~/components/ui/label/Label.vue'
-import type { PlaceholderFor, SettingsFormDefaults, SettingsFormState } from '~/components/settings/types'
+import type { AccountSection, PlaceholderFor } from '~/components/settings/types'
 
 const toast = useToast()
 
+const form = defineModel<AccountSection>({ required: true });
+
 const props = defineProps<{
-    formState: SettingsFormState;
-    formDefaults: SettingsFormDefaults;
+    defaults: AccountSection;
     placeholderFor: PlaceholderFor;
 }>();
-const accountState = props.formState.account
 
 const onIntegrateAppleHealth = () => {
     toast.add({
@@ -43,8 +43,8 @@ const onIntegrateAppleHealth = () => {
                         <Label>First Name</Label>
                         <p class="text-xs text-muted-foreground">Your given name.</p>
                         <Input
-                            v-model="accountState.firstName"
-                            :placeholder="props.placeholderFor(props.formDefaults.account.firstName, 'e.g., Jane')"
+                            v-model="form.firstName"
+                            :placeholder="props.placeholderFor(props.defaults.firstName, 'e.g., Jane')"
                         />
                     </div>
 
@@ -52,8 +52,8 @@ const onIntegrateAppleHealth = () => {
                         <Label>Last Name</Label>
                         <p class="text-xs text-muted-foreground">Your family name.</p>
                         <Input
-                            v-model="accountState.lastName"
-                            :placeholder="props.placeholderFor(props.formDefaults.account.lastName, 'e.g., Doe')"
+                            v-model="form.lastName"
+                            :placeholder="props.placeholderFor(props.defaults.lastName, 'e.g., Doe')"
                         />
                     </div>
                 </div>
@@ -66,9 +66,9 @@ const onIntegrateAppleHealth = () => {
                         <p class="text-xs text-muted-foreground">Used for account access and notifications.</p>
                     </div>
                     <Input
-                        v-model="accountState.email"
+                        v-model="form.email"
                         type="email"
-                        :placeholder="props.placeholderFor(props.formDefaults.account.email, 'e.g., jane.doe@example.com')"
+                        :placeholder="props.placeholderFor(props.defaults.email, 'e.g., jane.doe@example.com')"
                     />
                 </div>
 
@@ -80,10 +80,10 @@ const onIntegrateAppleHealth = () => {
                         <p class="text-xs text-muted-foreground">How many recent workouts should show on your homepage.</p>
                     </div>
                     <Input
-                        v-model="accountState.workoutsToTrackOnHomepage"
+                        v-model="form.workoutsToTrackOnHomepage"
                         type="number"
                         min="1"
-                        :placeholder="props.placeholderFor(props.formDefaults.account.workoutsToTrackOnHomepage, 'e.g., 6')"
+                        :placeholder="props.placeholderFor(props.defaults.workoutsToTrackOnHomepage, 'e.g., 6')"
                     />
                 </div>
             </CardContent>

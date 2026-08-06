@@ -14,7 +14,7 @@ interface Props {
   hoursSlept?: StatData
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   caloriesBurned: () => ({ label: 'Calories Burned', value: '1,247', unit: 'kcal' }),
   stepsTaken: () => ({ label: 'Steps Taken', value: '8,432', unit: 'steps' }),
   hoursSlept: () => ({ label: 'Hours Slept', value: '7.5', unit: 'hrs' })

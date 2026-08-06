@@ -138,8 +138,8 @@ const addMobilityRestriction = () => {
             min="0"
             max="14"
             :model-value="formData.daysPerWeek?.toString() ?? ''"
-            @update:model-value="handleNumberInput('daysPerWeek', $event)"
             placeholder="5"
+            @update:model-value="handleNumberInput('daysPerWeek', $event)"
           />
         </div>
 
@@ -151,8 +151,8 @@ const addMobilityRestriction = () => {
             min="0"
             max="1440"
             :model-value="formData.timePerSession?.toString() ?? ''"
-            @update:model-value="handleNumberInput('timePerSession', $event)"
             placeholder="75"
+            @update:model-value="handleNumberInput('timePerSession', $event)"
           />
         </div>
       </div>
@@ -162,9 +162,9 @@ const addMobilityRestriction = () => {
         <Textarea
           id="trainingHistory"
           :model-value="formData.trainingHistory"
-          @update:model-value="updateField('trainingHistory', $event)"
           placeholder="Describe your training background and experience..."
           class="min-h-[80px]"
+          @update:model-value="updateField('trainingHistory', $event)"
         />
       </div>
 
@@ -173,9 +173,9 @@ const addMobilityRestriction = () => {
         <Textarea
           id="doctorRestrictions"
           :model-value="formData.doctorRestrictions"
-          @update:model-value="updateField('doctorRestrictions', $event)"
           placeholder="Any medical guidance or loading restrictions..."
           class="min-h-[80px]"
+          @update:model-value="updateField('doctorRestrictions', $event)"
         />
       </div>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import GenericTabGroup from '~/components/GenericTabGroup.vue'
+import type { SettingsFormDefaults, SettingsFormState } from '~/components/settings/types'
 import ProfileSettings from '~/components/settings/ProfileSettings.vue'
 import AccountSettings from '~/components/settings/AccountSettings.vue'
 import NutritionSettings from '~/components/settings/NutritionSettings.vue'
@@ -60,7 +61,7 @@ const alcoholOptions = [
     { label: "Weekly", value: "weekly" },
 ];
 
-const formDefaults = reactive({
+const formDefaults = reactive<SettingsFormDefaults>({
     profile: {
         age: "29",
         sex: "Female",
@@ -110,7 +111,7 @@ const formDefaults = reactive({
     },
 });
 
-const formState = reactive({
+const formState = reactive<SettingsFormState>({
     profile: {
         age: "",
         sex: "",
@@ -192,22 +193,22 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
                             <div :key="activeTab">
                                 <ProfileSettings
                                     v-if="activeTab === 'profile'"
-                                    :form-state="formState"
-                                    :form-defaults="formDefaults"
+                                    v-model="formState.profile"
+                                    :defaults="formDefaults.profile"
                                     :placeholder-for="placeholderFor"
                                 />
 
                                 <AccountSettings
                                     v-else-if="activeTab === 'account'"
-                                    :form-state="formState"
-                                    :form-defaults="formDefaults"
+                                    v-model="formState.account"
+                                    :defaults="formDefaults.account"
                                     :placeholder-for="placeholderFor"
                                 />
 
                                 <NutritionSettings
                                     v-else-if="activeTab === 'nutrition'"
-                                    :form-state="formState"
-                                    :form-defaults="formDefaults"
+                                    v-model="formState.nutrition"
+                                    :defaults="formDefaults.nutrition"
                                     :placeholder-for="placeholderFor"
                                     :is-selected="isSelected"
                                     :yes-no-options="yesNoOptions"
@@ -219,8 +220,8 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
 
                                 <TrainingSettings
                                     v-else-if="activeTab === 'training'"
-                                    :form-state="formState"
-                                    :form-defaults="formDefaults"
+                                    v-model="formState.training"
+                                    :defaults="formDefaults.training"
                                     :placeholder-for="placeholderFor"
                                     :training-age-options="trainingAgeOptions"
                                     :equipment-options="equipmentOptions"
@@ -228,8 +229,8 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
 
                                 <GoalsSettings
                                     v-else
-                                    :form-state="formState"
-                                    :form-defaults="formDefaults"
+                                    v-model="formState.goals"
+                                    :defaults="formDefaults.goals"
                                     :placeholder-for="placeholderFor"
                                 />
                             </div>

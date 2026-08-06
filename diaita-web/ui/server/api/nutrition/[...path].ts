@@ -8,9 +8,8 @@ import {
   readBody,
 } from "h3";
 
-const API_BASE_URL = process.env.NUXT_PUBLIC_API_URL || "http://localhost:8080";
-
 export default defineEventHandler(async (event) => {
+  const API_BASE_URL = useRuntimeConfig(event).public.apiBaseUrl;
   const path = getRouterParam(event, "path");
 
   if (!path) {

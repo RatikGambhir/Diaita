@@ -9,6 +9,7 @@ import {
   SelectValue
 } from '~/components/ui/select'
 import Button from '~/components/ui/button/Button.vue'
+import type { WorkoutFormData } from './types'
 
 interface Props {
   loading?: boolean
@@ -19,18 +20,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  submit: [data: FormData]
+  submit: [data: WorkoutFormData]
 }>()
 
-interface FormData {
-  workoutType: string
-  duration: string
-  fitnessLevel: string
-  equipment: string
-  primaryGoal: string
-}
-
-const formData = ref<FormData>({
+const formData = ref<WorkoutFormData>({
   workoutType: '',
   duration: '',
   fitnessLevel: '',

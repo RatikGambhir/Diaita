@@ -70,13 +70,6 @@ const MEAL_CONFIGS: MealConfig[] = [
   { mealType: "dinner", name: "Dinner", icon: Moon, hour: 18 },
 ];
 
-const roundNutritionValue = (value: number) => Math.round(value * 10) / 10;
-
-const formatNutritionValue = (value: number) => {
-  const roundedValue = roundNutritionValue(value);
-  return Number.isInteger(roundedValue) ? `${roundedValue}` : `${roundedValue}`;
-};
-
 const createNutritionTotals = (): NutritionTotals => ({
   calories: 0,
   carbs: 0,
@@ -346,7 +339,6 @@ const handleAddFoods = async (
   }
 
   const currentUser = userStore.getUser as { id?: string } | null;
-  console.log('user', currentUser)
   const userId = currentUser?.id?.trim();
 
   if (!userId) {
