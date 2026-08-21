@@ -31,7 +31,7 @@ export type RecommendationExercise = {
   type: string;
 };
 
-export type WorkoutExercise = {
+export type RecommendedWorkoutExercise = {
   exercise: string;
   sets: number;
   reps: string;
@@ -67,7 +67,7 @@ export type TrainingRecommendation = {
       days: Array<{
         day: string;
         focus: string;
-        exercises: WorkoutExercise[];
+        exercises: RecommendedWorkoutExercise[];
       }>;
     }>;
   };
