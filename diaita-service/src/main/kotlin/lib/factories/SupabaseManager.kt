@@ -131,6 +131,53 @@ class SupabaseManager(val client: SupabaseClient) {
         }
     }
 
+    /** Selects every row whose [column] matches one of [values]; an empty [values] short-circuits. */
+    suspend inline fun <reified T : Any> selectWhereIn(
+        table: String,
+        column: String,
+        values: List<Any>,
+        columns: String = "*"
+    ): Result<List<T>> {
+        if (values.isEmpty()) {
+            return Result(emptyList(), null)
+        }
+
+        return try {
+            val result = client.postgrest[table]
+                .select(columns = Columns.raw(columns)) {
+                    filter {
+                        isIn(column, values)
+                    }
+                }
+                .decodeList<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Select where in error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    /** Selects rows matching every entry of [filters] (all combined with equality). */
+    suspend inline fun <reified T : Any> selectWhereAll(
+        table: String,
+        filters: Map<String, Any>,
+        columns: String = "*"
+    ): Result<List<T>> {
+        return try {
+            val result = client.postgrest[table]
+                .select(columns = Columns.raw(columns)) {
+                    filter {
+                        filters.forEach { (column, value) -> eq(column, value) }
+                    }
+                }
+                .decodeList<T>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Select where all error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
     suspend inline fun <reified T : Any> selectSingle(
         table: String,
         column: String,
@@ -174,6 +221,26 @@ class SupabaseManager(val client: SupabaseClient) {
 
 
 
+    /** Updates rows matching every entry of [filters] and returns the updated rows. */
+    suspend inline fun <reified TData : Any, reified TResult : Any> updateWhereAll(
+        table: String,
+        data: TData,
+        filters: Map<String, Any>
+    ): Result<List<TResult>> {
+        return try {
+            val result = client.postgrest[table].update(data) {
+                filter {
+                    filters.forEach { (column, value) -> eq(column, value) }
+                }
+                select()
+            }.decodeList<TResult>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Update where all error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
     suspend inline fun <reified T : Any> upsert(
         table: String,
         data: T,
@@ -191,6 +258,73 @@ class SupabaseManager(val client: SupabaseClient) {
             Result(result, null)
         } catch (e: Exception) {
             println("Upsert error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    /** Upserts a batch of rows in one round trip and returns the stored rows. */
+    suspend inline fun <reified TData : Any, reified TResult : Any> upsertMany(
+        table: String,
+        data: List<TData>,
+        onConflict: String? = null
+    ): Result<List<TResult>> {
+        if (data.isEmpty()) {
+            return Result(emptyList(), null)
+        }
+
+        return try {
+            val result = client.postgrest[table].upsert(data) {
+                if (!onConflict.isNullOrBlank()) {
+                    this.onConflict = onConflict
+                }
+                select()
+            }.decodeList<TResult>()
+            Result(result, null)
+        } catch (e: Exception) {
+            println("Upsert many error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    /** Deletes rows matching every entry of [filters]. */
+    suspend fun deleteWhereAll(
+        table: String,
+        filters: Map<String, Any>
+    ): Result<Unit> {
+        return try {
+            client.postgrest[table].delete {
+                filter {
+                    filters.forEach { (column, value) -> eq(column, value) }
+                }
+            }
+            Result(Unit, null)
+        } catch (e: Exception) {
+            println("Delete where all error: ${e.message}")
+            Result(null, e)
+        }
+    }
+
+    /** Deletes rows whose [column] matches one of [values]; an empty [values] short-circuits. */
+    suspend fun deleteWhereIn(
+        table: String,
+        column: String,
+        values: List<Any>,
+        scopeFilters: Map<String, Any> = emptyMap()
+    ): Result<Unit> {
+        if (values.isEmpty()) {
+            return Result(Unit, null)
+        }
+
+        return try {
+            client.postgrest[table].delete {
+                filter {
+                    scopeFilters.forEach { (scopeColumn, scopeValue) -> eq(scopeColumn, scopeValue) }
+                    isIn(column, values)
+                }
+            }
+            Result(Unit, null)
+        } catch (e: Exception) {
+            println("Delete where in error: ${e.message}")
             Result(null, e)
         }
     }

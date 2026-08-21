@@ -15,9 +15,14 @@ object PostgresFactory {
     const val GOALS_PRIORITIES_TABLE = "goals_priorities"
     const val TRAINING_BACKGROUND_TABLE = "training_background"
     const val NUTRITION_HISTORY_TABLE = "nutrition_history"
+    const val EXERCISES_TABLE = "exercises"
+    const val WORKOUTS_TABLE = "workouts"
+    const val WORKOUT_EXERCISES_TABLE = "workout_exercises"
 
     // ── Columns ──
     const val USER_ID_COLUMN = "user_id"
+    const val ID_COLUMN = "id"
+    const val WORKOUT_ID_COLUMN = "workout_id"
 
     // ── RPC Functions ──
     const val UPSERT_FULL_PROFILE_RPC = "upsert_full_profile"
