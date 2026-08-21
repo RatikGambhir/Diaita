@@ -101,3 +101,24 @@ export type NutritionDaySummary = {
   dinner: NutritionMealBucket;
   snacks: NutritionMealBucket;
 };
+
+export type NutritionDailyTotals = {
+  date: string;
+  totalCal: number;
+  totalProtein: number;
+  totalFat: number;
+  totalCarb: number;
+};
+
+export type NutritionDailySeries = {
+  start: string;
+  end: string;
+  days: NutritionDailyTotals[];
+  analytics: {
+    recCal: number | null;
+    recProtein: number | null;
+    recCarb: number | null;
+    recFat: number | null;
+    historical: NutritionHistoricalAverages | null;
+  };
+};

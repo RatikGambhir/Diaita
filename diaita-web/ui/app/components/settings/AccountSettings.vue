@@ -5,6 +5,7 @@ import CardContent from '~/components/ui/card/CardContent.vue'
 import Input from '~/components/ui/input/Input.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Label from '~/components/ui/label/Label.vue'
+import SettingsActions from '~/components/settings/SettingsActions.vue'
 import type { PlaceholderFor, SettingsFormDefaults, SettingsFormState } from '~/components/settings/types'
 
 const toast = useToast()
@@ -13,6 +14,12 @@ const props = defineProps<{
     formState: SettingsFormState;
     formDefaults: SettingsFormDefaults;
     placeholderFor: PlaceholderFor;
+    saving?: boolean;
+}>();
+
+const emit = defineEmits<{
+    save: [];
+    cancel: [];
 }>();
 const accountState = props.formState.account
 
@@ -63,12 +70,15 @@ const onIntegrateAppleHealth = () => {
                 <div class="grid gap-4 md:grid-cols-[220px,1fr]">
                     <div>
                         <Label>Email</Label>
-                        <p class="text-xs text-muted-foreground">Used for account access and notifications.</p>
+                        <p class="text-xs text-muted-foreground">
+                            The address you sign in with. Changing it requires re-verifying your account.
+                        </p>
                     </div>
                     <Input
-                        v-model="accountState.email"
+                        :model-value="accountState.email"
                         type="email"
-                        :placeholder="props.placeholderFor(props.formDefaults.account.email, 'e.g., jane.doe@example.com')"
+                        disabled
+                        placeholder="Sign in to see your email"
                     />
                 </div>
 
@@ -115,9 +125,10 @@ const onIntegrateAppleHealth = () => {
             </CardContent>
         </Card>
 
-        <div class="flex justify-end gap-3">
-            <Button variant="ghost" class="text-muted-foreground">Cancel</Button>
-            <Button class="bg-[#d96d54] text-white hover:bg-[#c75f49]">Save changes</Button>
-        </div>
+        <SettingsActions
+            :saving="saving"
+            @save="emit('save')"
+            @cancel="emit('cancel')"
+        />
     </div>
 </template>

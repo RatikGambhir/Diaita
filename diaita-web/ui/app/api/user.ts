@@ -30,4 +30,19 @@ export const userApi = {
     );
     return response.data;
   },
+
+  /**
+   * Regenerates the user's plan from their stored profile. `preferences` are extra free-form hints
+   * for this run only (what the plan generator form collects); they are not persisted.
+   */
+  async generateRecommendations(
+    userId: string,
+    preferences: Record<string, string> = {},
+  ): Promise<Recommendation> {
+    const response = await apiClient.post<Recommendation>(
+      `/users/${encodeURIComponent(userId)}/recommendations/generate`,
+      { preferences },
+    );
+    return response.data;
+  },
 };

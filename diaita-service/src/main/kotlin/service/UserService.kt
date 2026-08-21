@@ -67,18 +67,23 @@ class UserService(
     suspend fun genRecommendations(
         request: RegisterUserProfileRequestDto,
         config: GenerationConfigDto? = null,
-        systemInstruction: String? = null
+        systemInstruction: String? = null,
+        preferences: Map<String, String> = emptyMap()
     ): RecommendationDto? = genRecommendations(
         promptVariables = request.toPromptVariables(),
         config = config,
-        systemInstruction = systemInstruction
+        systemInstruction = systemInstruction,
+        preferences = preferences
     )
 
-    suspend fun generateAndSaveRecommendations(userId: String): ServiceResult<RecommendationDto> {
+    suspend fun generateAndSaveRecommendations(
+        userId: String,
+        preferences: Map<String, String> = emptyMap()
+    ): ServiceResult<RecommendationDto> {
         val profile = userRepo.getFullProfile(userId)
             ?: return ServiceResult.Failure("getFullProfile failed: profile not found for userId=$userId")
         val recommendation = try {
-            genRecommendations(profile)
+            genRecommendations(profile, preferences = preferences)
         } catch (e: Exception) {
             return ServiceResult.Failure("genRecommendations failed: ${e.message}")
         } ?: return ServiceResult.Failure("genRecommendations failed: returned null")
@@ -194,9 +199,10 @@ class UserService(
     private suspend fun genRecommendations(
         promptVariables: Map<String, Any>,
         config: GenerationConfigDto?,
-        systemInstruction: String?
+        systemInstruction: String?,
+        preferences: Map<String, String> = emptyMap()
     ): RecommendationDto? {
-        val prompt = buildStructuredRecommendationPrompt(promptVariables)
+        val prompt = buildStructuredRecommendationPrompt(promptVariables, preferences)
         return client.askQuestionStructured(
             prompt = prompt,
             responseSchema = ResponseSchemaBuilder.buildRecommendationSchema(),
@@ -206,9 +212,21 @@ class UserService(
         )
     }
 
-    private fun buildStructuredRecommendationPrompt(promptVariables: Map<String, Any>): String {
+    private fun buildStructuredRecommendationPrompt(
+        promptVariables: Map<String, Any>,
+        preferences: Map<String, String>
+    ): String {
         val prompt = PromptFactory.getPromptWithVariables("registerUserMetadata", promptVariables)
-        return "$prompt\n\nReturn only strict RFC 8259 JSON that matches the provided response schema. Do not use trailing commas."
+        val preferenceBlock = preferences
+            .filterValues { it.isNotBlank() }
+            .takeIf { it.isNotEmpty() }
+            ?.entries
+            ?.joinToString(separator = "\n", prefix = "\n\nAdditional preferences for this plan:\n") {
+                "- ${it.key}: ${it.value}"
+            }
+            .orEmpty()
+
+        return "$prompt$preferenceBlock\n\nReturn only strict RFC 8259 JSON that matches the provided response schema. Do not use trailing commas."
     }
 
     private companion object {

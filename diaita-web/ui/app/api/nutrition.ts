@@ -1,5 +1,6 @@
 import type {
   NutritionAutocompleteSuggestion,
+  NutritionDailySeries,
   NutritionDaySummary,
   NutritionFood,
   NutritionItemType,
@@ -132,6 +133,22 @@ export const nutritionApi = {
       "/nutrition/day-summary",
       {
         params: { userId, date },
+      },
+    );
+
+    return response.data;
+  },
+
+  /** Per-day macro totals across a date range, for the dashboard trend charts. */
+  async getDailySeries(
+    userId: string,
+    start: string,
+    end: string,
+  ): Promise<NutritionDailySeries> {
+    const response = await apiClient.get<NutritionDailySeries>(
+      "/nutrition/daily-series",
+      {
+        params: { userId, start, end },
       },
     );
 

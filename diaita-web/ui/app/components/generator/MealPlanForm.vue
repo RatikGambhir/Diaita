@@ -9,6 +9,7 @@ import {
   SelectValue
 } from '~/components/ui/select'
 import Button from '~/components/ui/button/Button.vue'
+import type { MealPlanGeneratorForm } from '~/types/GeneratorTypes'
 
 interface Props {
   loading?: boolean
@@ -19,18 +20,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  submit: [data: FormData]
+  submit: [data: MealPlanGeneratorForm]
 }>()
 
-interface FormData {
-  dietType: string
-  mealsPerDay: string
-  servings: string
-  restrictions: string
-  goal: string
-}
-
-const formData = ref<FormData>({
+const formData = ref<MealPlanGeneratorForm>({
   dietType: '',
   mealsPerDay: '',
   servings: '',

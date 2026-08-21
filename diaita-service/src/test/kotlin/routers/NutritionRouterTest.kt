@@ -20,6 +20,7 @@ import com.diaita.dto.SpoonacularNutrientDto
 import com.diaita.dto.SpoonacularNutritionDto
 import com.diaita.lib.clients.NutritionRestClient
 import com.diaita.repo.NutritionRepo
+import com.diaita.repo.RecommendationRepo
 import com.diaita.service.NutritionService
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -45,9 +46,11 @@ class NutritionRouterTest {
 
     private val json = Json
     private val fakeClient = FakeNutritionClient()
+    private val recommendationRepo = mockk<RecommendationRepo>(relaxed = true)
     private val container = Container().apply {
         bind<NutritionRepo>(mockk(relaxed = true))
         bind<NutritionRestClient>(fakeClient)
+        bind<RecommendationRepo>(recommendationRepo)
     }
     private val controller = container.get<NutritionController>()
 

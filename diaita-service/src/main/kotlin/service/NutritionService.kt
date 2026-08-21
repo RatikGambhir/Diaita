@@ -21,7 +21,11 @@ import com.diaita.lib.mappings.sortedByFoodName
 import com.diaita.lib.mappings.toFoodAutocompleteSuggestionDto
 import com.diaita.lib.mappings.toFoodDto
 import com.diaita.lib.mappings.toNormalizedRequest
+import com.diaita.dto.NutritionDailySeriesResponseDto
+import com.diaita.dto.NutritionDailyTotalsDto
+import com.diaita.dto.RecommendationDto
 import com.diaita.repo.NutritionRepo
+import com.diaita.repo.RecommendationRepo
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -31,7 +35,8 @@ import java.time.ZoneOffset
 
 class NutritionService(
     private val nutritionRepo: NutritionRepo,
-    private val nutritionClient: NutritionRestClient
+    private val nutritionClient: NutritionRestClient,
+    private val recommendationRepo: RecommendationRepo
 ) {
     enum class FoodSource {
         INGREDIENT,
@@ -56,11 +61,7 @@ class NutritionService(
             totalProtein = dayMealContexts.sumOf { context -> context.items.sumOf(MealItemRowEntity::proteinG) },
             totalFat = dayMealContexts.sumOf { context -> context.items.sumOf(MealItemRowEntity::fatG) },
             totalCarb = dayMealContexts.sumOf { context -> context.items.sumOf(MealItemRowEntity::carbsG) },
-            analytics = NutritionAnalyticsResponseDto(
-                recCal = null,
-                recProtein = null,
-                recCarb = null,
-                recFat = null,
+            analytics = recommendedTargets(normalizedUserId).copy(
                 historical = historicalDailyAverages(historicalMealContexts)
             ),
             breakfast = buildMealBucket(dayMealContexts, historicalMealContexts, "breakfast"),
@@ -262,6 +263,71 @@ class NutritionService(
         return MealBucketResponseDto(
             items = dayItems,
             historical = historicalMealBucketAverages(historicalMealContexts, mealType)
+        )
+    }
+
+    /**
+     * Per-day macro totals across a date range, derived from the same two table reads the day
+     * summary uses — so a 90-day chart costs one round trip, not ninety.
+     */
+    suspend fun getNutritionDailySeries(
+        userId: String,
+        start: LocalDate,
+        end: LocalDate
+    ): NutritionDailySeriesResponseDto {
+        val normalizedUserId = userId.trim()
+        val meals = nutritionRepo.getMealsForUser(normalizedUserId)
+        val itemsByMealId = nutritionRepo.getMealItemsForUser(normalizedUserId).groupBy { it.mealId }
+
+        val totalsByDate = meals
+            .mapNotNull { meal ->
+                val eatenOn = meal.eatenAt.toUtcLocalDate() ?: return@mapNotNull null
+                if (eatenOn < start || eatenOn > end) return@mapNotNull null
+                eatenOn to MealContext(meal, itemsByMealId[meal.id].orEmpty())
+            }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, contexts) -> contexts.toMacroTotals() }
+
+        // Days with nothing logged are emitted as zeroes so the series has no gaps to interpolate.
+        val days = generateSequence(start) { current ->
+            current.plusDays(1).takeIf { !it.isAfter(end) }
+        }.map { date ->
+            val totals = totalsByDate[date]
+            NutritionDailyTotalsDto(
+                date = date.toString(),
+                totalCal = totals?.calories ?: 0.0,
+                totalProtein = totals?.protein ?: 0.0,
+                totalFat = totals?.fat ?: 0.0,
+                totalCarb = totals?.carbs ?: 0.0
+            )
+        }.toList()
+
+        return NutritionDailySeriesResponseDto(
+            start = start.toString(),
+            end = end.toString(),
+            days = days,
+            analytics = recommendedTargets(normalizedUserId).copy(
+                historical = totalsByDate.values.toList().toHistoricalAverages()
+            )
+        )
+    }
+
+    /**
+     * Daily calorie and macro targets from the user's stored recommendation. Returns empty analytics
+     * when no recommendation has been generated yet.
+     */
+    private suspend fun recommendedTargets(userId: String): NutritionAnalyticsResponseDto {
+        val recommendation: RecommendationDto = runCatching {
+            recommendationRepo.getRecommendationByUserId(userId)
+        }.getOrNull() ?: return NutritionAnalyticsResponseDto()
+
+        val macros = recommendation.nutrition.macros.trainingDay
+
+        return NutritionAnalyticsResponseDto(
+            recCal = recommendation.nutrition.calories.baseline.toDouble(),
+            recProtein = macros.protein.toDouble(),
+            recCarb = macros.carbs.toDouble(),
+            recFat = macros.fat.toDouble()
         )
     }
 

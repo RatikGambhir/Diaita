@@ -1,42 +1,43 @@
 <script setup lang="ts">
-import { GripVertical } from 'lucide-vue-next'
+import { GripVertical, Trash2 } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 import Input from '~/components/ui/input/Input.vue'
 
-export type WorkoutCategory = 'Lifting' | 'Cardio' | 'Mobility'
-
-export interface WorkoutExercise {
+/** The shape the editor works in: two free-text metric columns per row, decoded on save. */
+export interface WorkoutExerciseDraft {
   id: string
   name: string
-  category: WorkoutCategory
-  col2Value: string
-  col3Value: string
+  primary: string
+  secondary: string
 }
 
 interface Props {
-  exercise: WorkoutExercise
-  col2Label: string
-  col3Label: string
+  draft: WorkoutExerciseDraft
+  primaryLabel: string
+  secondaryLabel: string
   editable?: boolean
   draggable?: boolean
+  removable?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   editable: false,
   draggable: false,
+  removable: false,
 })
 
 const emit = defineEmits<{
   'drag-start': [event: DragEvent]
   'drag-end': []
-  'update:exercise': [exercise: WorkoutExercise]
+  'update:draft': [draft: WorkoutExerciseDraft]
   'save': []
   'cancel': []
+  'remove': []
 }>()
 
-const updateField = (field: 'name' | 'col2Value' | 'col3Value', value: string) => {
-  emit('update:exercise', {
-    ...props.exercise,
+const updateField = (field: 'name' | 'primary' | 'secondary', value: string) => {
+  emit('update:draft', {
+    ...props.draft,
     [field]: value,
   })
 }
@@ -44,7 +45,7 @@ const updateField = (field: 'name' | 'col2Value' | 'col3Value', value: string) =
 
 <template>
   <div
-    class="select-none rounded-xl p-4 shadow-sm transition-all duration-200 bg-card"
+    class="group select-none rounded-xl p-4 shadow-sm transition-all duration-200 bg-card"
     :draggable="draggable && !editable"
     @dragstart="emit('drag-start', $event)"
     @dragend="emit('drag-end')"
@@ -59,38 +60,49 @@ const updateField = (field: 'name' | 'col2Value' | 'col3Value', value: string) =
           <p class="text-sm text-muted-foreground">Exercise</p>
           <Input
             v-if="editable"
-            :model-value="exercise.name"
+            :model-value="draft.name"
             placeholder="Exercise name"
             class="mt-1"
             @update:model-value="updateField('name', String($event))"
           />
-          <p v-else class="mt-1 text-foreground">{{ exercise.name }}</p>
+          <p v-else class="mt-1 text-foreground">{{ draft.name }}</p>
         </div>
 
         <div>
-          <p class="text-sm text-muted-foreground">{{ col2Label }}</p>
+          <p class="text-sm text-muted-foreground">{{ primaryLabel }}</p>
           <Input
             v-if="editable"
-            :model-value="exercise.col2Value"
-            :placeholder="col2Label"
+            :model-value="draft.primary"
+            :placeholder="primaryLabel"
             class="mt-1"
-            @update:model-value="updateField('col2Value', String($event))"
+            @update:model-value="updateField('primary', String($event))"
           />
-          <p v-else class="mt-1 text-foreground">{{ exercise.col2Value }}</p>
+          <p v-else class="mt-1 text-foreground">{{ draft.primary }}</p>
         </div>
 
         <div>
-          <p class="text-sm text-muted-foreground">{{ col3Label }}</p>
+          <p class="text-sm text-muted-foreground">{{ secondaryLabel }}</p>
           <Input
             v-if="editable"
-            :model-value="exercise.col3Value"
-            :placeholder="col3Label"
+            :model-value="draft.secondary"
+            :placeholder="secondaryLabel"
             class="mt-1"
-            @update:model-value="updateField('col3Value', String($event))"
+            @update:model-value="updateField('secondary', String($event))"
           />
-          <p v-else class="mt-1 text-foreground">{{ exercise.col3Value }}</p>
+          <p v-else class="mt-1 text-foreground">{{ draft.secondary }}</p>
         </div>
       </div>
+
+      <Button
+        v-if="removable && !editable"
+        variant="ghost"
+        size="icon"
+        class="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+        aria-label="Remove exercise"
+        @click="emit('remove')"
+      >
+        <Trash2 class="h-4 w-4 text-destructive" />
+      </Button>
     </div>
 
     <div v-if="editable" class="mt-3 flex justify-end gap-2">

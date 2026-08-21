@@ -1,28 +1,68 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Dumbbell, UtensilsCrossed, Sparkles } from 'lucide-vue-next'
+import { Dumbbell, UtensilsCrossed } from 'lucide-vue-next'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import WorkoutForm from './WorkoutForm.vue'
 import MealPlanForm from './MealPlanForm.vue'
+import { userApi } from '~/api/user'
+import { useToast } from '~/composables/useToast'
+import { useUserStore } from '~/stores/useUserStore'
+import type { MealPlanGeneratorForm, WorkoutGeneratorForm } from '~/types/GeneratorTypes'
 
 const activeTab = ref('workout')
 const isLoading = ref(false)
 
-const handleWorkoutSubmit = (data: any) => {
+const userStore = useUserStore()
+const toast = useToast()
+
+/**
+ * Both forms feed the same endpoint: the plan is regenerated from the stored profile, with the
+ * form's selections passed along as extra preferences for this run.
+ */
+const generatePlan = async (
+  preferences: Record<string, string>,
+  successTitle: string,
+) => {
+  const userId = userStore.getUser?.id?.trim()
+
+  if (!userId) {
+    toast.add({
+      title: 'Unable to generate',
+      description: 'No signed-in user was found.',
+      color: 'error',
+    })
+    return
+  }
+
   isLoading.value = true
-  // Simulate API call
-  setTimeout(() => {
+
+  try {
+    const recommendation = await userApi.generateRecommendations(userId, preferences)
+    userStore.setRecommendation(recommendation)
+
+    toast.add({
+      title: successTitle,
+      description: 'Your updated plan is available on your profile.',
+      color: 'success',
+    })
+  } catch (error) {
+    toast.add({
+      title: 'Unable to generate',
+      description:
+        error instanceof Error ? error.message : 'The plan could not be generated.',
+      color: 'error',
+    })
+  } finally {
     isLoading.value = false
-    console.log('Workout form submitted:', data)
-  }, 2000)
+  }
 }
 
-const handleMealPlanSubmit = (data: any) => {
-  isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-    console.log('Meal plan form submitted:', data)
-  }, 2000)
+const handleWorkoutSubmit = (data: WorkoutGeneratorForm) => {
+  void generatePlan(data, 'Workout plan generated')
+}
+
+const handleMealPlanSubmit = (data: MealPlanGeneratorForm) => {
+  void generatePlan(data, 'Meal plan generated')
 }
 </script>
 

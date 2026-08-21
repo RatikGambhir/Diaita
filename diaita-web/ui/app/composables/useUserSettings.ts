@@ -1,112 +1,129 @@
-export interface UserSettings {
-  profile: {
-    name: string
-    email: string
-    bio?: string
-  }
-  preferences: {
-    theme: 'light' | 'dark' | 'system'
-    language: string
-    timezone: string
-  }
-  workout: {
-    units: 'metric' | 'imperial'
-    defaultView: 'daily' | 'weekly' | 'monthly'
-    restTimerSound: boolean
-    autoStartRest: boolean
-  }
-  notifications: {
-    email: boolean
-    push: boolean
-    workoutReminders: boolean
-    weeklyReport: boolean
-    achievementAlerts: boolean
-  }
-  privacy: {
-    profileVisibility: 'public' | 'friends' | 'private'
-    showWorkouts: boolean
-    showStats: boolean
-  }
-}
+import { reactive, ref } from "vue";
+import { settingsApi } from "~/api/settings";
+import { useToast } from "~/composables/useToast";
+import { useUserStore } from "~/stores/useUserStore";
+import type {
+  UserSettings,
+  UserSettingsPage,
+  UserSettingsPayloads,
+} from "~/types/SettingsTypes";
 
-const defaultSettings: UserSettings = {
-  profile: {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    bio: 'Fitness enthusiast and workout tracker'
-  },
-  preferences: {
-    theme: 'system',
-    language: 'en',
-    timezone: 'UTC'
-  },
-  workout: {
-    units: 'metric',
-    defaultView: 'weekly',
-    restTimerSound: true,
-    autoStartRest: true
-  },
-  notifications: {
-    email: true,
-    push: true,
-    workoutReminders: true,
-    weeklyReport: true,
-    achievementAlerts: true
-  },
-  privacy: {
-    profileVisibility: 'friends',
-    showWorkouts: true,
-    showStats: true
-  }
-}
+export const USER_SETTINGS_PAGES: UserSettingsPage[] = [
+  "basic-demographics",
+  "activity-lifestyle",
+  "goals-priorities",
+  "training-background",
+  "nutrition-history",
+];
 
+const emptySettings = (): UserSettings => ({
+  "basic-demographics": null,
+  "activity-lifestyle": null,
+  "goals-priorities": null,
+  "training-background": null,
+  "nutrition-history": null,
+});
+
+const describeError = (error: unknown, fallback: string): string => {
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const response = (error as { response?: { data?: unknown } }).response;
+    if (typeof response?.data === "string" && response.data.trim()) {
+      return response.data;
+    }
+  }
+
+  return error instanceof Error ? error.message : fallback;
+};
+
+/**
+ * Reads and writes the user's settings sections through the service. Sections load in parallel and
+ * each saves independently, so one tab's failure never discards another tab's edits.
+ */
 export const useUserSettings = () => {
-  // Use useCookie for SSR-safe persistence
-  const settingsCookie = useCookie<UserSettings>('user-settings', {
-    default: () => defaultSettings,
-    maxAge: 60 * 60 * 24 * 365, // 1 year
-    sameSite: 'lax'
-  })
+  const userStore = useUserStore();
+  const toast = useToast();
 
-  const settings = ref<UserSettings>(settingsCookie.value || defaultSettings)
+  const settings = reactive<UserSettings>(emptySettings());
+  const isLoading = ref(false);
+  const savingPage = ref<UserSettingsPage | null>(null);
+  const loadError = ref<string | null>(null);
 
-  // Watch for changes and persist to cookie
-  watch(settings, (newSettings) => {
-    settingsCookie.value = newSettings
-  }, { deep: true })
+  const requireUserId = (): string | null => userStore.getUser?.id?.trim() ?? null;
 
-  const updateProfile = (profile: Partial<UserSettings['profile']>) => {
-    settings.value.profile = { ...settings.value.profile, ...profile }
-  }
+  const loadSettings = async () => {
+    const userId = requireUserId();
+    if (!userId) {
+      Object.assign(settings, emptySettings());
+      return;
+    }
 
-  const updatePreferences = (preferences: Partial<UserSettings['preferences']>) => {
-    settings.value.preferences = { ...settings.value.preferences, ...preferences }
-  }
+    isLoading.value = true;
+    loadError.value = null;
 
-  const updateWorkout = (workout: Partial<UserSettings['workout']>) => {
-    settings.value.workout = { ...settings.value.workout, ...workout }
-  }
+    try {
+      const sections = await Promise.all(
+        USER_SETTINGS_PAGES.map((page) => settingsApi.get(userId, page)),
+      );
 
-  const updateNotifications = (notifications: Partial<UserSettings['notifications']>) => {
-    settings.value.notifications = { ...settings.value.notifications, ...notifications }
-  }
+      USER_SETTINGS_PAGES.forEach((page, index) => {
+        // Indices line up with USER_SETTINGS_PAGES, but TypeScript can't narrow the union per page.
+        settings[page] = sections[index] as never;
+      });
+    } catch (error) {
+      Object.assign(settings, emptySettings());
+      loadError.value = describeError(error, "Failed to load your settings.");
+      toast.add({
+        title: "Unable to load settings",
+        description: loadError.value,
+        color: "error",
+      });
+    } finally {
+      isLoading.value = false;
+    }
+  };
 
-  const updatePrivacy = (privacy: Partial<UserSettings['privacy']>) => {
-    settings.value.privacy = { ...settings.value.privacy, ...privacy }
-  }
+  const saveSection = async <Page extends UserSettingsPage>(
+    page: Page,
+    payload: UserSettingsPayloads[Page],
+    label: string,
+  ): Promise<boolean> => {
+    const userId = requireUserId();
+    if (!userId) {
+      toast.add({
+        title: "Unable to save settings",
+        description: "No signed-in user was found.",
+        color: "error",
+      });
+      return false;
+    }
 
-  const resetSettings = () => {
-    settings.value = { ...defaultSettings }
-  }
+    savingPage.value = page;
+
+    try {
+      settings[page] = (await settingsApi.update(userId, page, payload)) as never;
+      toast.add({
+        title: `${label} saved`,
+        color: "success",
+      });
+      return true;
+    } catch (error) {
+      toast.add({
+        title: `Unable to save ${label.toLowerCase()}`,
+        description: describeError(error, "The change was not saved."),
+        color: "error",
+      });
+      return false;
+    } finally {
+      savingPage.value = null;
+    }
+  };
 
   return {
     settings,
-    updateProfile,
-    updatePreferences,
-    updateWorkout,
-    updateNotifications,
-    updatePrivacy,
-    resetSettings
-  }
-}
-
+    isLoading,
+    savingPage,
+    loadError,
+    loadSettings,
+    saveSection,
+  };
+};

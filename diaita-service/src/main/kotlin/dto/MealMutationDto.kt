@@ -218,6 +218,23 @@ data class NutritionAnalyticsResponseDto(
 )
 
 @Serializable
+data class NutritionDailyTotalsDto(
+    val date: String,
+    val totalCal: Double,
+    val totalProtein: Double,
+    val totalFat: Double,
+    val totalCarb: Double
+)
+
+@Serializable
+data class NutritionDailySeriesResponseDto(
+    val start: String,
+    val end: String,
+    val days: List<NutritionDailyTotalsDto>,
+    val analytics: NutritionAnalyticsResponseDto = NutritionAnalyticsResponseDto()
+)
+
+@Serializable
 data class HistoricalMacroAveragesResponseDto(
     val avgCal: Double? = null,
     val avgProtein: Double? = null,

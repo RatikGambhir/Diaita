@@ -1,51 +1,95 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import { Plus } from 'lucide-vue-next'
-import WorkoutExerciseItem, { type WorkoutCategory, type WorkoutExercise } from '~/components/workouts/WorkoutExerciseItem.vue'
+import { Plus, Search } from 'lucide-vue-next'
+import Button from '~/components/ui/button/Button.vue'
+import WorkoutExerciseItem, { type WorkoutExerciseDraft } from '~/components/workouts/WorkoutExerciseItem.vue'
+import ExerciseSelectModal from '~/components/ExerciseSelectModal.vue'
+import type {
+  ExerciseLibraryEntry,
+  UpsertWorkoutExercise,
+  WorkoutExercise,
+  WorkoutExerciseCategory,
+} from '~/types/WorkoutTypes'
+import {
+  WORKOUT_CATEGORY_LABELS,
+  exercisePrimaryMetric,
+  exerciseSecondaryMetric,
+  toUpsertExercise,
+} from '~/utils/workouts'
 
-const exercises = defineModel<WorkoutExercise[]>({ required: true })
+const props = defineProps<{
+  exercises: WorkoutExercise[]
+  saving?: boolean
+}>()
 
-const categoryOrder: WorkoutCategory[] = ['Lifting', 'Cardio', 'Mobility']
+/**
+ * The list never mutates its own copy. Every change is emitted so the page can persist it and then
+ * re-render from what the service actually stored.
+ */
+const emit = defineEmits<{
+  'upsert': [exercises: UpsertWorkoutExercise[]]
+  'remove': [exerciseId: string]
+}>()
 
-const groupedExercises = computed(() => {
-  return categoryOrder.map((category) => ({
+const categoryOrder: WorkoutExerciseCategory[] = ['lifting', 'cardio', 'mobility']
+
+const groupedExercises = computed(() =>
+  categoryOrder.map((category) => ({
     category,
-    items: exercises.value.filter((exercise) => exercise.category === category),
-  }))
-})
+    label: WORKOUT_CATEGORY_LABELS[category],
+    items: props.exercises
+      .filter((exercise) => exercise.category === category)
+      .sort((a, b) => a.position - b.position),
+  })),
+)
 
-const getCol2Label = (category: WorkoutCategory) => {
-  return category === 'Lifting' ? 'Reps' : 'Duration'
-}
+const getPrimaryLabel = (category: WorkoutExerciseCategory) =>
+  category === 'lifting' ? 'Sets x Reps' : 'Duration (min)'
 
-const getCol3Label = (category: WorkoutCategory) => {
-  if (category === 'Lifting') {
-    return 'Weight'
+const getSecondaryLabel = (category: WorkoutExerciseCategory) => {
+  if (category === 'lifting') {
+    return 'Weight (kg)'
   }
-  if (category === 'Cardio') {
+  if (category === 'cardio') {
     return 'Intensity'
   }
   return 'Target(s)'
 }
 
-const creatingCategory = ref<WorkoutCategory | null>(null)
-const draftByCategory = reactive<Record<WorkoutCategory, WorkoutExercise>>({
-  Lifting: { id: 'draft-lifting', name: '', category: 'Lifting', col2Value: '', col3Value: '' },
-  Cardio: { id: 'draft-cardio', name: '', category: 'Cardio', col2Value: '', col3Value: '' },
-  Mobility: { id: 'draft-mobility', name: '', category: 'Mobility', col2Value: '', col3Value: '' },
+const toDraft = (exercise: WorkoutExercise): WorkoutExerciseDraft => ({
+  id: exercise.id,
+  name: exercise.name,
+  primary: exercisePrimaryMetric(exercise),
+  secondary: exerciseSecondaryMetric(exercise),
 })
 
-const resetDraft = (category: WorkoutCategory) => {
-  draftByCategory[category] = {
-    id: `draft-${category.toLowerCase()}`,
-    name: '',
-    category,
-    col2Value: '',
-    col3Value: '',
-  }
+const emptyDraft = (category: WorkoutExerciseCategory): WorkoutExerciseDraft => ({
+  id: `draft-${category}`,
+  name: '',
+  primary: '',
+  secondary: '',
+})
+
+const creatingCategory = ref<WorkoutExerciseCategory | null>(null)
+const pickerCategory = ref<WorkoutExerciseCategory | null>(null)
+const isPickerOpen = ref(false)
+const draftByCategory = reactive<Record<WorkoutExerciseCategory, WorkoutExerciseDraft>>({
+  lifting: emptyDraft('lifting'),
+  cardio: emptyDraft('cardio'),
+  mobility: emptyDraft('mobility'),
+})
+const draftExerciseId = reactive<Record<WorkoutExerciseCategory, number | null>>({
+  lifting: null,
+  cardio: null,
+  mobility: null,
+})
+
+const resetDraft = (category: WorkoutExerciseCategory) => {
+  draftByCategory[category] = emptyDraft(category)
+  draftExerciseId[category] = null
 }
 
-const startCreating = (category: WorkoutCategory) => {
+const startCreating = (category: WorkoutExerciseCategory) => {
   resetDraft(category)
   creatingCategory.value = category
 }
@@ -58,51 +102,80 @@ const cancelCreating = () => {
   creatingCategory.value = null
 }
 
-const insertAtCategoryEnd = (item: WorkoutExercise) => {
-  const category = item.category
-  const categoryIndexes = exercises.value
-    .map((exercise, index) => (exercise.category === category ? index : -1))
-    .filter((index) => index >= 0)
+const openPicker = (category: WorkoutExerciseCategory) => {
+  pickerCategory.value = category
+  isPickerOpen.value = true
+}
 
-  if (categoryIndexes.length > 0) {
-    exercises.value.splice(categoryIndexes[categoryIndexes.length - 1] + 1, 0, item)
+const handlePickerSelect = (entry: ExerciseLibraryEntry) => {
+  const category = pickerCategory.value
+  if (!category) {
     return
   }
 
-  const currentCategoryIndex = categoryOrder.indexOf(category)
-  let insertIndex = exercises.value.length
-
-  for (let i = currentCategoryIndex + 1; i < categoryOrder.length; i += 1) {
-    const nextCategoryIndex = exercises.value.findIndex((exercise) => exercise.category === categoryOrder[i])
-    if (nextCategoryIndex >= 0) {
-      insertIndex = nextCategoryIndex
-      break
-    }
-  }
-
-  exercises.value.splice(insertIndex, 0, item)
+  startCreating(category)
+  draftByCategory[category] = { ...draftByCategory[category], name: entry.exercise }
+  draftExerciseId[category] = entry.id
 }
 
-// TODO: Remove this once we integrate with the backend api, ideally when we save we would re-pull the data
-const saveDraft = (category: WorkoutCategory) => {
+const nextPosition = () =>
+  props.exercises.reduce((highest, exercise) => Math.max(highest, exercise.position), -1) + 1
+
+const saveDraft = (category: WorkoutExerciseCategory) => {
   const draft = draftByCategory[category]
   if (!draft.name.trim()) {
     return
   }
 
-  insertAtCategoryEnd({
-    ...draft,
-    id: `${category.toLowerCase()}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-  })
+  const template: WorkoutExercise = {
+    id: draft.id,
+    exerciseId: draftExerciseId[category],
+    name: draft.name,
+    category,
+    position: nextPosition(),
+    sets: null,
+    reps: null,
+    weightKg: null,
+    durationSeconds: null,
+    intensity: null,
+    target: null,
+    notes: null,
+  }
+
+  emit('upsert', [toUpsertExercise(template, draft)])
   resetDraft(category)
   creatingCategory.value = null
 }
 
-const draggingId = ref<string | null>(null)
-const draggingCategory = ref<WorkoutCategory | null>(null)
-const activeDropZone = ref<{ category: WorkoutCategory; index: number } | null>(null)
+const updateExistingDraft = (exercise: WorkoutExercise, draft: WorkoutExerciseDraft) => {
+  emit('upsert', [toUpsertExercise(exercise, draft)])
+}
 
-const onDragStart = (id: string, category: WorkoutCategory, event: DragEvent) => {
+const editingId = ref<string | null>(null)
+const editingDraft = ref<WorkoutExerciseDraft | null>(null)
+
+const startEditing = (exercise: WorkoutExercise) => {
+  editingId.value = exercise.id
+  editingDraft.value = toDraft(exercise)
+}
+
+const cancelEditing = () => {
+  editingId.value = null
+  editingDraft.value = null
+}
+
+const commitEditing = (exercise: WorkoutExercise) => {
+  if (editingDraft.value) {
+    updateExistingDraft(exercise, editingDraft.value)
+  }
+  cancelEditing()
+}
+
+const draggingId = ref<string | null>(null)
+const draggingCategory = ref<WorkoutExerciseCategory | null>(null)
+const activeDropZone = ref<{ category: WorkoutExerciseCategory; index: number } | null>(null)
+
+const onDragStart = (id: string, category: WorkoutExerciseCategory, event: DragEvent) => {
   draggingId.value = id
   draggingCategory.value = category
   if (event.dataTransfer) {
@@ -117,7 +190,7 @@ const clearDragState = () => {
   activeDropZone.value = null
 }
 
-const onDragOverDropZone = (category: WorkoutCategory, index: number, event: DragEvent) => {
+const onDragOverDropZone = (category: WorkoutExerciseCategory, index: number, event: DragEvent) => {
   if (!draggingId.value || draggingCategory.value !== category) {
     return
   }
@@ -128,29 +201,50 @@ const onDragOverDropZone = (category: WorkoutCategory, index: number, event: Dra
   }
 }
 
-const reorderWithinCategory = (category: WorkoutCategory, sourceId: string, targetIndex: number) => {
-  const categoryItems = exercises.value.filter((exercise) => exercise.category === category)
+/**
+ * Reordering rewrites the positions of the affected category and persists all of them, so the order
+ * survives a reload rather than living only in local state.
+ */
+const reorderWithinCategory = (
+  category: WorkoutExerciseCategory,
+  sourceId: string,
+  targetIndex: number,
+) => {
+  const categoryItems = props.exercises
+    .filter((exercise) => exercise.category === category)
+    .sort((a, b) => a.position - b.position)
+
   const sourceIndex = categoryItems.findIndex((exercise) => exercise.id === sourceId)
   if (sourceIndex < 0) {
     return
   }
 
   const [moved] = categoryItems.splice(sourceIndex, 1)
+  if (!moved) {
+    return
+  }
+
   const normalizedTarget = Math.max(0, Math.min(targetIndex, categoryItems.length))
   categoryItems.splice(normalizedTarget, 0, moved)
 
-  let pointer = 0
-  exercises.value = exercises.value.map((exercise) => {
-    if (exercise.category !== category) {
-      return exercise
-    }
-    const replacement = categoryItems[pointer]
-    pointer += 1
-    return replacement
-  })
+  const slots = props.exercises
+    .filter((exercise) => exercise.category === category)
+    .map((exercise) => exercise.position)
+    .sort((a, b) => a - b)
+
+  const repositioned = categoryItems
+    .map((exercise, index) => ({ exercise, position: slots[index] ?? exercise.position }))
+    .filter(({ exercise, position }) => exercise.position !== position)
+    .map(({ exercise, position }) =>
+      toUpsertExercise({ ...exercise, position }, toDraft(exercise)),
+    )
+
+  if (repositioned.length > 0) {
+    emit('upsert', repositioned)
+  }
 }
 
-const onDropZoneDrop = (category: WorkoutCategory, index: number, event: DragEvent) => {
+const onDropZoneDrop = (category: WorkoutExerciseCategory, index: number, event: DragEvent) => {
   if (!draggingId.value || draggingCategory.value !== category) {
     return
   }
@@ -159,21 +253,22 @@ const onDropZoneDrop = (category: WorkoutCategory, index: number, event: DragEve
   clearDragState()
 }
 
-const isDropZoneActive = (category: WorkoutCategory, index: number) => {
-  return activeDropZone.value?.category === category && activeDropZone.value?.index === index
-}
+const isDropZoneActive = (category: WorkoutExerciseCategory, index: number) =>
+  activeDropZone.value?.category === category && activeDropZone.value?.index === index
 </script>
 
 <template>
   <div>
     <div>
       <h2 class="mb-2 text-lg font-semibold text-foreground">Exercise Plan</h2>
-      <p class="mb-4 text-sm text-muted-foreground">Hold and drag to reorder exercises</p>
+      <p class="mb-4 text-sm text-muted-foreground">
+        Hold and drag to reorder exercises. Click an exercise to edit it.
+      </p>
     </div>
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <div v-for="group in groupedExercises" :key="group.category" class="mb-6 min-w-0">
         <div class="flex min-w-0 flex-col">
-          <h3 class="mb-3 font-semibold text-primary">{{ group.category }}</h3>
+          <h3 class="mb-3 font-semibold text-primary">{{ group.label }}</h3>
 
           <div class="space-y-2">
             <template v-for="(item, index) in group.items" :key="item.id">
@@ -185,12 +280,27 @@ const isDropZoneActive = (category: WorkoutCategory, index: number) => {
               />
 
               <WorkoutExerciseItem
-                :exercise="item"
-                :col2-label="getCol2Label(group.category)"
-                :col3-label="getCol3Label(group.category)"
+                v-if="editingId === item.id && editingDraft"
+                :draft="editingDraft"
+                :primary-label="getPrimaryLabel(group.category)"
+                :secondary-label="getSecondaryLabel(group.category)"
+                editable
+                @update:draft="editingDraft = $event"
+                @save="commitEditing(item)"
+                @cancel="cancelEditing"
+              />
+
+              <WorkoutExerciseItem
+                v-else
+                :draft="toDraft(item)"
+                :primary-label="getPrimaryLabel(group.category)"
+                :secondary-label="getSecondaryLabel(group.category)"
                 :draggable="true"
+                removable
                 @drag-start="onDragStart(item.id, group.category, $event)"
                 @drag-end="clearDragState"
+                @remove="emit('remove', item.id)"
+                @click="startEditing(item)"
               />
             </template>
 
@@ -202,25 +312,40 @@ const isDropZoneActive = (category: WorkoutCategory, index: number) => {
             />
 
             <Transition name="morph" mode="out-in">
-              <button
+              <div
                 v-if="creatingCategory !== group.category"
                 :key="`add-${group.category}`"
-                type="button"
-                class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-3 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
-                @click="startCreating(group.category)"
+                class="flex gap-2"
               >
-                <Plus class="h-4 w-4" />
-                Add exercise
-              </button>
+                <button
+                  type="button"
+                  class="flex flex-1 items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-3 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+                  :disabled="saving"
+                  @click="startCreating(group.category)"
+                >
+                  <Plus class="h-4 w-4" />
+                  Add exercise
+                </button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  class="h-auto"
+                  :disabled="saving"
+                  aria-label="Search exercise library"
+                  @click="openPicker(group.category)"
+                >
+                  <Search class="h-4 w-4" />
+                </Button>
+              </div>
 
               <WorkoutExerciseItem
                 v-else
                 :key="`draft-${group.category}`"
-                :exercise="draftByCategory[group.category]"
-                :col2-label="getCol2Label(group.category)"
-                :col3-label="getCol3Label(group.category)"
+                :draft="draftByCategory[group.category]"
+                :primary-label="getPrimaryLabel(group.category)"
+                :secondary-label="getSecondaryLabel(group.category)"
                 editable
-                @update:exercise="draftByCategory[group.category] = $event"
+                @update:draft="draftByCategory[group.category] = $event"
                 @save="saveDraft(group.category)"
                 @cancel="cancelCreating"
               />
@@ -229,6 +354,8 @@ const isDropZoneActive = (category: WorkoutCategory, index: number) => {
         </div>
       </div>
     </div>
+
+    <ExerciseSelectModal v-model="isPickerOpen" @select="handlePickerSelect" />
   </div>
 </template>
 

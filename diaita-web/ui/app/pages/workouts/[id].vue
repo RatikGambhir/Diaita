@@ -1,152 +1,214 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { ArrowLeft, Calendar, Clock, Dumbbell, MoreHorizontal, Target, TrendingUp, Zap } from 'lucide-vue-next'
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Dumbbell,
+  Loader2,
+  MoreHorizontal,
+  Target,
+  Timer,
+  TrendingUp,
+  Trash2,
+} from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
-import WorkoutSummaryCard from '~/components/workouts/WorkoutSummaryCard.vue'
+import Input from '~/components/ui/input/Input.vue'
 import WorkoutStatCarousel from '~/components/workouts/WorkoutStatCarousel.vue'
 import WorkoutExerciseList from '~/components/workouts/WorkoutExerciseList.vue'
-import type { WorkoutExercise } from '~/components/workouts/WorkoutExerciseItem.vue'
-
-interface WorkoutDetail {
-  id: number
-  name: string
-  date: string
-  duration: string
-  summary: {
-    progress: string
-    intensity: string
-    achievement: string
-  }
-  stats: {
-    totalVolume: string
-    totalVolumeChange: string
-    caloriesBurned: string
-    caloriesChange: string
-    durationChange: string
-  }
-  exercises: WorkoutExercise[]
-}
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '~/components/ui/dropdown-menu'
+import { workoutsApi } from '~/api/workouts'
+import { useToast } from '~/composables/useToast'
+import { useUserStore } from '~/stores/useUserStore'
+import type {
+  UpdateWorkoutRequest,
+  UpsertWorkoutExercise,
+  Workout,
+} from '~/types/WorkoutTypes'
+import {
+  formatWorkoutDate,
+  formatWorkoutDuration,
+  formatWorkoutVolume,
+} from '~/utils/workouts'
 
 const route = useRoute()
-const workoutId = computed(() => Number(route.params.id))
+const toast = useToast()
+const userStore = useUserStore()
 
-const allWorkouts = ref<WorkoutDetail[]>([
-  {
-    id: 1,
-    name: 'Morning Workout',
-    date: 'Dec 15, 2025',
-    duration: '0:50',
-    summary: {
-      progress: 'Volume increased 10% since last week.',
-      intensity: 'Moderate effort with strong consistency.',
-      achievement: 'Completed all scheduled categories.',
-    },
-    stats: {
-      totalVolume: '9,200 lbs',
-      totalVolumeChange: '+8%',
-      caloriesBurned: '410 kcal',
-      caloriesChange: '+10%',
-      durationChange: '+3 min',
-    },
-    exercises: [
-      { id: 'lift-1', name: 'Bench Press', category: 'Lifting', col2Value: '4x8', col3Value: '185 lbs' },
-      { id: 'lift-2', name: 'Barbell Row', category: 'Lifting', col2Value: '4x8', col3Value: '155 lbs' },
-      { id: 'cardio-1', name: 'Running', category: 'Cardio', col2Value: '20 min', col3Value: 'Zone 2' },
-      { id: 'mobility-1', name: 'Yoga Flow', category: 'Mobility', col2Value: '12 min', col3Value: 'Hips, Shoulders' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Evening Push Day',
-    date: 'Dec 14, 2025',
-    duration: '1:15',
-    summary: {
-      progress: 'Hit a rep PR on incline press.',
-      intensity: 'High intensity, short rest intervals.',
-      achievement: 'Closed all planned sets with clean form.',
-    },
-    stats: {
-      totalVolume: '12,450 lbs',
-      totalVolumeChange: '+12%',
-      caloriesBurned: '450 kcal',
-      caloriesChange: '+15%',
-      durationChange: '+5 min',
-    },
-    exercises: [
-      { id: 'lift-3', name: 'Incline Bench Press', category: 'Lifting', col2Value: '5x6', col3Value: '165 lbs' },
-      { id: 'lift-4', name: 'Shoulder Press', category: 'Lifting', col2Value: '4x8', col3Value: '75 lbs' },
-      { id: 'lift-5', name: 'Cable Fly', category: 'Lifting', col2Value: '3x12', col3Value: '45 lbs' },
-      { id: 'cardio-2', name: 'Jump Rope', category: 'Cardio', col2Value: '10 min', col3Value: 'HIIT' },
-      { id: 'mobility-2', name: 'Foam Rolling', category: 'Mobility', col2Value: '8 min', col3Value: 'Chest, Lats' },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Leg Day',
-    date: 'Dec 13, 2025',
-    duration: '1:30',
-    summary: {
-      progress: 'Maintained top-end squat numbers.',
-      intensity: 'Very high lower-body workload.',
-      achievement: 'Finished with strong mobility cooldown.',
-    },
-    stats: {
-      totalVolume: '15,880 lbs',
-      totalVolumeChange: '+9%',
-      caloriesBurned: '520 kcal',
-      caloriesChange: '+12%',
-      durationChange: '+6 min',
-    },
-    exercises: [
-      { id: 'lift-6', name: 'Squats', category: 'Lifting', col2Value: '5x5', col3Value: '225 lbs' },
-      { id: 'lift-7', name: 'Leg Press', category: 'Lifting', col2Value: '4x10', col3Value: '320 lbs' },
-      { id: 'lift-8', name: 'Romanian Deadlift', category: 'Lifting', col2Value: '4x8', col3Value: '185 lbs' },
-      { id: 'cardio-3', name: 'Cycling', category: 'Cardio', col2Value: '20 min', col3Value: 'Steady' },
-      { id: 'mobility-3', name: 'Dynamic Stretching', category: 'Mobility', col2Value: '10 min', col3Value: 'Hip Flexors' },
-    ],
-  },
-  {
-    id: 4,
-    name: 'Back & Biceps',
-    date: 'Dec 12, 2025',
-    duration: '1:20',
-    summary: {
-      progress: 'Pull volume rose across all major lifts.',
-      intensity: 'High effort with controlled tempo.',
-      achievement: 'Excellent consistency on all working sets.',
-    },
-    stats: {
-      totalVolume: '11,340 lbs',
-      totalVolumeChange: '+7%',
-      caloriesBurned: '430 kcal',
-      caloriesChange: '+11%',
-      durationChange: '+4 min',
-    },
-    exercises: [
-      { id: 'lift-9', name: 'Deadlift', category: 'Lifting', col2Value: '3x5', col3Value: '275 lbs' },
-      { id: 'lift-10', name: 'Lat Pulldown', category: 'Lifting', col2Value: '4x10', col3Value: '140 lbs' },
-      { id: 'cardio-4', name: 'Row Erg', category: 'Cardio', col2Value: '12 min', col3Value: 'Zone 3' },
-      { id: 'mobility-4', name: 'Thoracic Rotations', category: 'Mobility', col2Value: '8 min', col3Value: 'Upper Back' },
-    ],
-  },
-])
+const workoutId = computed(() => String(route.params.id))
+const currentUserId = computed(() => userStore.getUser?.id?.trim() ?? null)
 
-const workout = computed(() => {
-  return allWorkouts.value.find((item) => item.id === workoutId.value) ?? allWorkouts.value[0]
-})
+const workout = ref<Workout | null>(null)
+const isLoading = ref(true)
+const isSaving = ref(false)
+const loadError = ref<string | null>(null)
 
-const exercises = ref<WorkoutExercise[]>([])
+const isEditingHeader = ref(false)
+const headerName = ref('')
+const headerDate = ref('')
+const headerDurationMinutes = ref('')
 
-watch(workout, (newWorkout) => {
-  exercises.value = newWorkout?.exercises.map((exercise) => ({ ...exercise })) ?? []
+const describeError = (error: unknown, fallback: string): string => {
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = (error as { response?: { data?: unknown } }).response
+    if (typeof response?.data === 'string' && response.data.trim()) {
+      return response.data
+    }
+  }
+  return error instanceof Error ? error.message : fallback
+}
+
+const applyWorkout = (next: Workout) => {
+  workout.value = next
+  headerName.value = next.name
+  headerDate.value = next.performedAt.slice(0, 10)
+  headerDurationMinutes.value = next.durationSeconds
+    ? String(Math.round(next.durationSeconds / 60))
+    : ''
+}
+
+const loadWorkout = async () => {
+  const userId = currentUserId.value
+  if (!userId) {
+    isLoading.value = false
+    loadError.value = 'Sign in to view this workout.'
+    return
+  }
+
+  isLoading.value = true
+  loadError.value = null
+
+  try {
+    applyWorkout(await workoutsApi.get(workoutId.value, userId))
+  } catch (error) {
+    workout.value = null
+    loadError.value = describeError(error, 'Failed to load this workout.')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+watch([workoutId, currentUserId], () => {
+  void loadWorkout()
 }, { immediate: true })
 
-const statCards = computed(() => [
-  { icon: TrendingUp, label: 'Total Volume', value: workout?.value?.stats.totalVolume, change: workout?.value?.stats.totalVolumeChange },
-  { icon: Dumbbell, label: 'Exercises', value: String(exercises.value.length), change: '+2' },
-  { icon: Zap, label: 'Calories Burned', value: workout?.value?.stats.caloriesBurned, change: workout?.value?.stats.caloriesChange },
-  { icon: Target, label: 'Duration', value: workout?.value?.duration, change: workout?.value?.stats.durationChange },
-])
+const saveWorkout = async (payload: Omit<UpdateWorkoutRequest, 'userId'>) => {
+  const userId = currentUserId.value
+  if (!userId || !workout.value) {
+    return
+  }
+
+  isSaving.value = true
+
+  try {
+    applyWorkout(await workoutsApi.update(workout.value.id, { ...payload, userId }))
+  } catch (error) {
+    toast.add({
+      title: 'Unable to save workout',
+      description: describeError(error, 'Failed to save the workout.'),
+      color: 'error',
+    })
+  } finally {
+    isSaving.value = false
+  }
+}
+
+const handleUpsertExercises = async (exercises: UpsertWorkoutExercise[]) => {
+  await saveWorkout({ exerciseOps: { upsert: exercises } })
+}
+
+const handleRemoveExercise = async (exerciseId: string) => {
+  await saveWorkout({ exerciseOps: { deleteIds: [exerciseId] } })
+}
+
+const startEditingHeader = () => {
+  isEditingHeader.value = true
+}
+
+const cancelEditingHeader = () => {
+  if (workout.value) {
+    applyWorkout(workout.value)
+  }
+  isEditingHeader.value = false
+}
+
+const saveHeader = async () => {
+  const name = headerName.value.trim()
+  if (!name) {
+    return
+  }
+
+  const minutes = Number(headerDurationMinutes.value.trim())
+  const durationSeconds = Number.isFinite(minutes) && minutes > 0
+    ? Math.round(minutes * 60)
+    : null
+
+  await saveWorkout({
+    name,
+    performedAt: headerDate.value || undefined,
+    durationSeconds,
+  })
+
+  isEditingHeader.value = false
+}
+
+const deleteWorkout = async () => {
+  const userId = currentUserId.value
+  if (!userId || !workout.value) {
+    return
+  }
+
+  try {
+    await workoutsApi.remove(workout.value.id, userId)
+    toast.add({ title: 'Workout deleted', color: 'success' })
+    await navigateTo('/workouts')
+  } catch (error) {
+    toast.add({
+      title: 'Unable to delete workout',
+      description: describeError(error, 'Failed to delete the workout.'),
+      color: 'error',
+    })
+  }
+}
+
+const statCards = computed(() => {
+  const current = workout.value
+  if (!current) {
+    return []
+  }
+
+  return [
+    {
+      icon: TrendingUp,
+      label: 'Total Volume',
+      value: formatWorkoutVolume(current.totals.totalVolumeKg),
+      change: `${current.totals.totalSets} sets`,
+    },
+    {
+      icon: Dumbbell,
+      label: 'Exercises',
+      value: String(current.totals.exerciseCount),
+      change: `${current.totals.liftingCount} lifting`,
+    },
+    {
+      icon: Timer,
+      label: 'Cardio Time',
+      value: formatWorkoutDuration(current.totals.totalCardioSeconds),
+      change: `${current.totals.cardioCount} sessions`,
+    },
+    {
+      icon: Target,
+      label: 'Duration',
+      value: formatWorkoutDuration(current.durationSeconds),
+      change: `${current.totals.mobilityCount} mobility`,
+    },
+  ]
+})
 </script>
 
 <template>
@@ -156,37 +218,81 @@ const statCards = computed(() => [
         <Button variant="ghost" size="icon" @click="navigateTo('/workouts')">
           <ArrowLeft class="h-5 w-5" />
         </Button>
-        <h1 class="text-xl font-semibold text-foreground">{{ workout?.name }}</h1>
+        <h1 class="text-xl font-semibold text-foreground">
+          {{ workout?.name ?? 'Workout' }}
+        </h1>
+        <Loader2 v-if="isSaving" class="h-4 w-4 animate-spin text-muted-foreground" />
       </div>
-      <Button variant="ghost" size="icon">
-        <MoreHorizontal class="h-5 w-5" />
-      </Button>
+      <DropdownMenu v-if="workout">
+        <DropdownMenuTrigger as-child>
+          <Button variant="ghost" size="icon">
+            <MoreHorizontal class="h-5 w-5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem @click="startEditingHeader">Edit details</DropdownMenuItem>
+          <DropdownMenuItem class="text-destructive" @click="deleteWorkout">
+            <Trash2 class="h-4 w-4 mr-2" />
+            Delete workout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
 
     <div class="flex-1 space-y-6 overflow-auto p-6">
-      <div class="flex items-center gap-6 text-muted-foreground">
-        <div class="flex items-center gap-2">
-          <Calendar class="h-5 w-5" />
-          <span>{{ workout?.date }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <Clock class="h-5 w-5" />
-          <span>{{ workout?.duration }}</span>
-        </div>
+      <div
+        v-if="isLoading"
+        class="flex items-center justify-center gap-2 py-16 text-muted-foreground"
+      >
+        <Loader2 class="h-4 w-4 animate-spin" />
+        Loading workout…
       </div>
 
-      <WorkoutSummaryCard
-        :progress="workout?.summary.progress"
-        :intensity="workout?.summary.intensity"
-        :achievement="workout?.summary.achievement"
-      />
+      <div v-else-if="!workout" class="space-y-4 py-16 text-center">
+        <p class="text-muted-foreground">{{ loadError ?? 'Workout not found.' }}</p>
+        <Button variant="outline" @click="navigateTo('/workouts')">Back to workouts</Button>
+      </div>
 
-      <section>
-        <h2 class="mb-3 text-lg font-semibold text-foreground">Statistics</h2>
-        <WorkoutStatCarousel :stats="statCards" />
-      </section>
+      <template v-else>
+        <div v-if="isEditingHeader" class="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <Input v-model="headerName" placeholder="Workout name" />
+          <Input v-model="headerDate" type="date" />
+          <div class="flex gap-2">
+            <Input
+              v-model="headerDurationMinutes"
+              type="number"
+              min="0"
+              placeholder="Duration (min)"
+            />
+            <Button :disabled="isSaving" @click="saveHeader">Save</Button>
+            <Button variant="ghost" @click="cancelEditingHeader">Cancel</Button>
+          </div>
+        </div>
 
-      <WorkoutExerciseList v-model="exercises" />
+        <div v-else class="flex items-center gap-6 text-muted-foreground">
+          <div class="flex items-center gap-2">
+            <Calendar class="h-5 w-5" />
+            <span>{{ formatWorkoutDate(workout.performedAt) }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <Clock class="h-5 w-5" />
+            <span>{{ formatWorkoutDuration(workout.durationSeconds) }}</span>
+          </div>
+          <Button variant="ghost" size="sm" @click="startEditingHeader">Edit</Button>
+        </div>
+
+        <section>
+          <h2 class="mb-3 text-lg font-semibold text-foreground">Statistics</h2>
+          <WorkoutStatCarousel :stats="statCards" />
+        </section>
+
+        <WorkoutExerciseList
+          :exercises="workout.exercises"
+          :saving="isSaving"
+          @upsert="handleUpsertExercises"
+          @remove="handleRemoveExercise"
+        />
+      </template>
     </div>
   </div>
 </template>

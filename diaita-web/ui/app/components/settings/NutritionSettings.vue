@@ -11,18 +11,25 @@ import SelectTrigger from '~/components/ui/select/SelectTrigger.vue'
 import SelectValue from '~/components/ui/select/SelectValue.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Label from '~/components/ui/label/Label.vue'
+import SettingsActions from '~/components/settings/SettingsActions.vue'
 import type { IsSelected, Option, PlaceholderFor, SettingsFormDefaults, SettingsFormState } from '~/components/settings/types'
 
 defineProps<{
     formState: SettingsFormState;
     formDefaults: SettingsFormDefaults;
     placeholderFor: PlaceholderFor;
+    saving?: boolean;
     isSelected: IsSelected;
     yesNoOptions: Option[];
     dietPatterns: Option[];
     skillLevels: Option[];
     budgetOptions: Option[];
     alcoholOptions: Option[];
+}>();
+
+const emit = defineEmits<{
+    save: [];
+    cancel: [];
 }>();
 </script>
 
@@ -116,7 +123,7 @@ defineProps<{
                                 :class="isSelected(formState.nutrition.calorieTracking, formDefaults.nutrition.calorieTracking, 'yes') ? 'border-foreground text-foreground' : ''"
                                 @click="formState.nutrition.calorieTracking = 'yes'"
                             >
-                                {{ yesNoOptions[0].label }}
+                                {{ yesNoOptions[0]?.label }}
                             </Button>
                             <Button
                                 variant="outline"
@@ -124,7 +131,7 @@ defineProps<{
                                 :class="isSelected(formState.nutrition.calorieTracking, formDefaults.nutrition.calorieTracking, 'no') ? 'border-foreground text-foreground' : ''"
                                 @click="formState.nutrition.calorieTracking = 'no'"
                             >
-                                {{ yesNoOptions[1].label }}
+                                {{ yesNoOptions[1]?.label }}
                             </Button>
                         </div>
                     </div>
@@ -175,9 +182,10 @@ defineProps<{
             </CardContent>
         </Card>
 
-        <div class="flex justify-end gap-3">
-            <Button variant="ghost" class="text-muted-foreground">Cancel</Button>
-            <Button class="bg-[#d96d54] text-white hover:bg-[#c75f49]">Save changes</Button>
-        </div>
+        <SettingsActions
+            :saving="saving"
+            @save="emit('save')"
+            @cancel="emit('cancel')"
+        />
     </div>
 </template>

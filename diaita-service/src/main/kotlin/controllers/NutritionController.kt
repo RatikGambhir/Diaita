@@ -6,16 +6,26 @@ import com.diaita.dto.IngredientAutocompleteFiltersDto
 import com.diaita.dto.FoodSearchResponseDto
 import com.diaita.dto.IngredientSearchFiltersDto
 import com.diaita.dto.MenuItemSearchFiltersDto
+import com.diaita.dto.NutritionDailySeriesResponseDto
 import com.diaita.dto.NutritionDaySummaryResponseDto
 import com.diaita.dto.ProductSuggestFiltersDto
 import com.diaita.dto.ProductSearchFiltersDto
 import com.diaita.dto.UpsertMealsRequestDto
 import com.diaita.service.NutritionService
+import java.time.LocalDate
 
 class NutritionController(private val nutritionService: NutritionService) {
 
     suspend fun getNutritionDaySummary(userId: String, date: String): NutritionDaySummaryResponseDto? {
         return nutritionService.getNutritionDaySummary(userId, date)
+    }
+
+    suspend fun getNutritionDailySeries(
+        userId: String,
+        start: LocalDate,
+        end: LocalDate
+    ): NutritionDailySeriesResponseDto {
+        return nutritionService.getNutritionDailySeries(userId, start, end)
     }
 
     suspend fun upsertMeals(request: UpsertMealsRequestDto): NutritionDaySummaryResponseDto? {
