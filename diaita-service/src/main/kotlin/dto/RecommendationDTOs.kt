@@ -182,6 +182,11 @@ data class PerformanceDto(
     val metrics: List<String>
 )
 
+// Declared at file level, not in a companion: a `private companion object` on a @Serializable
+// class shadows the generated one and makes its serializer inaccessible at runtime.
+private const val MAX_PREFERENCES = 25
+private const val MAX_PREFERENCE_LENGTH = 200
+
 /**
  * Optional free-form preferences supplied alongside a regeneration request (the plan generator
  * form). They are appended to the prompt as extra context; the stored profile stays the source of
@@ -211,8 +216,4 @@ data class GenerateRecommendationsRequestDto(
         return ValidationResultDto(true, null)
     }
 
-    private companion object {
-        const val MAX_PREFERENCES = 25
-        const val MAX_PREFERENCE_LENGTH = 200
-    }
 }

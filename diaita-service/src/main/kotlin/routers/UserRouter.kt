@@ -54,11 +54,15 @@ fun Application.configureUserRoutes(userController: UserController) {
                 return@post
             }
 
-            // The body is optional: an empty request regenerates from the stored profile alone.
+            // The body is optional, so an absent one means "no preferences". A body that is
+            // present but malformed is a client error, not a silent fallback.
             val request = try {
                 call.receive<GenerateRecommendationsRequestDto>()
-            } catch (_: Exception) {
+            } catch (_: ContentTransformationException) {
                 GenerateRecommendationsRequestDto()
+            } catch (_: Exception) {
+                call.respondText("Invalid request payload", status = HttpStatusCode.BadRequest)
+                return@post
             }
 
             val validation = request.validate()
