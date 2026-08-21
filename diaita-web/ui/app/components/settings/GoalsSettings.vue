@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import Button from '~/components/ui/button/Button.vue'
 import Card from '~/components/ui/card/Card.vue'
 import CardContent from '~/components/ui/card/CardContent.vue'
 import Input from '~/components/ui/input/Input.vue'
 import Textarea from '~/components/ui/textarea/Textarea.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Label from '~/components/ui/label/Label.vue'
+import SettingsActions from '~/components/settings/SettingsActions.vue'
 import type { PlaceholderFor, SettingsFormDefaults, SettingsFormState } from '~/components/settings/types'
 
 defineProps<{
     formState: SettingsFormState;
     formDefaults: SettingsFormDefaults;
     placeholderFor: PlaceholderFor;
+    saving?: boolean;
+}>();
+
+const emit = defineEmits<{
+    save: [];
+    cancel: [];
 }>();
 </script>
 
@@ -105,9 +111,10 @@ defineProps<{
             </CardContent>
         </Card>
 
-        <div class="flex justify-end gap-3">
-            <Button variant="ghost" class="text-muted-foreground">Cancel</Button>
-            <Button class="bg-[#d96d54] text-white hover:bg-[#c75f49]">Save changes</Button>
-        </div>
+        <SettingsActions
+            :saving="saving"
+            @save="emit('save')"
+            @cancel="emit('cancel')"
+        />
     </div>
 </template>

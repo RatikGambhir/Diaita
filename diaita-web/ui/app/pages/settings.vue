@@ -1,16 +1,51 @@
 <script setup lang="ts">
+import { computed, onMounted, reactive, watch } from 'vue'
+import { Loader2 } from 'lucide-vue-next'
 import GenericTabGroup from '~/components/GenericTabGroup.vue'
 import ProfileSettings from '~/components/settings/ProfileSettings.vue'
 import AccountSettings from '~/components/settings/AccountSettings.vue'
+import LifestyleSettings from '~/components/settings/LifestyleSettings.vue'
 import NutritionSettings from '~/components/settings/NutritionSettings.vue'
 import TrainingSettings from '~/components/settings/TrainingSettings.vue'
 import GoalsSettings from '~/components/settings/GoalsSettings.vue'
+import { useUserSettings } from '~/composables/useUserSettings'
+import { useAccountSettings } from '~/composables/useAccountSettings'
+import { useToast } from '~/composables/useToast'
+import { useUserStore } from '~/stores/useUserStore'
+import {
+    emptyGoalsForm,
+    emptyLifestyleForm,
+    emptyNutritionForm,
+    emptyProfileForm,
+    emptyTrainingForm,
+    formToGoals,
+    formToLifestyle,
+    formToNutrition,
+    formToProfile,
+    formToTraining,
+    goalsToForm,
+    lifestyleToForm,
+    nutritionToForm,
+    profileToForm,
+    trainingToForm,
+} from '~/components/settings/mappers'
 
 const activeTab = ref('profile');
+
+const toast = useToast();
+const userStore = useUserStore();
+const { settings, isLoading, savingPage, loadSettings, saveSection } = useUserSettings();
+const {
+    accountForm,
+    isSavingAccount,
+    resetAccountForm,
+    saveAccount,
+} = useAccountSettings();
 
 const tabs = [
     { value: "profile", label: "Profile" },
     { value: "account", label: "Account" },
+    { value: "lifestyle", label: "Lifestyle" },
     { value: "nutrition", label: "Nutrition" },
     { value: "training", label: "Training" },
     { value: "goals", label: "Goals" },
@@ -60,105 +95,159 @@ const alcoholOptions = [
     { label: "Weekly", value: "weekly" },
 ];
 
-const formDefaults = reactive({
+const activityLevels = [
+    { label: "Sedentary", value: "sedentary" },
+    { label: "Lightly active", value: "lightly-active" },
+    { label: "Moderately active", value: "moderately-active" },
+    { label: "Very active", value: "very-active" },
+    { label: "Extremely active", value: "extremely-active" },
+];
+
+const sleepQualityOptions = [
+    { label: "Poor", value: "poor" },
+    { label: "Fair", value: "fair" },
+    { label: "Good", value: "good" },
+    { label: "Excellent", value: "excellent" },
+];
+
+const stressLevels = [
+    { label: "Low", value: "low" },
+    { label: "Moderate", value: "moderate" },
+    { label: "High", value: "high" },
+];
+
+const recoveryOptions = [
+    { label: "Slow", value: "slow" },
+    { label: "Average", value: "average" },
+    { label: "Fast", value: "fast" },
+];
+
+/**
+ * Placeholder hints only. Real values live in formState, which is populated from the service — these
+ * are the example strings shown while a field is still empty.
+ */
+const formDefaults = {
     profile: {
-        age: "29",
-        sex: "Female",
-        gender: "Woman",
-        height: "170",
-        weight: "68",
-        bodyFat: "19",
-        leanMass: "56.0",
-        biological: "Post-pregnancy, thyroid condition",
-        menstrual: "Regular 28-day cycle, tracking symptoms",
+        age: "", sex: "", gender: "", height: "", weight: "",
+        bodyFat: "", leanMass: "", biological: "", menstrual: "",
     },
-    account: {
-        firstName: "Jane",
-        lastName: "Doe",
-        email: "jane.doe@example.com",
-        workoutsToTrackOnHomepage: "6",
-    },
+    account: { firstName: "", lastName: "", email: "", workoutsToTrackOnHomepage: "" },
     nutrition: {
-        dietPattern: "Mediterranean",
-        calorieTracking: "yes",
-        cookingSkill: "Intermediate",
-        macroPreferences: "High protein, moderate carbs, low fat",
-        allergies: "Tree nuts",
-        dietaryRestrictions: "No dairy",
-        culturalPreferences: "Mediterranean, Indian",
-        foodBudget: "$100-$200",
-        alcoholIntake: "Occasionally",
+        dietPattern: "", calorieTracking: "", cookingSkill: "", macroPreferences: "",
+        allergies: "", dietaryRestrictions: "", culturalPreferences: "",
+        foodBudget: "", alcoholIntake: "",
     },
     training: {
-        trainingAge: "1-3 years",
-        trainingHistory: "Started with bodyweight training, then moved to weightlifting.",
-        workoutRoutine: "PPL split 6 days per week, focusing on compound movements.",
-        exercisePreferences: "Deadlifts, incline bench",
-        exerciseDislikes: "Burpees",
-        equipmentAccess: "Gym access",
-        timePerSession: "60",
-        daysPerWeek: "4",
+        trainingAge: "", trainingHistory: "", workoutRoutine: "", exercisePreferences: "",
+        exerciseDislikes: "", equipmentAccess: "", timePerSession: "", daysPerWeek: "",
     },
     goals: {
-        primaryGoal: "Lean muscle gain",
-        secondaryGoals: "Improve mobility",
-        timeframe: "6 months",
-        targetWeight: "70 kg",
-        performanceMetric: "5K under 25 minutes",
-        aestheticGoals: "More definition in shoulders and core.",
-        healthGoals: "Improve resting heart rate",
+        primaryGoal: "", secondaryGoals: "", timeframe: "", targetWeight: "",
+        performanceMetric: "", aestheticGoals: "", healthGoals: "",
     },
-});
+};
 
 const formState = reactive({
-    profile: {
-        age: "",
-        sex: "",
-        gender: "",
-        height: "",
-        weight: "",
-        bodyFat: "",
-        leanMass: "",
-        biological: "",
-        menstrual: "",
-    },
-    account: {
-        firstName: "",
-        lastName: "",
-        email: "",
-        workoutsToTrackOnHomepage: "",
-    },
-    nutrition: {
-        dietPattern: "",
-        calorieTracking: "",
-        cookingSkill: "",
-        macroPreferences: "",
-        allergies: "",
-        dietaryRestrictions: "",
-        culturalPreferences: "",
-        foodBudget: "",
-        alcoholIntake: "",
-    },
-    training: {
-        trainingAge: "",
-        trainingHistory: "",
-        workoutRoutine: "",
-        exercisePreferences: "",
-        exerciseDislikes: "",
-        equipmentAccess: "",
-        timePerSession: "",
-        daysPerWeek: "",
-    },
-    goals: {
-        primaryGoal: "",
-        secondaryGoals: "",
-        timeframe: "",
-        targetWeight: "",
-        performanceMetric: "",
-        aestheticGoals: "",
-        healthGoals: "",
-    },
+    profile: emptyProfileForm(),
+    account: accountForm,
+    lifestyle: emptyLifestyleForm(),
+    nutrition: emptyNutritionForm(),
+    training: emptyTrainingForm(),
+    goals: emptyGoalsForm(),
 });
+
+/** Re-seeds every form from the loaded sections; also serves as the Cancel handler. */
+const resetForms = () => {
+    Object.assign(formState.profile, profileToForm(settings['basic-demographics']));
+    Object.assign(formState.lifestyle, lifestyleToForm(settings['activity-lifestyle']));
+    Object.assign(formState.nutrition, nutritionToForm(settings['nutrition-history']));
+    Object.assign(formState.training, trainingToForm(settings['training-background']));
+    Object.assign(formState.goals, goalsToForm(settings['goals-priorities']));
+    resetAccountForm();
+};
+
+onMounted(async () => {
+    await loadSettings();
+    resetForms();
+});
+
+// A sign-in or sign-out that lands while this page is open should re-read the settings.
+watch(() => userStore.getUser?.id, async (userId, previousUserId) => {
+    if (userId === previousUserId) {
+        return;
+    }
+    await loadSettings();
+    resetForms();
+});
+
+const warnMissing = (field: string) => {
+    toast.add({
+        title: `${field} is required`,
+        description: `Add a ${field.toLowerCase()} before saving this section.`,
+        color: 'error',
+    });
+};
+
+const saveProfile = async () => {
+    const payload = formToProfile(formState.profile, settings['basic-demographics']);
+
+    if (payload.age <= 0 || payload.height <= 0 || payload.weight <= 0) {
+        warnMissing('Age, height and weight');
+        return;
+    }
+
+    if (await saveSection('basic-demographics', payload, 'Profile')) {
+        Object.assign(formState.profile, profileToForm(settings['basic-demographics']));
+    }
+};
+
+const saveLifestyle = async () => {
+    const payload = formToLifestyle(formState.lifestyle, settings['activity-lifestyle']);
+
+    if (!payload.activityLevel) {
+        warnMissing('Activity level');
+        return;
+    }
+
+    if (await saveSection('activity-lifestyle', payload, 'Lifestyle')) {
+        Object.assign(formState.lifestyle, lifestyleToForm(settings['activity-lifestyle']));
+    }
+};
+
+const saveNutrition = async () => {
+    const payload = formToNutrition(formState.nutrition, settings['nutrition-history']);
+
+    if (await saveSection('nutrition-history', payload, 'Nutrition')) {
+        Object.assign(formState.nutrition, nutritionToForm(settings['nutrition-history']));
+    }
+};
+
+const saveTraining = async () => {
+    const payload = formToTraining(formState.training, settings['training-background']);
+
+    if (await saveSection('training-background', payload, 'Training')) {
+        Object.assign(formState.training, trainingToForm(settings['training-background']));
+    }
+};
+
+const saveGoals = async () => {
+    const payload = formToGoals(formState.goals, settings['goals-priorities']);
+
+    if (!payload.primaryGoal) {
+        warnMissing('Primary goal');
+        return;
+    }
+
+    if (await saveSection('goals-priorities', payload, 'Goals')) {
+        Object.assign(formState.goals, goalsToForm(settings['goals-priorities']));
+    }
+};
+
+const cancelProfile = () => Object.assign(formState.profile, profileToForm(settings['basic-demographics']));
+const cancelLifestyle = () => Object.assign(formState.lifestyle, lifestyleToForm(settings['activity-lifestyle']));
+const cancelNutrition = () => Object.assign(formState.nutrition, nutritionToForm(settings['nutrition-history']));
+const cancelTraining = () => Object.assign(formState.training, trainingToForm(settings['training-background']));
+const cancelGoals = () => Object.assign(formState.goals, goalsToForm(settings['goals-priorities']));
 
 const placeholderFor = (value: string, fallback: string) => {
     if (!value || value.trim() === "") {
@@ -171,6 +260,9 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
     const resolvedValue = currentValue || defaultValue;
     return resolvedValue === targetValue;
 };
+
+const isSaving = (page: string) => savingPage.value === page;
+const isBusy = computed(() => isLoading.value);
 </script>
 
 <template>
@@ -187,7 +279,15 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
                         <h1 class="text-xl font-semibold text-slate-700">Settings</h1>
                     </template>
 
-                    <div class="relative overflow-hidden">
+                    <div
+                        v-if="isBusy"
+                        class="flex items-center justify-center gap-2 py-16 text-muted-foreground"
+                    >
+                        <Loader2 class="h-4 w-4 animate-spin" />
+                        Loading settings…
+                    </div>
+
+                    <div v-else class="relative overflow-hidden">
                         <Transition name="settings-slide" mode="out-in">
                             <div :key="activeTab">
                                 <ProfileSettings
@@ -195,6 +295,9 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
                                     :form-state="formState"
                                     :form-defaults="formDefaults"
                                     :placeholder-for="placeholderFor"
+                                    :saving="isSaving('basic-demographics')"
+                                    @save="saveProfile"
+                                    @cancel="cancelProfile"
                                 />
 
                                 <AccountSettings
@@ -202,6 +305,21 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
                                     :form-state="formState"
                                     :form-defaults="formDefaults"
                                     :placeholder-for="placeholderFor"
+                                    :saving="isSavingAccount"
+                                    @save="saveAccount"
+                                    @cancel="resetAccountForm"
+                                />
+
+                                <LifestyleSettings
+                                    v-else-if="activeTab === 'lifestyle'"
+                                    v-model="formState.lifestyle"
+                                    :saving="isSaving('activity-lifestyle')"
+                                    :activity-levels="activityLevels"
+                                    :sleep-quality-options="sleepQualityOptions"
+                                    :stress-levels="stressLevels"
+                                    :recovery-options="recoveryOptions"
+                                    @save="saveLifestyle"
+                                    @cancel="cancelLifestyle"
                                 />
 
                                 <NutritionSettings
@@ -210,11 +328,14 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
                                     :form-defaults="formDefaults"
                                     :placeholder-for="placeholderFor"
                                     :is-selected="isSelected"
+                                    :saving="isSaving('nutrition-history')"
                                     :yes-no-options="yesNoOptions"
                                     :diet-patterns="dietPatterns"
                                     :skill-levels="skillLevels"
                                     :budget-options="budgetOptions"
                                     :alcohol-options="alcoholOptions"
+                                    @save="saveNutrition"
+                                    @cancel="cancelNutrition"
                                 />
 
                                 <TrainingSettings
@@ -222,8 +343,11 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
                                     :form-state="formState"
                                     :form-defaults="formDefaults"
                                     :placeholder-for="placeholderFor"
+                                    :saving="isSaving('training-background')"
                                     :training-age-options="trainingAgeOptions"
                                     :equipment-options="equipmentOptions"
+                                    @save="saveTraining"
+                                    @cancel="cancelTraining"
                                 />
 
                                 <GoalsSettings
@@ -231,6 +355,9 @@ const isSelected = (currentValue: string, defaultValue: string, targetValue: str
                                     :form-state="formState"
                                     :form-defaults="formDefaults"
                                     :placeholder-for="placeholderFor"
+                                    :saving="isSaving('goals-priorities')"
+                                    @save="saveGoals"
+                                    @cancel="cancelGoals"
                                 />
                             </div>
                         </Transition>
