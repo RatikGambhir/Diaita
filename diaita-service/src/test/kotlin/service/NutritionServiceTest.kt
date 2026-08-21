@@ -21,6 +21,7 @@ import com.diaita.dto.SpoonacularNutrientDto
 import com.diaita.dto.SpoonacularNutritionDto
 import com.diaita.lib.clients.NutritionRestClient
 import com.diaita.repo.NutritionRepo
+import com.diaita.repo.RecommendationRepo
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -32,9 +33,11 @@ import kotlin.test.assertTrue
 class NutritionServiceTest {
 
     private val client = FakeNutritionClient()
+    private val recommendationRepo = mockk<RecommendationRepo>(relaxed = true)
     private val container = Container().apply {
         bind<NutritionRepo>(mockk(relaxed = true))
         bind<NutritionRestClient>(client)
+        bind<RecommendationRepo>(recommendationRepo)
     }
     private val service = container.get<NutritionService>()
 

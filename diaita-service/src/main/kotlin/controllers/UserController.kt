@@ -15,8 +15,11 @@ class UserController(private val userService: UserService) {
         return userService.registerUserProfile(request)
     }
 
-    suspend fun generateAndSaveRecommendations(userId: String): ServiceResult<RecommendationDto> {
-        return userService.generateAndSaveRecommendations(userId)
+    suspend fun generateAndSaveRecommendations(
+        userId: String,
+        preferences: Map<String, String> = emptyMap()
+    ): ServiceResult<RecommendationDto> {
+        return userService.generateAndSaveRecommendations(userId, preferences)
     }
 
     suspend fun getUserProfile(userId: String): RegisteredUserProfileDto? {

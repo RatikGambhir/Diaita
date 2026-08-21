@@ -1,7 +1,20 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, format, subDays, subWeeks, subMonths } from 'date-fns'
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { computed, onMounted, ref, watch } from 'vue'
+import {
+  eachDayOfInterval,
+  eachWeekOfInterval,
+  eachMonthOfInterval,
+  format,
+  isSameDay,
+  isSameMonth,
+  isSameWeek,
+  parseISO,
+  subDays,
+  subWeeks,
+  subMonths
+} from 'date-fns'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-vue-next'
+import { useNutritionSeries } from '~/composables/useNutritionSeries'
 import { VisXYContainer, VisLine, VisAxis, VisCrosshair, VisTooltip } from '@unovis/vue'
 import { useElementSize } from '@vueuse/core'
 import Button from '~/components/ui/button/Button.vue'
@@ -11,7 +24,7 @@ type MetricKey = 'calories' | 'protein' | 'carbs' | 'fats'
 
 type MetricPoint = {
   actual: number
-  projected: number
+  target: number
 }
 
 type DataRecord = {
@@ -73,14 +86,15 @@ const metrics: MetricConfig[] = [
 ]
 
 const data = ref<DataRecord[]>([])
+const { series, isLoading, error, loadSeries } = useNutritionSeries()
 
-const activeMetric = computed(() => metrics[activeMetricIndex.value])
+const activeMetric = computed(() => metrics[activeMetricIndex.value] ?? metrics[0]!)
 const periodLabel = computed(() => periods.find(p => p.value === selectedPeriod.value)?.label.toLowerCase() || 'daily')
 const chartWidth = computed(() => Math.max(width.value - 48, 240))
 
 const x = (_: DataRecord, i: number) => i
 const yActual = (d: DataRecord) => d[activeMetric.value.key].actual
-const yProjected = (d: DataRecord) => d[activeMetric.value.key].projected
+const yTarget = (d: DataRecord) => d[activeMetric.value.key].target
 
 const nextMetric = () => {
   transitionName.value = 'slide-left'
@@ -92,60 +106,96 @@ const prevMetric = () => {
   activeMetricIndex.value = activeMetricIndex.value === 0 ? metrics.length - 1 : activeMetricIndex.value - 1
 }
 
-const generateData = () => {
-  const now = new Date()
-  let dates: Date[]
+/** How far back each period reaches, and how its points are bucketed. */
+const PERIOD_WINDOW_DAYS: Record<TimePeriod, number> = {
+  daily: 7,
+  weekly: 84,
+  monthly: 365
+}
 
+const bucketDates = (now: Date): Date[] => {
   switch (selectedPeriod.value) {
     case 'daily':
-      dates = eachDayOfInterval({ start: subDays(now, 6), end: now })
-      break
+      return eachDayOfInterval({ start: subDays(now, PERIOD_WINDOW_DAYS.daily - 1), end: now })
     case 'weekly':
-      dates = eachWeekOfInterval({ start: subWeeks(now, 11), end: now })
-      break
+      return eachWeekOfInterval({ start: subWeeks(now, 11), end: now })
     case 'monthly':
     default:
-      dates = eachMonthOfInterval({ start: subMonths(now, 11), end: now })
-      break
+      return eachMonthOfInterval({ start: subMonths(now, 11), end: now })
+  }
+}
+
+const isInBucket = (day: Date, bucket: Date) => {
+  switch (selectedPeriod.value) {
+    case 'daily':
+      return isSameDay(day, bucket)
+    case 'weekly':
+      return isSameWeek(day, bucket)
+    case 'monthly':
+    default:
+      return isSameMonth(day, bucket)
+  }
+}
+
+/**
+ * Buckets the per-day series into the selected period. Weekly and monthly points are daily averages
+ * rather than sums, so they stay comparable to the daily target line.
+ */
+const buildSeries = () => {
+  const loaded = series.value
+  if (!loaded) {
+    data.value = []
+    return
   }
 
-  data.value = dates.map((date, index) => {
-    const drift = index / Math.max(dates.length - 1, 1)
-    const noise = () => (Math.random() - 0.5) * 2
+  const targets = loaded.analytics
+  const days = loaded.days.map((day) => ({ ...day, parsed: parseISO(day.date) }))
 
-    const caloriesActual = 1750 + 220 * Math.sin(index * 0.65) + 180 * drift + noise() * 80
-    const proteinActual = 118 + 10 * Math.sin(index * 0.55 + 1.2) + 18 * drift + noise() * 6
-    const carbsActual = 210 + 24 * Math.sin(index * 0.4 + 0.4) + 16 * drift + noise() * 10
-    const fatsActual = 62 + 8 * Math.sin(index * 0.48 + 2.1) + 10 * drift + noise() * 5
+  data.value = bucketDates(new Date()).map((bucket) => {
+    const inBucket = days.filter((day) => isInBucket(day.parsed, bucket))
+    const logged = inBucket.filter((day) => day.totalCal > 0)
+    const divisor = Math.max(logged.length, 1)
 
-    const caloriesProjected = caloriesActual * (1.04 + 0.012 * Math.sin(index * 0.5 + 0.8))
-    const proteinProjected = proteinActual * (1.03 + 0.01 * Math.sin(index * 0.45 + 0.4))
-    const carbsProjected = carbsActual * (1.025 + 0.01 * Math.sin(index * 0.42 + 1.1))
-    const fatsProjected = fatsActual * (1.02 + 0.008 * Math.sin(index * 0.38 + 1.6))
+    const average = (total: number) => Math.round(total / divisor)
 
     return {
-      date,
+      date: bucket,
       calories: {
-        actual: Math.max(1200, Math.round(caloriesActual)),
-        projected: Math.max(1200, Math.round(caloriesProjected))
+        actual: average(logged.reduce((sum, day) => sum + day.totalCal, 0)),
+        target: Math.round(targets.recCal ?? 0)
       },
       protein: {
-        actual: Math.max(70, Math.round(proteinActual)),
-        projected: Math.max(70, Math.round(proteinProjected))
+        actual: average(logged.reduce((sum, day) => sum + day.totalProtein, 0)),
+        target: Math.round(targets.recProtein ?? 0)
       },
       carbs: {
-        actual: Math.max(120, Math.round(carbsActual)),
-        projected: Math.max(120, Math.round(carbsProjected))
+        actual: average(logged.reduce((sum, day) => sum + day.totalCarb, 0)),
+        target: Math.round(targets.recCarb ?? 0)
       },
       fats: {
-        actual: Math.max(35, Math.round(fatsActual)),
-        projected: Math.max(35, Math.round(fatsProjected))
+        actual: average(logged.reduce((sum, day) => sum + day.totalFat, 0)),
+        target: Math.round(targets.recFat ?? 0)
       }
     }
   })
 }
 
-watch(selectedPeriod, generateData, { immediate: true })
+const reload = async () => {
+  const now = new Date()
+  await loadSeries(subDays(now, PERIOD_WINDOW_DAYS[selectedPeriod.value] - 1), now)
+  buildSeries()
+}
+
+const hasTargets = computed(() => data.value.some((point) => point[activeMetric.value.key].target > 0))
+const hasData = computed(() => data.value.some((point) => point[activeMetric.value.key].actual > 0))
+
+onMounted(() => {
+  void reload()
+})
+
+watch(selectedPeriod, () => {
+  void reload()
+})
 
 const formatXAxisDate = (date: Date) => {
   switch (selectedPeriod.value) {
@@ -194,7 +244,10 @@ const yTickFormat = (value: number) => {
 
 const template = (d: DataRecord) => {
   const point = d[activeMetric.value.key]
-  return `${format(d.date, 'MMM d, yyyy')}<br/>Actual: ${formatMetricValue(point.actual)}<br/>Projected: ${formatMetricValue(point.projected)}`
+  const target = point.target > 0
+    ? `<br/>Target: ${formatMetricValue(point.target)}`
+    : ''
+  return `${format(d.date, 'MMM d, yyyy')}<br/>Logged: ${formatMetricValue(point.actual)}${target}`
 }
 </script>
 
@@ -227,11 +280,11 @@ const template = (d: DataRecord) => {
           <div class="flex items-center gap-3 text-xs text-muted-foreground">
             <span class="inline-flex items-center gap-1.5">
               <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: ACTUAL_COLOR }" />
-              Actual
+              Logged
             </span>
-            <span class="inline-flex items-center gap-1.5">
+            <span v-if="hasTargets" class="inline-flex items-center gap-1.5">
               <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: PROJECTED_COLOR }" />
-              Projected
+              Target
             </span>
           </div>
 
@@ -259,7 +312,23 @@ const template = (d: DataRecord) => {
     </div>
 
     <div class="relative h-80 overflow-hidden">
-      <Transition :name="transitionName" mode="out-in">
+      <div
+        v-if="isLoading && data.length === 0"
+        class="flex h-full items-center justify-center gap-2 text-muted-foreground"
+      >
+        <Loader2 class="h-4 w-4 animate-spin" />
+        Loading nutrition history…
+      </div>
+
+      <p v-else-if="error" class="flex h-full items-center justify-center text-muted-foreground">
+        {{ error }}
+      </p>
+
+      <p v-else-if="!hasData" class="flex h-full items-center justify-center text-muted-foreground">
+        Log meals to see your {{ activeMetric.label.toLowerCase() }} trend.
+      </p>
+
+      <Transition v-else :name="transitionName" mode="out-in">
         <div :key="activeMetric.key" class="h-full">
           <VisXYContainer
             :data="data"
@@ -268,8 +337,9 @@ const template = (d: DataRecord) => {
             :width="chartWidth"
           >
             <VisLine
+              v-if="hasTargets"
               :x="x"
-              :y="yProjected"
+              :y="yTarget"
               :color="PROJECTED_COLOR"
               :curve-type="'linear'"
               :line-width="2"

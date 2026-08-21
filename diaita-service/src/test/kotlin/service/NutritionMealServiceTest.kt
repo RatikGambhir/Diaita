@@ -14,6 +14,7 @@ import com.diaita.entity.MealItemRowEntity
 import com.diaita.entity.MealRowEntity
 import com.diaita.lib.clients.NutritionRestClient
 import com.diaita.repo.NutritionRepo
+import com.diaita.repo.RecommendationRepo
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -26,9 +27,11 @@ class NutritionMealServiceTest {
 
     private val repo = mockk<NutritionRepo>()
     private val client = mockk<NutritionRestClient>(relaxed = true)
+    private val recommendationRepo = mockk<RecommendationRepo>(relaxed = true)
     private val container = Container().apply {
         bind<NutritionRepo>(repo)
         bind<NutritionRestClient>(client)
+        bind<RecommendationRepo>(recommendationRepo)
     }
     private val service = container.get<NutritionService>()
 

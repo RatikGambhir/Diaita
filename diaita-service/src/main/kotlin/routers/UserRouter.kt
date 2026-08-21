@@ -1,6 +1,7 @@
 package com.diaita.routers
 
 import com.diaita.controllers.UserController
+import com.diaita.dto.GenerateRecommendationsRequestDto
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.ServiceResult
 import com.diaita.dto.UserSettingsAction
@@ -53,7 +54,23 @@ fun Application.configureUserRoutes(userController: UserController) {
                 return@post
             }
 
-            when (val result = userController.generateAndSaveRecommendations(userId)) {
+            // The body is optional: an empty request regenerates from the stored profile alone.
+            val request = try {
+                call.receive<GenerateRecommendationsRequestDto>()
+            } catch (_: Exception) {
+                GenerateRecommendationsRequestDto()
+            }
+
+            val validation = request.validate()
+            if (!validation.isValid) {
+                call.respondText(
+                    validation.errorMessage ?: "Invalid request",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@post
+            }
+
+            when (val result = userController.generateAndSaveRecommendations(userId, request.preferences)) {
                 is ServiceResult.Success -> call.respond(HttpStatusCode.OK, result.data)
                 is ServiceResult.Failure -> call.respondText(result.error, status = HttpStatusCode.InternalServerError)
             }

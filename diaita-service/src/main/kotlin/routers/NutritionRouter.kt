@@ -111,6 +111,9 @@ private suspend fun ApplicationCall.handleGetByIdRequest(
     }
 }
 
+/** Caps how much of the series a single request can ask for; a year of daily points is plenty. */
+private const val MAX_NUTRITION_SERIES_DAYS = 366
+
 private fun isValidUuid(value: String): Boolean =
     runCatching { UUID.fromString(value.trim()) }.isSuccess
 
@@ -145,6 +148,52 @@ fun Application.configureNutritionRoutes(nutritionController: NutritionControlle
             } else {
                 call.respondText("Failed to fetch nutrition day summary", status = HttpStatusCode.InternalServerError)
             }
+        }
+
+        get("/nutrition/daily-series") {
+            val userId = call.requiredQueryParam("userId") ?: return@get
+            val start = call.requiredQueryParam("start") ?: return@get
+            val end = call.requiredQueryParam("end") ?: return@get
+
+            if (!isValidUuid(userId)) {
+                call.respondText(
+                    "Invalid request: 'userId' must be a valid UUID",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+
+            val startDate = runCatching { LocalDate.parse(start.trim()) }.getOrNull()
+            val endDate = runCatching { LocalDate.parse(end.trim()) }.getOrNull()
+
+            if (startDate == null || endDate == null) {
+                call.respondText(
+                    "Invalid request: 'start' and 'end' must be in YYYY-MM-DD format",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+
+            if (startDate.isAfter(endDate)) {
+                call.respondText(
+                    "Invalid request: 'start' must not be after 'end'",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+
+            if (startDate.plusDays(MAX_NUTRITION_SERIES_DAYS.toLong()).isBefore(endDate)) {
+                call.respondText(
+                    "Invalid request: the range must span at most $MAX_NUTRITION_SERIES_DAYS days",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+
+            call.respond(
+                HttpStatusCode.OK,
+                nutritionController.getNutritionDailySeries(userId, startDate, endDate)
+            )
         }
 
         post("/nutrition/meals/upsert") {
