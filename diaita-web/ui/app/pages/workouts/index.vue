@@ -2,11 +2,7 @@
 import { Activity, Clock, Dumbbell, Plus, Search, Trash2, TrendingUp } from "lucide-vue-next";
 import { workoutApi } from "~/api/workouts";
 import type { Exercise, WorkoutLog, WorkoutStats } from "~/types/WorkoutTypes";
-import Badge from "~/components/ui/badge/Badge.vue";
 import Button from "~/components/ui/button/Button.vue";
-import Card from "~/components/ui/card/Card.vue";
-import CardContent from "~/components/ui/card/CardContent.vue";
-import CardHeader from "~/components/ui/card/CardHeader.vue";
 import Input from "~/components/ui/input/Input.vue";
 import WorkoutAddModal from "~/components/WorkoutAddModal.vue";
 import GenericTabGroup from "~/components/GenericTabGroup.vue";
@@ -71,32 +67,30 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="flex-1 overflow-auto p-6">
-    <div class="mx-auto max-w-7xl space-y-6">
-      <header>
-        <h1 class="text-2xl font-semibold">Workout Tracker</h1>
-        <p class="mt-1 text-sm text-muted-foreground">Log sessions, exercises, volume, cardio, and notes.</p>
-      </header>
+  <div class="app-page space-y-8">
+      <AppPageHeader
+        eyebrow="Training ledger"
+        title="Workouts"
+        description="Capture the work. Keep the useful detail. Let consistency—not memory—show your progress."
+      >
+        <template #actions>
+          <Button @click="isAddWorkoutModalOpen = true"><Plus class="h-4 w-4" />New workout</Button>
+        </template>
+      </AppPageHeader>
 
-      <section class="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent class="flex items-center gap-4 p-5">
-            <Dumbbell class="h-8 w-8 text-primary" />
-            <div><p class="text-2xl font-semibold">{{ stats?.workoutsLast30Days ?? 0 }}</p><p class="text-sm text-muted-foreground">Workouts / 30 days</p></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent class="flex items-center gap-4 p-5">
-            <Clock class="h-8 w-8 text-primary" />
-            <div><p class="text-2xl font-semibold">{{ stats?.minutesLast30Days ?? 0 }}</p><p class="text-sm text-muted-foreground">Minutes / 30 days</p></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent class="flex items-center gap-4 p-5">
-            <TrendingUp class="h-8 w-8 text-primary" />
-            <div><p class="text-2xl font-semibold">{{ Math.round(stats?.totalVolumeKg ?? 0).toLocaleString() }} kg</p><p class="text-sm text-muted-foreground">Total lifting volume</p></div>
-          </CardContent>
-        </Card>
+      <section class="grid border-y sm:grid-cols-3 sm:divide-x">
+        <div class="flex min-h-28 items-center gap-4 border-b py-5 sm:border-b-0 sm:px-6 sm:first:pl-0">
+          <Dumbbell class="h-5 w-5 text-primary" />
+          <div><p class="font-mono text-3xl font-semibold">{{ stats?.workoutsLast30Days ?? 0 }}</p><p class="mt-1 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Sessions · 30 days</p></div>
+        </div>
+        <div class="flex min-h-28 items-center gap-4 border-b py-5 sm:border-b-0 sm:px-6">
+          <Clock class="h-5 w-5 text-primary" />
+          <div><p class="font-mono text-3xl font-semibold">{{ stats?.minutesLast30Days ?? 0 }}</p><p class="mt-1 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Minutes · 30 days</p></div>
+        </div>
+        <div class="flex min-h-28 items-center gap-4 py-5 sm:px-6">
+          <TrendingUp class="h-5 w-5 text-primary" />
+          <div><p class="font-mono text-3xl font-semibold">{{ Math.round(stats?.totalVolumeKg ?? 0).toLocaleString() }} <span class="text-sm font-normal text-muted-foreground">kg</span></p><p class="mt-1 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Lifetime volume</p></div>
+        </div>
       </section>
 
       <GenericTabGroup
@@ -105,38 +99,37 @@ onMounted(load);
       >
         <div v-if="activeTab === 'workouts'" class="space-y-5">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div class="relative max-w-md flex-1">
+            <div class="relative max-w-lg flex-1">
               <Search class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input v-model="searchQuery" class="pl-10" placeholder="Search your workouts" />
             </div>
-            <Button @click="isAddWorkoutModalOpen = true"><Plus class="mr-2 h-4 w-4" />New workout</Button>
+            <p class="text-sm text-muted-foreground">{{ filteredWorkouts.length }} {{ filteredWorkouts.length === 1 ? 'session' : 'sessions' }}</p>
           </div>
 
           <div v-if="isLoading" class="py-16 text-center text-muted-foreground">Loading workouts…</div>
           <div v-else-if="errorMessage" class="rounded-lg border border-destructive/40 p-4 text-destructive">{{ errorMessage }}</div>
-          <div v-else-if="filteredWorkouts.length === 0" class="rounded-xl border border-dashed py-16 text-center">
-            <Dumbbell class="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-            <p class="font-medium">No workouts yet</p>
-            <p class="mt-1 text-sm text-muted-foreground">Create your first session to start tracking progress.</p>
+          <div v-else-if="filteredWorkouts.length === 0" class="border-y py-16 text-center">
+            <Dumbbell class="mx-auto mb-4 h-8 w-8 text-primary" />
+            <p class="font-semibold">No workouts match this view.</p>
+            <p class="mt-1 text-sm text-muted-foreground">Create a session or try a different search.</p>
           </div>
-          <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <Card v-for="workout in filteredWorkouts" :key="workout.id" class="transition-shadow hover:shadow-md">
-              <CardHeader class="flex-row items-start justify-between gap-3">
-                <button type="button" class="min-w-0 text-left" @click="navigateTo(`/workouts/${workout.id}`)">
-                  <h2 class="truncate text-lg font-semibold">{{ workout.name }}</h2>
-                  <p class="mt-1 text-sm text-muted-foreground">{{ new Date(workout.performedAt).toLocaleString() }}</p>
-                </button>
-                <Button variant="ghost" size="icon" aria-label="Delete workout" @click="deleteWorkout(workout)"><Trash2 class="h-4 w-4 text-destructive" /></Button>
-              </CardHeader>
-              <CardContent class="space-y-4">
-                <div class="flex flex-wrap gap-2">
-                  <Badge variant="secondary">{{ workout.durationMinutes }} min</Badge>
-                  <Badge variant="outline">{{ workout.exercises.length }} exercises</Badge>
-                  <Badge variant="outline">{{ Math.round(workout.totalVolumeKg) }} kg volume</Badge>
+          <div v-else class="divide-y border-y">
+            <article v-for="(workout, index) in filteredWorkouts" :key="workout.id" class="group grid gap-4 py-5 sm:grid-cols-[2.5rem_minmax(0,1fr)_auto] sm:items-center">
+              <span class="hidden font-mono text-xs text-muted-foreground sm:block">{{ String(index + 1).padStart(2, '0') }}</span>
+              <button type="button" class="focus-ring min-w-0 rounded-md text-left" @click="navigateTo(`/workouts/${workout.id}`)">
+                <h2 class="truncate text-lg font-semibold group-hover:text-primary">{{ workout.name }}</h2>
+                <p class="mt-1 text-sm text-muted-foreground">{{ new Date(workout.performedAt).toLocaleString() }}</p>
+                <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted-foreground">
+                  <span>{{ workout.durationMinutes }} min</span>
+                  <span>{{ workout.exercises.length }} exercises</span>
+                  <span>{{ Math.round(workout.totalVolumeKg).toLocaleString() }} kg volume</span>
                 </div>
-                <Button variant="outline" class="w-full" @click="navigateTo(`/workouts/${workout.id}`)">Open workout</Button>
-              </CardContent>
-            </Card>
+              </button>
+              <div class="flex items-center gap-1">
+                <Button variant="ghost" size="sm" @click="navigateTo(`/workouts/${workout.id}`)">Open</Button>
+                <Button variant="ghost" size="icon" :aria-label="`Delete ${workout.name}`" @click="deleteWorkout(workout)"><Trash2 class="h-4 w-4 text-destructive" /></Button>
+              </div>
+            </article>
           </div>
         </div>
 
@@ -145,18 +138,15 @@ onMounted(load);
             <div class="relative flex-1"><Search class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input v-model="exerciseQuery" class="pl-10" placeholder="Search bench, run, row…" /></div>
             <Button type="submit">Search</Button>
           </form>
-          <div v-if="exercises.length" class="grid gap-3 md:grid-cols-2">
-            <Card v-for="exercise in exercises" :key="exercise.id ?? exercise.exercise">
-              <CardContent class="flex items-start gap-3 p-4">
+          <div v-if="exercises.length" class="grid border-y md:grid-cols-2">
+            <div v-for="exercise in exercises" :key="exercise.id ?? exercise.exercise" class="flex items-start gap-3 border-b p-5 md:odd:border-r">
                 <Activity class="mt-1 h-5 w-5 text-primary" />
                 <div><p class="font-medium">{{ exercise.exercise }}</p><p class="text-sm capitalize text-muted-foreground">{{ exercise.exerciseType }} · {{ exercise.primaryFitnessFocus }}</p><p v-if="exercise.description" class="mt-1 text-xs text-muted-foreground">{{ exercise.description }}</p></div>
-              </CardContent>
-            </Card>
+            </div>
           </div>
           <p v-else class="py-12 text-center text-muted-foreground">Search the local exercise catalog.</p>
         </div>
       </GenericTabGroup>
-    </div>
     <WorkoutAddModal v-model="isAddWorkoutModalOpen" @create="createWorkout" />
   </div>
 </template>

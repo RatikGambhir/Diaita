@@ -45,12 +45,12 @@ watch(internalActiveTab, (newValue) => {
 </script>
 
 <template>
-  <Tabs v-model="internalActiveTab" :class="cn('w-full space-y-6', props.class)">
+  <Tabs v-model="internalActiveTab" :class="cn('w-full space-y-7', props.class)">
     <div :class="cn('flex flex-col gap-4 sm:flex-row sm:items-center', props.headerClass)">
       <slot name="leading" />
       <TabsList
         :class="cn(
-          'inline-flex h-14 items-center rounded-full bg-muted px-1.5 py-1 sm:ml-auto',
+          'inline-flex h-auto items-center justify-start gap-6 border-b bg-transparent p-0 sm:ml-auto',
           tabsListClass
         )"
       >
@@ -59,7 +59,7 @@ watch(internalActiveTab, (newValue) => {
           :key="tab.value"
           :value="tab.value"
           :class="cn(
-            'rounded-full px-7 py-2.5 text-base font-medium text-slate-500 transition-all data-[state=active]:bg-[oklch(0.6397_0.1720_36.4421)] data-[state=active]:text-white data-[state=active]:shadow-none',
+            'relative rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-1 text-sm font-semibold text-muted-foreground shadow-none transition-colors data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none',
             tabTriggerClass
           )"
         >

@@ -6,7 +6,6 @@ import CardContent from "~/components/ui/card/CardContent.vue"
 import CardTitle from "~/components/ui/card/CardTitle.vue"
 
 const props = defineProps<{
-    gradient: string;
     macros: Array<{
         name: string;
         percent: number;
@@ -24,49 +23,62 @@ const formatPercent = (value: number) => {
     const roundedValue = Math.round(value * 10) / 10
     return Number.isInteger(roundedValue) ? `${roundedValue}` : `${roundedValue}`
 }
+
+const circumference = 2 * Math.PI * 48
+const segments = computed(() => {
+    let offset = 0
+    return props.macros.map((macro) => {
+        const length = (macro.percent / 100) * circumference
+        const segment = { ...macro, dash: `${length} ${circumference - length}`, offset: -offset }
+        offset += length
+        return segment
+    })
+})
 </script>
 
 <template>
-    <Card class="bg-card text-card-foreground border shadow-sm">
-        <CardHeader class="pb-2">
-            <CardTitle class="text-sm font-semibold">Macro Distribution</CardTitle>
+    <Card class="overflow-hidden">
+        <CardHeader class="border-b pb-5">
+            <p class="eyebrow">Nutrient balance</p>
+            <CardTitle class="display-title mt-2 text-2xl">Macro distribution</CardTitle>
         </CardHeader>
-        <CardContent class="pt-4">
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-8">
-                <!-- Donut Chart -->
-                <div class="relative flex-shrink-0">
-                    <div
-                        class="h-44 w-44 rounded-full"
-                        :style="{ background: gradient }"
-                    >
-                        <!-- Center hole -->
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="h-24 w-24 rounded-full bg-card flex flex-col items-center justify-center">
-                                <span class="text-2xl font-bold text-foreground">{{ totalCalories }}%</span>
-                                <span class="text-xs text-muted-foreground">Total</span>
-                            </div>
-                        </div>
+        <CardContent class="grid items-center gap-8 pt-6 sm:grid-cols-[11rem_1fr]">
+                <div class="relative mx-auto h-40 w-40">
+                    <svg class="h-full w-full -rotate-90" viewBox="0 0 112 112" aria-label="Macronutrient distribution chart" role="img">
+                        <circle cx="56" cy="56" r="48" fill="none" stroke="var(--muted)" stroke-width="12" />
+                        <circle
+                            v-for="segment in segments"
+                            :key="segment.name"
+                            cx="56"
+                            cy="56"
+                            r="48"
+                            fill="none"
+                            :stroke="segment.color"
+                            stroke-width="12"
+                            :stroke-dasharray="segment.dash"
+                            :stroke-dashoffset="segment.offset"
+                        />
+                    </svg>
+                    <div class="absolute inset-0 grid place-content-center text-center">
+                        <span class="font-mono text-2xl font-semibold">{{ totalCalories }}%</span>
+                        <span class="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">mapped</span>
                     </div>
                 </div>
 
-                <!-- Legend -->
-                <div class="flex flex-col gap-4">
+                <div class="divide-y border-y">
                     <div
                         v-for="macro in macros"
                         :key="`legend-${macro.name}`"
-                        class="flex items-center gap-3"
+                        class="grid grid-cols-[8px_1fr_auto] items-center gap-3 py-3"
                     >
                         <span
-                            class="h-3 w-3 rounded-full flex-shrink-0"
+                            class="h-2 w-2 flex-shrink-0"
                             :style="{ backgroundColor: macro.color }"
                         />
-                        <div class="flex flex-col">
-                            <span class="text-sm font-medium text-foreground">{{ macro.name }}</span>
-                            <span class="text-xs text-muted-foreground">{{ formatPercent(macro.percent) }}%</span>
-                        </div>
+                        <span class="text-sm font-medium text-foreground">{{ macro.name }}</span>
+                        <span class="font-mono text-sm text-muted-foreground">{{ formatPercent(macro.percent) }}%</span>
                     </div>
                 </div>
-            </div>
         </CardContent>
     </Card>
 </template>

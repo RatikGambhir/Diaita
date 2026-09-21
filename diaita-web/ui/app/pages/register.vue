@@ -3,7 +3,7 @@ import axios from "axios";
 import * as z from "zod";
 import { toTypedSchema } from "@vee-validate/zod";
 import { Field as FormField, useForm } from "vee-validate";
-import { AlertCircle, ChevronLeft, LoaderCircle, LockKeyhole, Mail, User } from "lucide-vue-next";
+import { AlertCircle, ChevronLeft, Check, LoaderCircle, LockKeyhole, Mail, User } from "lucide-vue-next";
 import { authApi } from "~/api/auth";
 import { useUserStore } from "~/stores/useUserStore";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
@@ -50,46 +50,55 @@ const onSubmit = handleSubmit(async ({ displayName, email, password }) => {
 </script>
 
 <template>
-  <div class="min-h-screen lg:grid lg:grid-cols-2">
-    <div
-      class="hidden bg-cover bg-center lg:block"
-      style="background-image: linear-gradient(180deg, transparent, rgb(15 23 42 / .72)), url('/assets/preportionedhealthyfood.jpg')"
-    />
-    <main class="flex min-h-screen items-center justify-center bg-background p-8">
-      <div class="w-full max-w-md space-y-7">
+  <div class="min-h-screen lg:grid lg:grid-cols-[minmax(20rem,.8fr)_minmax(32rem,1.2fr)]">
+    <aside class="hidden min-h-screen flex-col bg-foreground p-10 text-background lg:flex xl:p-14">
+      <NuxtLink to="/landing" class="focus-ring w-fit rounded-md"><BrandMark inverse /></NuxtLink>
+      <div class="mt-auto max-w-md">
+        <p class="eyebrow text-background/45">Your journal, your data</p>
+        <p class="display-title mt-5 text-5xl leading-[1.05]">Build the record your future self can use.</p>
+        <ul class="mt-8 space-y-3 text-sm text-background/65">
+          <li class="flex items-center gap-3"><Check class="h-4 w-4 text-sidebar-primary" />Fast daily food logging</li>
+          <li class="flex items-center gap-3"><Check class="h-4 w-4 text-sidebar-primary" />Detailed training sessions</li>
+          <li class="flex items-center gap-3"><Check class="h-4 w-4 text-sidebar-primary" />Self-hosted SQLite storage</li>
+        </ul>
+      </div>
+    </aside>
+    <main class="flex min-h-screen items-center justify-center bg-background px-5 py-12 sm:p-10">
+      <div class="w-full max-w-[28rem] space-y-7">
         <NuxtLink to="/landing" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft class="h-4 w-4" /> Back to Diaita
         </NuxtLink>
         <div>
-          <h1 class="text-3xl font-bold">Create your account</h1>
-          <p class="mt-2 text-muted-foreground">Your data stays in the SQLite database you run.</p>
+          <p class="eyebrow mb-3">Start the record</p>
+          <h1 class="display-title text-5xl">Create your account.</h1>
+          <p class="mt-3 leading-7 text-muted-foreground">Your data stays in the SQLite database you run.</p>
         </div>
         <Alert v-if="errorMessage" variant="destructive">
           <AlertCircle class="h-4 w-4" />
           <AlertTitle>Registration failed</AlertTitle>
           <AlertDescription>{{ errorMessage }}</AlertDescription>
         </Alert>
-        <form class="space-y-4" @submit="onSubmit">
+        <form class="space-y-4" novalidate @submit="onSubmit">
           <FormField v-slot="{ componentField }" name="displayName">
-            <FormItem><FormControl><div class="relative">
+            <FormItem><p class="mb-2 text-sm font-semibold">Your name</p><FormControl><div class="relative">
               <User class="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input v-bind="componentField" autocomplete="name" placeholder="Your name" class="h-11 pl-10" />
             </div></FormControl><FormMessage /></FormItem>
           </FormField>
           <FormField v-slot="{ componentField }" name="email">
-            <FormItem><FormControl><div class="relative">
+            <FormItem><p class="mb-2 text-sm font-semibold">Email address</p><FormControl><div class="relative">
               <Mail class="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input v-bind="componentField" type="email" autocomplete="email" placeholder="you@example.com" class="h-11 pl-10" />
             </div></FormControl><FormMessage /></FormItem>
           </FormField>
           <FormField v-slot="{ componentField }" name="password">
-            <FormItem><FormControl><div class="relative">
+            <FormItem><p class="mb-2 text-sm font-semibold">Password</p><FormControl><div class="relative">
               <LockKeyhole class="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input v-bind="componentField" type="password" autocomplete="new-password" placeholder="Password" class="h-11 pl-10" />
             </div></FormControl><FormMessage /></FormItem>
           </FormField>
           <FormField v-slot="{ componentField }" name="confirmPassword">
-            <FormItem><FormControl><div class="relative">
+            <FormItem><p class="mb-2 text-sm font-semibold">Confirm password</p><FormControl><div class="relative">
               <LockKeyhole class="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input v-bind="componentField" type="password" autocomplete="new-password" placeholder="Confirm password" class="h-11 pl-10" />
             </div></FormControl><FormMessage /></FormItem>
@@ -99,7 +108,7 @@ const onSubmit = handleSubmit(async ({ displayName, email, password }) => {
             {{ isLoading ? "Creating account…" : "Create account" }}
           </Button>
         </form>
-        <p class="text-center text-sm text-muted-foreground">
+        <p class="border-t pt-6 text-center text-sm text-muted-foreground">
           Already have an account?
           <NuxtLink to="/login" class="font-medium text-foreground hover:underline">Sign in</NuxtLink>
         </p>

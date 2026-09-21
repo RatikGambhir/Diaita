@@ -45,15 +45,16 @@ const remindLater = () => {
 </script>
 
 <template>
-  <Alert v-if="shouldShowBanner" class="relative bg-primary/10 border-primary/20">
-    <UserCircle class="h-5 w-5" />
-    <AlertTitle>Complete Your Profile</AlertTitle>
-    <AlertDescription>
-      Set up your fitness profile to get personalized recommendations and track your progress more effectively.
+  <Alert v-if="shouldShowBanner" class="relative border-foreground bg-foreground text-background">
+    <UserCircle class="h-5 w-5 text-sidebar-primary" />
+    <AlertTitle class="text-background">Complete your profile</AlertTitle>
+    <AlertDescription class="text-background/65">
+      Add your goals and baseline details to unlock a personalized training recommendation.
     </AlertDescription>
     <div class="mt-4 flex gap-2">
       <Button
         size="sm"
+        class="border-sidebar-primary bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
         @click="completeNow"
       >
         Complete Now
@@ -61,6 +62,7 @@ const remindLater = () => {
       <Button
         variant="ghost"
         size="sm"
+        class="text-background/65 hover:bg-background/10 hover:text-background"
         @click="remindLater"
       >
         Remind Me Later
@@ -69,7 +71,8 @@ const remindLater = () => {
     <Button
       variant="ghost"
       size="icon"
-      class="absolute top-2 right-2 h-6 w-6"
+      class="absolute right-2 top-2 h-7 w-7 text-background/55 hover:bg-background/10 hover:text-background"
+      aria-label="Dismiss profile reminder"
       @click="remindLater"
     >
       <X class="h-4 w-4" />

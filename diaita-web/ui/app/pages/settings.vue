@@ -59,21 +59,20 @@ const save = async () => {
 </script>
 
 <template>
-  <div class="flex-1 overflow-auto p-6">
-    <div class="mx-auto max-w-3xl space-y-6">
-      <header><h1 class="text-2xl font-semibold">Settings</h1><p class="mt-1 text-sm text-muted-foreground">Manage your account and core health profile.</p></header>
+  <div class="app-page max-w-5xl space-y-8">
+      <AppPageHeader eyebrow="Preferences" title="Settings" description="Keep the identity and health details behind your recommendations accurate." />
 
-      <Card>
-        <CardHeader><h2 class="flex items-center gap-2 text-lg font-semibold"><UserRound class="h-5 w-5 text-primary" />Account</h2></CardHeader>
-        <CardContent class="grid gap-4 sm:grid-cols-2">
-          <div><p class="text-sm text-muted-foreground">Name</p><p class="font-medium">{{ userStore.getUser?.displayName }}</p></div>
-          <div><p class="text-sm text-muted-foreground">Email</p><p class="font-medium">{{ userStore.getUser?.email }}</p></div>
-        </CardContent>
-      </Card>
+      <section>
+        <div class="mb-4 flex items-center gap-3"><UserRound class="h-5 w-5 text-primary" /><div><p class="eyebrow">Identity</p><h2 class="display-title mt-1 text-2xl">Account</h2></div></div>
+        <div class="grid border-y sm:grid-cols-2 sm:divide-x">
+          <div class="py-5 sm:px-6 sm:first:pl-0"><p class="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Name</p><p class="mt-2 font-medium">{{ userStore.getUser?.displayName }}</p></div>
+          <div class="border-t py-5 sm:border-t-0 sm:px-6"><p class="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Email</p><p class="mt-2 break-all font-medium">{{ userStore.getUser?.email }}</p></div>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader><h2 class="text-lg font-semibold">Health profile</h2><p class="text-sm text-muted-foreground">These values shape your saved nutrition and training recommendation.</p></CardHeader>
-        <CardContent>
+      <Card class="overflow-hidden">
+        <CardHeader class="border-b"><p class="eyebrow">Recommendation inputs</p><h2 class="display-title mt-2 text-3xl">Health profile</h2><p class="mt-1 text-sm text-muted-foreground">These values shape your saved nutrition and training recommendation.</p></CardHeader>
+        <CardContent class="pt-6">
           <div v-if="isLoading" class="py-10 text-center text-muted-foreground">Loading settings…</div>
           <div v-else-if="!userStore.getProfile" class="py-8 text-center"><p class="mb-4 text-muted-foreground">Complete onboarding before editing your health profile.</p><Button @click="navigateTo('/setup-profile')">Set up profile</Button></div>
           <form v-else class="space-y-5" @submit.prevent="save">
@@ -104,10 +103,9 @@ const save = async () => {
                 </SelectContent>
               </Select>
             </label>
-            <div class="flex justify-end"><Button type="submit" :disabled="isSaving"><LoaderCircle v-if="isSaving" class="mr-2 h-4 w-4 animate-spin" /><Save v-else class="mr-2 h-4 w-4" />Save changes</Button></div>
+            <div class="flex justify-end border-t pt-5"><Button type="submit" :disabled="isSaving"><LoaderCircle v-if="isSaving" class="h-4 w-4 animate-spin" /><Save v-else class="h-4 w-4" />Save changes</Button></div>
           </form>
         </CardContent>
       </Card>
-    </div>
   </div>
 </template>

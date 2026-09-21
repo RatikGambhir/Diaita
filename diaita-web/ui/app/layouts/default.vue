@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { Home, Dumbbell, Utensils, Settings, LogOut, PanelLeftClose, PanelLeft, UserCircle } from 'lucide-vue-next'
-import Button from '~/components/ui/button/Button.vue'
-import { authApi } from '~/api/auth'
-import { useUserStore } from '~/stores/useUserStore'
+import { Dumbbell, Home, LogOut, Settings, UserCircle, Utensils } from "lucide-vue-next"
+import { authApi } from "~/api/auth"
+import { useUserStore } from "~/stores/useUserStore"
 
 const route = useRoute()
 const toast = useToast()
 const userStore = useUserStore()
 
-const sidebarCollapsed = ref(false)
-
 const mainNavItems = [
-  { label: 'Home', icon: Home, to: '/' },
-  { label: 'Profile', icon: UserCircle, to: '/profile' },
-  { label: 'Workouts', icon: Dumbbell, to: '/workouts' },
-  { label: 'Nutrition', icon: Utensils, to: '/nutrition' },
-  { label: 'Settings', icon: Settings, to: '/settings' }
+  { label: "Today", icon: Home, to: "/" },
+  { label: "Nutrition", icon: Utensils, to: "/nutrition" },
+  { label: "Training", icon: Dumbbell, to: "/workouts" },
+  { label: "Plan", icon: UserCircle, to: "/profile" },
+  { label: "Settings", icon: Settings, to: "/settings" },
 ]
 
-const toggleSidebar = () => {
-  sidebarCollapsed.value = !sidebarCollapsed.value
-}
+const isActive = (to: string) => route.path === to || (to !== "/" && route.path.startsWith(to))
+
+const initials = computed(() => {
+  const name = userStore.getUser?.displayName?.trim() || "D"
+  return name.split(/\s+/).slice(0, 2).map(part => part[0]?.toUpperCase()).join("")
+})
 
 const signOut = async () => {
   try {
@@ -29,82 +29,94 @@ const signOut = async () => {
     // The local token is cleared even if the service is unavailable.
   }
   userStore.clearSession()
-  toast.add({
-    title: 'Signed out',
-    description: 'Your session has ended.',
-    color: 'success'
-  })
-
-  await navigateTo('/login')
+  toast.add({ title: "Signed out", description: "Your session has ended.", color: "success" })
+  await navigateTo("/login")
 }
-
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-sidebar">
-    <!-- Sidebar -->
-    <aside
-      class="sticky top-0 flex h-screen shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground transition-all duration-300"
-      :class="sidebarCollapsed ? 'w-16' : 'w-64'"
-    >
-      <!-- Header -->
-      <div class="flex h-16 items-center border-b px-4">
-        <NuxtLink to="/" class="flex items-center gap-2">
-          <span v-if="!sidebarCollapsed" class="text-lg font-bold text-sidebar-foreground">Diaita</span>
-        </NuxtLink>
-      </div>
+  <div class="min-h-screen bg-background lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
+    <aside class="sticky top-0 hidden h-screen flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground lg:flex">
+      <NuxtLink to="/" class="focus-ring mb-10 w-fit rounded-md">
+        <BrandMark inverse />
+      </NuxtLink>
 
-      <!-- Main Navigation -->
-      <nav class="flex-1 space-y-1 p-2">
+      <div class="eyebrow px-3 text-sidebar-foreground/45">Your journal</div>
+      <nav class="mt-4 space-y-1" aria-label="Primary navigation">
         <NuxtLink
           v-for="item in mainNavItems"
           :key="item.to"
           :to="item.to"
-          class="flex items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground transition-colors hover:bg-white hover:text-sidebar-accent-foreground"
-          :class="{
-            'bg-sidebar-primary text-sidebar-primary-foreground': route.path === item.to || (item.to !== '/' && route.path.startsWith(item.to)),
-            'justify-center': sidebarCollapsed
-          }"
+          :aria-current="isActive(item.to) ? 'page' : undefined"
+          :class="[
+            'focus-ring group flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors',
+            isActive(item.to)
+              ? 'bg-sidebar-accent text-sidebar-foreground'
+              : 'text-sidebar-foreground/62 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
+          ]"
         >
-          <component :is="item.icon" class="h-5 w-5 shrink-0" />
-          <span v-if="!sidebarCollapsed">{{ item.label }}</span>
+          <span
+            :class="[
+              'h-5 w-[3px] transition-colors',
+              isActive(item.to) ? 'bg-sidebar-primary' : 'bg-transparent group-hover:bg-sidebar-border',
+            ]"
+          />
+          <component :is="item.icon" class="h-[18px] w-[18px] shrink-0" />
+          <span>{{ item.label }}</span>
         </NuxtLink>
       </nav>
 
-      <!-- Secondary Navigation -->
-      <div class="border-t border-sidebar-border p-2">
+      <div class="mt-auto border-t border-sidebar-border pt-4">
+        <div class="flex items-center gap-3 px-3 py-2">
+          <span class="grid h-9 w-9 place-items-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-primary">
+            {{ initials }}
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold">{{ userStore.getUser?.displayName || "Diaita member" }}</p>
+            <p class="truncate text-xs text-sidebar-foreground/45">{{ userStore.getUser?.email }}</p>
+          </div>
+        </div>
         <button
           type="button"
-          class="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 font-sans text-sidebar-foreground/80 transition-colors hover:bg-white hover:text-sidebar-accent-foreground"
-          :class="{ 'justify-center': sidebarCollapsed }"
+          class="focus-ring mt-2 flex min-h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-sidebar-foreground/55 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
           @click="signOut"
         >
-          <LogOut class="h-5 w-5 shrink-0" />
-          <span v-if="!sidebarCollapsed">Sign Out</span>
+          <LogOut class="h-4 w-4" />
+          Sign out
         </button>
-      </div>
-
-      <!-- Collapse Toggle -->
-      <div class="border-t border-sidebar-border p-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          class="font-sans text-sidebar-foreground hover:bg-white hover:text-sidebar-accent-foreground"
-          :class="sidebarCollapsed ? 'w-full justify-center' : 'w-full justify-start'"
-          @click="toggleSidebar"
-        >
-          <PanelLeftClose v-if="!sidebarCollapsed" class="h-4 w-4" />
-          <PanelLeft v-else class="h-4 w-4" />
-          <span v-if="!sidebarCollapsed" class="ml-2">Collapse</span>
-        </Button>
       </div>
     </aside>
 
-    <div class="flex-1 pr-3 pt-4">
-      <!-- Main Content -->
-      <main class="relative z-10 h-[calc(100vh-1rem)] overflow-x-hidden overflow-y-auto rounded-2xl bg-background shadow-lg">
+    <div class="min-w-0">
+      <header class="sticky top-0 z-40 flex h-15 items-center justify-between border-b bg-background/95 px-5 backdrop-blur-md lg:hidden">
+        <NuxtLink to="/" class="focus-ring rounded-md">
+          <BrandMark />
+        </NuxtLink>
+        <NuxtLink to="/settings" class="focus-ring grid h-9 w-9 place-items-center rounded-full bg-foreground text-xs font-bold text-background" aria-label="Open settings">
+          {{ initials }}
+        </NuxtLink>
+      </header>
+
+      <main class="min-h-screen min-w-0">
         <slot />
       </main>
     </div>
+
+    <nav class="fixed inset-x-3 bottom-3 z-40 grid h-17 grid-cols-5 border border-sidebar-border bg-sidebar px-1.5 text-sidebar-foreground shadow-xl lg:hidden" aria-label="Mobile navigation">
+      <NuxtLink
+        v-for="item in mainNavItems"
+        :key="item.to"
+        :to="item.to"
+        :aria-current="isActive(item.to) ? 'page' : undefined"
+        :class="[
+          'focus-ring relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold transition-colors',
+          isActive(item.to) ? 'text-sidebar-primary' : 'text-sidebar-foreground/55',
+        ]"
+      >
+        <span v-if="isActive(item.to)" class="absolute inset-x-5 top-0 h-0.5 bg-sidebar-primary" />
+        <component :is="item.icon" class="h-5 w-5" />
+        <span>{{ item.label }}</span>
+      </NuxtLink>
+    </nav>
   </div>
 </template>

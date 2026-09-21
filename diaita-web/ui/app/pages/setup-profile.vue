@@ -2,7 +2,6 @@
 import { ref, computed } from 'vue'
 import { User, Activity, Target, Apple, Dumbbell, FileCheck, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
-import Badge from '~/components/ui/badge/Badge.vue'
 import Dialog from '~/components/ui/dialog/Dialog.vue'
 import DialogContent from '~/components/ui/dialog/DialogContent.vue'
 import DialogFooter from '~/components/ui/dialog/DialogFooter.vue'
@@ -294,12 +293,13 @@ const handleSkipForNow = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen border bg-background py-12 px-4">
-    <div class="max-w-7xl mx-auto">
-      <div class="mb-6 flex items-center justify-end">
+  <div class="min-h-screen bg-background px-4 py-5 sm:px-6 lg:py-8">
+    <div class="mx-auto max-w-7xl">
+      <div class="mb-8 flex items-center justify-between">
+        <NuxtLink to="/landing" class="focus-ring rounded-md"><BrandMark /></NuxtLink>
         <Button
           variant="outline"
-          class="gap-2 border-dashed text-muted-foreground hover:text-foreground"
+          class="gap-2 text-muted-foreground hover:text-foreground"
           :disabled="isSubmitting"
           @click="isSkipDialogOpen = true"
         >
@@ -308,58 +308,43 @@ const handleSkipForNow = async () => {
         </Button>
       </div>
 
-      <div class="text-center mb-12">
-        <Badge variant="outline" class="mb-4 px-4 py-1 bg-primary">
-          Diaita
-        </Badge>
-        <h1 class="text-4xl font-bold mb-3">Account Setup</h1>
-        <p class="text-muted-foreground">
-          Complete the steps below to set up your personalized fitness profile
-        </p>
+      <div class="mb-8 max-w-2xl">
+        <p class="eyebrow mb-3">Personalize Diaita</p>
+        <h1 class="display-title text-4xl sm:text-5xl">Build your health profile.</h1>
+        <p class="mt-3 leading-7 text-muted-foreground">A few grounded details help Diaita shape a more useful training recommendation.</p>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div class="lg:col-span-1">
-          <div class="bg-card rounded-lg border shadow-sm p-6 space-y-2">
+      <div class="mb-7 h-1 bg-muted lg:hidden"><div class="h-full bg-primary transition-all" :style="{ width: `${(currentStep / steps.length) * 100}%` }" /></div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
+        <aside class="hidden lg:block">
+          <div class="sticky top-8 bg-foreground p-5 text-background">
+            <p class="eyebrow mb-5 text-background/40">Setup progress</p>
             <button
               v-for="step in steps"
               :key="step.id"
               :class="cn(
-                'w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors',
-                currentStep === step.id && 'bg-background',
-                currentStep !== step.id && 'hover:bg-white'
+                'group flex w-full items-start gap-3 border-t border-background/15 px-1 py-4 text-left transition-colors last:border-b',
+                currentStep === step.id ? 'text-background' : 'text-background/45 hover:text-background/75'
               )"
               @click="currentStep = step.id"
             >
-              <div
-                :class="cn(
-                  'flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0',
-                  currentStep === step.id && 'bg-primary text-primary-foreground',
-                  currentStep !== step.id && 'bg-muted text-muted-foreground'
-                )"
-              >
-                <component :is="step.icon" class="w-5 h-5" />
-              </div>
+              <span :class="cn('font-mono text-xs', currentStep === step.id && 'text-sidebar-primary')">{{ String(step.id).padStart(2, '0') }}</span>
+              <component :is="step.icon" :class="cn('mt-0.5 h-4 w-4', currentStep === step.id && 'text-sidebar-primary')" />
               <div class="flex-1 min-w-0">
-                <p
-                  :class="cn(
-                    'font-medium text-sm',
-                    currentStep === step.id && 'text-foreground',
-                    currentStep !== step.id && 'text-muted-foreground'
-                  )"
-                >
-                  {{ step.title }}
-                </p>
-                <p class="text-xs text-muted-foreground">
-                  {{ step.description }}
-                </p>
+                <p class="text-sm font-semibold">{{ step.title }}</p>
+                <p class="mt-0.5 text-xs opacity-65">{{ step.description }}</p>
               </div>
             </button>
           </div>
-        </div>
+        </aside>
 
-        <div class="lg:col-span-3">
-          <div class="bg-card rounded-lg border shadow-sm p-8 min-h-[600px]">
+        <main class="min-w-0">
+          <div class="mb-5 flex items-center justify-between lg:hidden">
+            <div><p class="eyebrow">Step {{ currentStep }} of {{ steps.length }}</p><p class="mt-2 font-semibold">{{ currentStepInfo?.title }}</p></div>
+            <component :is="currentStepInfo?.icon" class="h-5 w-5 text-primary" />
+          </div>
+          <div class="min-h-[600px] rounded-xl border bg-card p-5 sm:p-8 lg:p-10">
             <PersonalInfoStep
               v-if="currentStep === 1"
               :form-data="basicDemographicsForm"
@@ -394,7 +379,7 @@ const handleSkipForNow = async () => {
               :nutrition-history="nutritionHistoryForm"
             />
 
-            <div class="flex items-center justify-between mt-12 pt-8 border-t border-border">
+            <div class="mt-12 flex flex-col gap-4 border-t border-border pt-7 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 variant="ghost"
                 :disabled="currentStep === 1"
@@ -405,19 +390,19 @@ const handleSkipForNow = async () => {
                 Back
               </Button>
 
-              <div class="flex items-center gap-2">
+              <div class="hidden items-center gap-2 sm:flex">
                 <span class="text-sm text-muted-foreground">
                   Step {{ currentStep }} of {{ steps.length }}
                 </span>
-                <span v-if="isCurrentStepSkippable" class="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                <span v-if="isCurrentStepSkippable" class="text-xs text-muted-foreground">
                   Optional
                 </span>
               </div>
 
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center justify-end gap-2">
                 <Button
                   variant="ghost"
-                  class="gap-2 text-muted-foreground hover:text-foreground"
+                  class="hidden gap-2 text-muted-foreground hover:text-foreground sm:inline-flex"
                   :disabled="isSubmitting"
                   @click="isSkipDialogOpen = true"
                 >
@@ -453,7 +438,7 @@ const handleSkipForNow = async () => {
               </div>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
 

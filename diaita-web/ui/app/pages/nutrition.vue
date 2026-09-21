@@ -315,13 +315,6 @@ const macros = computed<[Macro, Macro, Macro]>(() => {
   ];
 });
 
-const pieGradient = computed(() => {
-  const [carb, protein, fat] = macros.value;
-  const carbStop = carb.percent;
-  const proteinStop = carbStop + protein.percent;
-  return `conic-gradient(${carb.color} 0 ${carbStop}%, ${protein.color} ${carbStop}% ${proteinStop}%, ${fat.color} ${proteinStop}% 100%)`;
-});
-
 const applySummary = (summary: NutritionDaySummary) => {
   meals.value = meals.value.map((meal) => {
     const items = mapBucketToMealItems(bucketForMealType(summary, meal.mealType));
@@ -432,19 +425,18 @@ const handleAddFoods = async (
 </script>
 
 <template>
-    <div class="flex-1 flex flex-col h-full bg-background">
-        <div class="flex-1 overflow-auto p-6">
-            <div class="max-w-6xl mx-auto space-y-6">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 class="text-2xl font-semibold text-foreground">Nutrition Tracker</h1>
-                        <p class="text-sm text-muted-foreground">Log meals and review calories and macronutrients by day.</p>
-                    </div>
+    <div class="app-page space-y-8">
+                <AppPageHeader
+                    eyebrow="Daily ledger"
+                    title="Food & nutrition"
+                    description="Record what you ate, then use the day’s totals to spot patterns—not chase perfection."
+                >
+                  <template #actions>
                     <Popover v-model:open="datePickerOpen">
                         <PopoverTrigger as-child>
                             <Button
                                 variant="outline"
-                                class="h-9 justify-start gap-2 text-sm font-normal text-muted-foreground hover:text-foreground"
+                                class="justify-start gap-2 font-medium"
                             >
                                 <CalendarDays class="h-4 w-4" />
                                 {{ displayDate }}
@@ -454,10 +446,11 @@ const handleAddFoods = async (
                             <Calendar :model-value="selectedDate" @select="onDateSelect" />
                         </PopoverContent>
                     </Popover>
-                </div>
+                  </template>
+                </AppPageHeader>
 
-                <div class="space-y-6">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="space-y-8">
+                                <div class="grid border-y sm:grid-cols-2 lg:grid-cols-4 lg:divide-x">
                                     <NutritionSummaryCard
                                         v-for="card in summaryCards"
                                         :key="card.label"
@@ -469,9 +462,18 @@ const handleAddFoods = async (
                                     />
                                 </div>
 
-                                <MacroDistributionCard :gradient="pieGradient" :macros="macros" />
+                                <div class="grid gap-8 xl:grid-cols-[minmax(22rem,.72fr)_1.28fr] xl:items-start">
+                                  <MacroDistributionCard :macros="macros" />
+                                  <section>
+                                    <div class="mb-5 flex items-end justify-between border-b pb-4">
+                                      <div>
+                                        <p class="eyebrow">Daybook</p>
+                                        <h2 class="display-title mt-2 text-3xl">Meals</h2>
+                                      </div>
+                                      <p class="text-sm text-muted-foreground">{{ meals.reduce((sum, meal) => sum + meal.items.length, 0) }} foods logged</p>
+                                    </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                                <div class="grid grid-cols-1 gap-4 2xl:grid-cols-2">
                                     <MealCard
                                         v-for="meal in meals"
                                         :key="meal.name"
@@ -480,9 +482,8 @@ const handleAddFoods = async (
                                         @delete-food="(itemId) => handleDeleteFood(meal.mealType, itemId)"
                                     />
                                 </div>
-
+                                  </section>
+                                </div>
                 </div>
-            </div>
-        </div>
     </div>
 </template>
