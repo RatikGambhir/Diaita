@@ -4,12 +4,12 @@ import com.diaita.Container
 import com.diaita.controllers.UserController
 import com.diaita.dto.*
 import com.diaita.entity.*
-import com.diaita.lib.clients.GeminiRestClient
 import com.diaita.lib.mappings.toEntity
 import com.diaita.repo.RecommendationRepo
 import com.diaita.repo.UserRepo
 import com.diaita.testdata.RecommendationTestData
 import com.diaita.testdata.UserProfileTestData
+import com.diaita.service.RecommendationFactory
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -41,11 +41,9 @@ class UserRouterTest {
 
     private val json = Json
     private val repo = mockk<UserRepo>()
-    private val gemini = mockk<GeminiRestClient>(relaxed = true)
     private val recommendationRepo = mockk<RecommendationRepo>()
     private val container = Container().apply {
         bind<UserRepo>(repo)
-        bind<GeminiRestClient>(gemini)
         bind<RecommendationRepo>(recommendationRepo)
     }
     private val controller = container.get<UserController>()
@@ -66,11 +64,8 @@ class UserRouterTest {
     fun register_returns_200_and_calls_controller_with_payload_on_success() = testApplication {
         val payload = UserProfileTestData.fullRequest()
         val profile = RecommendationTestData.registeredProfile(payload.userId)
-        val recommendation = RecommendationTestData.recommendation()
+        val recommendation = RecommendationFactory.create(profile)
         coEvery { repo.upsertUserProfile(payload) } returns profile
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
         coEvery { recommendationRepo.saveRecommendation(payload.userId, recommendation) } returns true
 
         application {
@@ -87,9 +82,6 @@ class UserRouterTest {
         assertEquals(profile, body.profile)
         assertEquals(recommendation, body.recommendation)
         coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
-        coVerify(exactly = 1) {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        }
         coVerify(exactly = 1) { recommendationRepo.saveRecommendation(payload.userId, recommendation) }
     }
 
@@ -108,7 +100,7 @@ class UserRouterTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertTrue(response.bodyAsText().contains("Invalid request"))
-        confirmVerified(repo, gemini, recommendationRepo)
+        confirmVerified(repo, recommendationRepo)
     }
 
     @Test
@@ -126,7 +118,7 @@ class UserRouterTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertTrue(response.bodyAsText().contains("age"))
-        confirmVerified(repo, gemini, recommendationRepo)
+        confirmVerified(repo, recommendationRepo)
     }
 
     @Test
@@ -144,12 +136,15 @@ class UserRouterTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertTrue(response.bodyAsText().contains("primaryGoal"))
-        confirmVerified(repo, gemini, recommendationRepo)
+        confirmVerified(repo, recommendationRepo)
     }
 
     @Test
-    fun user_profile_returns_400_when_training_background_missing() = testApplication {
-        val invalidPayload = UserProfileTestData.fullRequest().copy(trainingHistory = null, trainingAge = null)
+    fun user_profile_accepts_missing_optional_training_background() = testApplication {
+        val payload = UserProfileTestData.fullRequest().copy(trainingHistory = null, trainingAge = null)
+        val recommendation = RecommendationFactory.create(payload)
+        coEvery { repo.upsertUserProfile(payload) } returns payload
+        coEvery { recommendationRepo.saveRecommendation(payload.userId, recommendation) } returns true
 
         application {
             testModule()
@@ -157,22 +152,18 @@ class UserRouterTest {
 
         val response = client.post("/user/profile") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            setBody(json.encodeToString(invalidPayload))
+            setBody(json.encodeToString(payload))
         }
 
-        assertEquals(HttpStatusCode.BadRequest, response.status)
-        assertTrue(response.bodyAsText().contains("trainingHistory"))
-        confirmVerified(repo, gemini, recommendationRepo)
+        assertEquals(HttpStatusCode.OK, response.status)
+        coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
+        coVerify(exactly = 1) { recommendationRepo.saveRecommendation(payload.userId, recommendation) }
     }
 
     @Test
     fun user_profile_returns_500_when_controller_reports_failure() = testApplication {
         val payload = UserProfileTestData.fullRequest()
-        val recommendation = RecommendationTestData.recommendation()
         coEvery { repo.upsertUserProfile(payload) } returns null
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
 
         application {
             testModule()
@@ -192,11 +183,8 @@ class UserRouterTest {
     fun user_profile_returns_200_on_success() = testApplication {
         val payload = UserProfileTestData.fullRequest()
         val profile = RecommendationTestData.registeredProfile(payload.userId)
-        val recommendation = RecommendationTestData.recommendation()
+        val recommendation = RecommendationFactory.create(profile)
         coEvery { repo.upsertUserProfile(payload) } returns profile
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
         coEvery { recommendationRepo.saveRecommendation(payload.userId, recommendation) } returns true
 
         application {
@@ -213,9 +201,6 @@ class UserRouterTest {
         assertEquals(profile, body.profile)
         assertEquals(recommendation, body.recommendation)
         coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
-        coVerify(exactly = 1) {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        }
         coVerify(exactly = 1) { recommendationRepo.saveRecommendation(payload.userId, recommendation) }
     }
 
@@ -231,19 +216,16 @@ class UserRouterTest {
         }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-        confirmVerified(repo, gemini, recommendationRepo)
+        confirmVerified(repo, recommendationRepo)
     }
 
     @Test
     fun integration_register_calls_repo_and_recommendations_when_upsert_succeeds() = testApplication {
         val payload = UserProfileTestData.fullRequest()
         val profile = RecommendationTestData.registeredProfile(payload.userId)
-        val recommendation = RecommendationTestData.recommendation()
+        val recommendation = RecommendationFactory.create(profile)
 
         coEvery { repo.upsertUserProfile(payload) } returns profile
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
         coEvery { recommendationRepo.saveRecommendation(payload.userId, recommendation) } returns true
 
         application {
@@ -257,21 +239,13 @@ class UserRouterTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
         coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
-        coVerify(exactly = 1) {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        }
         coVerify(exactly = 1) { recommendationRepo.saveRecommendation(payload.userId, recommendation) }
     }
 
     @Test
     fun integration_register_returns_500_when_upsert_fails() = testApplication {
         val payload = UserProfileTestData.fullRequest()
-        val recommendation = RecommendationTestData.recommendation()
-
         coEvery { repo.upsertUserProfile(payload) } returns null
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
 
         application {
             testModule()
@@ -290,12 +264,9 @@ class UserRouterTest {
     @Test
     fun generate_recommendations_returns_structured_payload() = testApplication {
         val profile = RecommendationTestData.registeredProfile()
-        val recommendation = RecommendationTestData.recommendation()
+        val recommendation = RecommendationFactory.create(profile)
 
         coEvery { repo.getFullProfile(profile.userId) } returns profile
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
         coEvery { recommendationRepo.saveRecommendation(profile.userId, recommendation) } returns true
 
         application {
@@ -376,7 +347,7 @@ class UserRouterTest {
             )
         }
         coVerify(exactly = 1) { repo.deleteSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) }
-        confirmVerified(gemini, recommendationRepo)
+        confirmVerified(recommendationRepo)
     }
 
     @Test
@@ -407,7 +378,7 @@ class UserRouterTest {
         coVerify(exactly = 1) { repo.getSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) }
         coVerify(exactly = 1) { repo.updateSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId, any()) }
         coVerify(exactly = 1) { repo.deleteSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) }
-        confirmVerified(gemini, recommendationRepo)
+        confirmVerified(recommendationRepo)
     }
 
     @Test
@@ -530,7 +501,7 @@ class UserRouterTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertTrue(response.bodyAsText().contains("page query parameter"))
-        confirmVerified(repo, gemini, recommendationRepo)
+        confirmVerified(repo, recommendationRepo)
     }
 
     @Test
@@ -545,7 +516,7 @@ class UserRouterTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertTrue(response.bodyAsText().contains("action query parameter"))
-        confirmVerified(repo, gemini, recommendationRepo)
+        confirmVerified(repo, recommendationRepo)
     }
 
     private fun assertSectionCrudSuccess(

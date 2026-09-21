@@ -17,15 +17,12 @@ import Button from "~/components/ui/button/Button.vue"
 import NutritionSummaryCard from "~/components/nutrition/NutritionSummaryCard.vue"
 import MacroDistributionCard from "~/components/nutrition/MacroDistributionCard.vue"
 import MealCard from "~/components/nutrition/MealCard.vue"
-import NutritionResourcesCard from "~/components/nutrition/NutritionResourcesCard.vue"
-import { CalendarDays, FileText, Lightbulb, Plus, Sun, Moon } from "lucide-vue-next"
-import GenericTabGroup from "~/components/GenericTabGroup.vue"
+import { Apple, CalendarDays, Sun, Moon } from "lucide-vue-next"
 import { Popover, PopoverTrigger, PopoverContent } from "~/components/ui/popover"
 import { Calendar } from "~/components/ui/calendar"
-import FoodsTab from "~/components/nutrition/FoodsTab.vue"
-import MealsTab from "~/components/nutrition/MealsTab.vue"
 
 type MealItem = {
+  id: string | null;
   name: string;
   calories: number;
   carbs: number;
@@ -68,6 +65,7 @@ const MEAL_CONFIGS: MealConfig[] = [
   { mealType: "breakfast", name: "Breakfast", icon: Sun, hour: 8 },
   { mealType: "lunch", name: "Lunch", icon: Sun, hour: 12 },
   { mealType: "dinner", name: "Dinner", icon: Moon, hour: 18 },
+  { mealType: "snack", name: "Snacks", icon: Apple, hour: 15 },
 ];
 
 const roundNutritionValue = (value: number) => Math.round(value * 10) / 10;
@@ -118,6 +116,7 @@ const formatMealItemName = (foodName: string, servingSize?: string | null) => {
 
 const mapBucketToMealItems = (bucket: NutritionMealBucket): MealItem[] => {
   return bucket.items.map((item) => ({
+    id: item.id,
     name: formatMealItemName(item.foodName, item.servingSize),
     calories: roundNutritionValue(item.cal),
     carbs: roundNutritionValue(item.carb),
@@ -197,7 +196,6 @@ const buildUpsertMealItems = (
 
 const selectedDate = ref(new Date());
 const datePickerOpen = ref(false);
-const activeTab = ref("today");
 const meals = ref<Meal[]>(createMeals());
 const userStore = useUserStore();
 const toast = useToast();
@@ -250,9 +248,13 @@ const loadDaySummary = async () => {
   }
 };
 
-watch(selectedDate, () => {
+watch([selectedDate, () => userStore.getUser?.id], () => {
   void loadDaySummary();
-}, { immediate: true });
+});
+
+onMounted(() => {
+  void loadDaySummary();
+});
 
 function onDateSelect(date: Date) {
   selectedDate.value = date;
@@ -326,10 +328,41 @@ const applySummary = (summary: NutritionDaySummary) => {
 
     return {
       ...meal,
+      mealId: bucketForMealType(summary, meal.mealType).mealId,
       totals: calculateMealTotals(items),
       items,
     };
   });
+};
+
+const handleDeleteFood = async (mealType: NutritionMealType, itemId: string | null) => {
+  if (!itemId || savingMealType.value !== null) return;
+  const meal = meals.value.find((option) => option.mealType === mealType);
+  const userId = userStore.getUser?.id?.trim();
+  if (!meal?.mealId || !userId) return;
+
+  savingMealType.value = mealType;
+  try {
+    const summary = await nutritionApi.upsertMeals({
+      userId,
+      meals: [{
+        id: meal.mealId,
+        mealType,
+        eatenAt: buildEatenAt(selectedDate.value, mealType),
+        itemOps: { upsert: [], deleteIds: [itemId] },
+      }],
+    });
+    applySummary(summary);
+    toast.add({ title: "Food removed", description: `Updated ${meal.name}.`, color: "success" });
+  } catch (error) {
+    toast.add({
+      title: "Unable to remove food",
+      description: error instanceof Error ? error.message : "Please try again.",
+      color: "error",
+    });
+  } finally {
+    savingMealType.value = null;
+  }
 };
 
 const handleAddFoods = async (
@@ -346,7 +379,6 @@ const handleAddFoods = async (
   }
 
   const currentUser = userStore.getUser as { id?: string } | null;
-  console.log('user', currentUser)
   const userId = currentUser?.id?.trim();
 
   if (!userId) {
@@ -397,65 +429,34 @@ const handleAddFoods = async (
   }
 };
 
-const resources = [
-  { label: "Meal Plans", value: 12, icon: FileText, iconBg: "bg-primary/10", iconColor: "text-primary" },
-  { label: "Add Specific Food", value: 156, icon: Plus, iconBg: "bg-destructive/10", iconColor: "text-destructive" },
-  { label: "Recipes", value: 48, icon: FileText, iconBg: "bg-accent", iconColor: "text-accent-foreground" },
-  { label: "Nutrition Recommendations", value: 8, icon: Lightbulb, iconBg: "bg-secondary", iconColor: "text-secondary-foreground" },
-] satisfies Array<{
-  label: string;
-  value: number;
-  icon: FunctionalComponent<LucideProps>;
-  iconBg: string;
-  iconColor: string;
-}>;
 </script>
 
 <template>
     <div class="flex-1 flex flex-col h-full bg-background">
         <div class="flex-1 overflow-auto p-6">
             <div class="max-w-6xl mx-auto space-y-6">
-                <h1 class="text-2xl font-semibold text-foreground">Nutrition Tracker</h1>
-                <GenericTabGroup
-                    v-model="activeTab"
-                    :tabs="[
-                        { value: 'today', label: 'Today' },
-                        { value: 'foods', label: 'Foods' },
-                        { value: 'meals', label: 'Meals' },
-                    ]"
-                    tab-trigger-class="text-xl sm:text-2xl"
-                >
-                    <template #leading>
-                        <Popover v-model:open="datePickerOpen">
-                            <PopoverTrigger as-child>
-                                <Button
-                                    variant="outline"
-                                    class="h-9 justify-start gap-2 text-sm font-normal text-muted-foreground hover:text-foreground"
-                                >
-                                    <CalendarDays class="h-4 w-4" />
-                                    {{ displayDate }}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent align="start" class="w-auto p-0">
-                                <Calendar
-                                    :model-value="selectedDate"
-                                    @select="onDateSelect"
-                                />
-                            </PopoverContent>
-                        </Popover>
-                    </template>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-foreground">Nutrition Tracker</h1>
+                        <p class="text-sm text-muted-foreground">Log meals and review calories and macronutrients by day.</p>
+                    </div>
+                    <Popover v-model:open="datePickerOpen">
+                        <PopoverTrigger as-child>
+                            <Button
+                                variant="outline"
+                                class="h-9 justify-start gap-2 text-sm font-normal text-muted-foreground hover:text-foreground"
+                            >
+                                <CalendarDays class="h-4 w-4" />
+                                {{ displayDate }}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" class="w-auto p-0">
+                            <Calendar :model-value="selectedDate" @select="onDateSelect" />
+                        </PopoverContent>
+                    </Popover>
+                </div>
 
-                    <Transition
-                        mode="out-in"
-                        enter-active-class="transition-all duration-300 ease-out"
-                        enter-from-class="opacity-0 translate-x-5"
-                        enter-to-class="opacity-100 translate-x-0"
-                        leave-active-class="transition-all duration-250 ease-in"
-                        leave-from-class="opacity-100 translate-x-0"
-                        leave-to-class="opacity-0 -translate-x-5"
-                    >
-                        <div :key="activeTab" class="mt-0 overflow-hidden">
-                            <div v-if="activeTab === 'today'" class="space-y-6">
+                <div class="space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <NutritionSummaryCard
                                         v-for="card in summaryCards"
@@ -470,24 +471,17 @@ const resources = [
 
                                 <MacroDistributionCard :gradient="pieGradient" :macros="macros" />
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                                     <MealCard
                                         v-for="meal in meals"
                                         :key="meal.name"
                                         :meal="meal"
                                         @add-foods="(ingredients) => handleAddFoods(meal.mealType, ingredients)"
+                                        @delete-food="(itemId) => handleDeleteFood(meal.mealType, itemId)"
                                     />
                                 </div>
 
-                                <NutritionResourcesCard :resources="resources" />
-                            </div>
-
-                            <FoodsTab v-else-if="activeTab === 'foods'" />
-
-                            <MealsTab v-else />
-                        </div>
-                    </Transition>
-                </GenericTabGroup>
+                </div>
             </div>
         </div>
     </div>

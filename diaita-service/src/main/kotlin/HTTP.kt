@@ -1,22 +1,25 @@
 package com.diaita
 
 import io.ktor.http.*
-import io.ktor.serialization.gson.*
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.defaultheaders.*
-import kotlinx.serialization.json.Json
 
 fun Application.configureHTTP() {
+    val allowedHosts = System.getenv("DIAITA_CORS_HOSTS")
+        ?.takeIf(String::isNotBlank)
+        ?: environment.config.propertyOrNull("cors.allowedHosts")?.getString()
+        ?: "localhost:3000,127.0.0.1:3000"
+
     install(DefaultHeaders) {
         header("X-Engine", "Ktor")
     }
 
-
     install(CORS) {
-        allowHost("localhost:3000", schemes = listOf("http"))
+        allowedHosts.split(',')
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .forEach { allowHost(it, schemes = listOf("http", "https")) }
 
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
@@ -28,6 +31,6 @@ fun Application.configureHTTP() {
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.Authorization)
 
-        allowCredentials = true // only if using cookies
+        allowCredentials = false
     }
 }

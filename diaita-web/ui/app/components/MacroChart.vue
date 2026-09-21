@@ -95,7 +95,7 @@ const getPieSlices = () => {
                 <div
                     class="w-4 h-4 rounded"
                     :style="{ backgroundColor: colorMap[item.name] || 'var(--muted-foreground)' }"
-                ></div>
+                />
                 <span class="text-sm font-medium">{{ item.name }}: {{ item.value }}g</span>
             </div>
         </div>

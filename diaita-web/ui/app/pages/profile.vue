@@ -16,6 +16,7 @@ import {
 } from "~/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { userApi } from "~/api/user";
+import { formatOptionLabel } from "~/lib/utils";
 import type { Recommendation } from "~/types/ProfileTypes";
 
 const userStore = useUserStore();
@@ -37,7 +38,7 @@ const summaryCards = computed(() => {
   return [
     {
       label: "Primary focus",
-      value: training.value.focus.primary,
+      value: formatOptionLabel(training.value.focus.primary),
       icon: Dumbbell,
     },
     {
@@ -129,7 +130,7 @@ onMounted(() => {
           v-if="training"
           class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
         >
-          <Badge variant="secondary">{{ training.focus.primary }}</Badge>
+          <Badge variant="secondary">{{ formatOptionLabel(training.focus.primary) }}</Badge>
           <Badge variant="secondary">{{ training.split.days_per_week }} days / week</Badge>
         </div>
       </header>

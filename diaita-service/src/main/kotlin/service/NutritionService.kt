@@ -79,14 +79,9 @@ class NutritionService(
 
     suspend fun upsertMeals(request: UpsertMealsRequestDto): NutritionDaySummaryResponseDto? {
         val normalizedRequest = request.toNormalizedRequest()
-        val summary = nutritionRepo.upsertMeals(normalizedRequest) ?: return null
-
-        return summary.copy(
-            breakfast = summary.breakfast.sortedByFoodName(),
-            lunch = summary.lunch.sortedByFoodName(),
-            dinner = summary.dinner.sortedByFoodName(),
-            snacks = summary.snacks.sortedByFoodName()
-        )
+        if (!nutritionRepo.upsertMeals(normalizedRequest)) return null
+        val date = normalizedRequest.meals.firstOrNull()?.eatenAt?.toUtcLocalDate()?.toString() ?: return null
+        return getNutritionDaySummary(normalizedRequest.userId, date)
     }
 
     suspend fun autocomplete(
@@ -260,6 +255,7 @@ class NutritionService(
             }
 
         return MealBucketResponseDto(
+            mealId = dayMealContexts.firstOrNull { it.meal.mealType == mealType }?.meal?.id,
             items = dayItems,
             historical = historicalMealBucketAverages(historicalMealContexts, mealType)
         )
@@ -325,6 +321,7 @@ class NutritionService(
 
     private fun MealItemRowEntity.toMealBucketItem(): MealBucketItemResponseDto {
         return MealBucketItemResponseDto(
+            id = id,
             foodName = itemName,
             cal = calories,
             fat = fatG,

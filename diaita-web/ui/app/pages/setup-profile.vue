@@ -211,18 +211,6 @@ const handleSubmit = async () => {
     return
   }
 
-  const trainingHistory = normalizeString(form.value.trainingHistory)
-  const trainingAge = normalizeString(form.value.trainingAge)
-
-  if (!trainingHistory && !trainingAge) {
-    toast.add({
-      title: 'Training background required',
-      description: 'Please provide either training history or training age.',
-      color: 'error',
-    })
-    return
-  }
-
   const payload: RegisterUserProfileRequest = {
     userId,
     age: form.value.age!,
@@ -233,8 +221,8 @@ const handleSubmit = async () => {
     activityLevel: form.value.activityLevel.trim(),
     sleepDuration: form.value.sleepDuration,
     stressLevel: normalizeString(form.value.stressLevel),
-    trainingHistory,
-    trainingAge,
+    trainingHistory: normalizeString(form.value.trainingHistory),
+    trainingAge: normalizeString(form.value.trainingAge),
     equipmentAccess: normalizeString(form.value.equipmentAccess),
     daysPerWeek: form.value.daysPerWeek,
     timePerSession: form.value.timePerSession,

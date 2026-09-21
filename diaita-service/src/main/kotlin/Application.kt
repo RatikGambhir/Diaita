@@ -7,11 +7,11 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    configureFrameworks()
     configureSerialization()
-    val container = configureContainer()
-    // configureMonitoring()
+    configureMonitoring()
+    val database = configureDatabases()
+    val container = configureContainer(database)
+    configureSecurity(container.get(), container.get())
     configureHTTP()
-    // configureSecurity()
     configureRouting(container)
 }

@@ -18,6 +18,10 @@ out/
 diaita-service/src/main/resources/
 **/build/
 **/out/
+diaita-service/data/
+*.db
+*.db-shm
+*.db-wal
 # If using Maven anywhere:
 target/
 

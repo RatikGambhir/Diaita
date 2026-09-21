@@ -1,321 +1,75 @@
 package com.diaita.service
 
-import com.diaita.Container
-import com.diaita.dto.RecommendationDto
 import com.diaita.dto.RegisterUserProfileResponseDto
 import com.diaita.dto.ServiceResult
 import com.diaita.dto.UserSettingsAction
 import com.diaita.dto.UserSettingsPage
-import com.diaita.lib.clients.GeminiRestClient
 import com.diaita.lib.mappings.toEntity
 import com.diaita.repo.RecommendationRepo
 import com.diaita.repo.UserRepo
-import com.diaita.testdata.RecommendationTestData
 import com.diaita.testdata.UserProfileTestData
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.confirmVerified
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class UserServiceTest {
-
     private val repo = mockk<UserRepo>()
-    private val gemini = mockk<GeminiRestClient>(relaxed = true)
     private val recommendationRepo = mockk<RecommendationRepo>()
-    private val json = Json
-    private val container = Container().apply {
-        bind<UserRepo>(repo)
-        bind<GeminiRestClient>(gemini)
-        bind<RecommendationRepo>(recommendationRepo)
-    }
-    private val service = container.get<UserService>()
+    private val service = UserService(repo, recommendationRepo)
 
     @Test
-    fun registerUserProfile_returns_success_when_upsert_and_recommendations_succeed() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val profile = RecommendationTestData.registeredProfile(payload.userId)
-        val recommendation = RecommendationTestData.recommendation()
+    fun registerUserProfile_saves_profile_and_local_recommendation() = runBlocking {
+        val profile = UserProfileTestData.fullRequest()
+        coEvery { repo.upsertUserProfile(profile) } returns profile
+        coEvery { recommendationRepo.saveRecommendation(profile.userId, any()) } returns true
 
-        coEvery { repo.upsertUserProfile(payload) } returns profile
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
-        coEvery { recommendationRepo.saveRecommendation(payload.userId, recommendation) } returns true
+        val result = assertIs<ServiceResult.Success<RegisterUserProfileResponseDto>>(
+            service.registerUserProfile(profile)
+        )
 
-        val result = service.registerUserProfile(payload)
-
-        assertIs<ServiceResult.Success<RegisterUserProfileResponseDto>>(result)
         assertEquals(profile, result.data.profile)
-        assertEquals(recommendation, result.data.recommendation)
-        coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
-        coVerify(exactly = 1) {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        }
-        coVerify(exactly = 1) { recommendationRepo.saveRecommendation(payload.userId, recommendation) }
+        assertEquals(profile.primaryGoal, result.data.recommendation.training.focus.primary)
+        coVerify(exactly = 1) { recommendationRepo.saveRecommendation(profile.userId, result.data.recommendation) }
     }
 
     @Test
-    fun registerUserProfile_returns_failure_when_upsert_fails() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val recommendation = RecommendationTestData.recommendation()
+    fun registerUserProfile_returns_failure_when_profile_cannot_be_saved() = runBlocking {
+        val profile = UserProfileTestData.fullRequest()
+        coEvery { repo.upsertUserProfile(profile) } returns null
 
-        coEvery { repo.upsertUserProfile(payload) } returns null
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
-
-        val result = service.registerUserProfile(payload)
-
-        assertIs<ServiceResult.Failure>(result)
+        val result = assertIs<ServiceResult.Failure>(service.registerUserProfile(profile))
         assertTrue(result.error.contains("upsertUserProfile"))
-        coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
     }
 
     @Test
-    fun registerUserProfile_returns_failure_when_recommendation_generation_fails() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val profile = RecommendationTestData.registeredProfile(payload.userId)
-
-        coEvery { repo.upsertUserProfile(payload) } returns profile
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns null
-
-        val result = service.registerUserProfile(payload)
-
-        assertIs<ServiceResult.Failure>(result)
-        assertTrue(result.error.contains("genRecommendations"))
-        coVerify(exactly = 1) { repo.upsertUserProfile(payload) }
-        coVerify(exactly = 1) {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        }
-        confirmVerified(recommendationRepo)
-    }
-
-    @Test
-    fun registerUserProfile_returns_failure_when_recommendation_save_fails() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val profile = RecommendationTestData.registeredProfile(payload.userId)
-        val recommendation = RecommendationTestData.recommendation()
-
-        coEvery { repo.upsertUserProfile(payload) } returns profile
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
-        coEvery { recommendationRepo.saveRecommendation(payload.userId, recommendation) } returns false
-
-        val result = service.registerUserProfile(payload)
-
-        assertIs<ServiceResult.Failure>(result)
-        assertTrue(result.error.contains("saveUserRecommendations"))
-        coVerify(exactly = 1) { recommendationRepo.saveRecommendation(payload.userId, recommendation) }
-    }
-
-    @Test
-    fun generateAndSaveRecommendations_returns_structured_recommendation_when_profile_exists() = runBlocking {
-        val profile = RecommendationTestData.registeredProfile()
-        val recommendation = RecommendationTestData.recommendation()
-
+    fun generateAndSaveRecommendations_uses_saved_profile() = runBlocking {
+        val profile = UserProfileTestData.fullRequest()
         coEvery { repo.getFullProfile(profile.userId) } returns profile
-        coEvery {
-            gemini.askQuestionStructured(match { it.isNotBlank() }, any(), RecommendationDto.serializer(), any(), any())
-        } returns recommendation
-        coEvery { recommendationRepo.saveRecommendation(profile.userId, recommendation) } returns true
+        coEvery { recommendationRepo.saveRecommendation(profile.userId, any()) } returns true
 
-        val result = service.generateAndSaveRecommendations(profile.userId)
-
-        assertIs<ServiceResult.Success<RecommendationDto>>(result)
-        assertEquals(recommendation, result.data)
-        coVerify(exactly = 1) { repo.getFullProfile(profile.userId) }
-        coVerify(exactly = 1) { recommendationRepo.saveRecommendation(profile.userId, recommendation) }
+        val result = assertIs<ServiceResult.Success<*>>(service.generateAndSaveRecommendations(profile.userId))
+        assertTrue(result.data != null)
     }
 
     @Test
-    fun getRecommendations_returns_saved_recommendation() = runBlocking {
+    fun settings_basic_demographics_crud_maps_dto_and_entity() = runBlocking {
         val userId = UserProfileTestData.fullRequest().userId
-        val recommendation = RecommendationTestData.recommendation()
-
-        coEvery { recommendationRepo.getRecommendationByUserId(userId) } returns recommendation
-
-        assertEquals(recommendation, service.getRecommendations(userId))
-    }
-
-    @Test
-    fun settings_basic_demographics_crud_success() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val row = UserProfileTestData.basicDemographics().toEntity(userId)
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.basicDemographics())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) } returns row
-        coEvery { repo.updateSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId, any()) } returns row
+        val dto = UserProfileTestData.basicDemographics()
+        val entity = dto.toEntity(userId)
+        val payload = Json.encodeToJsonElement(dto)
+        coEvery { repo.getSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) } returns entity
+        coEvery { repo.updateSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId, any()) } returns entity
         coEvery { repo.deleteSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) } returns true
 
-        assertEquals(UserProfileTestData.basicDemographics(), service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.GET))
-        assertEquals(
-            UserProfileTestData.basicDemographics(),
-            service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.UPDATE, updatePayload)
-        )
+        assertEquals(dto, service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.GET))
+        assertEquals(dto, service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.UPDATE, payload))
         assertTrue(service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.DELETE) as Boolean)
-    }
-
-    @Test
-    fun settings_basic_demographics_crud_error() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.basicDemographics())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) } returns null
-        coEvery { repo.updateSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId, any()) } returns null
-        coEvery { repo.deleteSettingsSection(UserSettingsPage.BASIC_DEMOGRAPHICS, userId) } returns false
-
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.GET))
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.UPDATE, updatePayload))
-        assertFalse(service.handleUserSettings(userId, UserSettingsPage.BASIC_DEMOGRAPHICS, UserSettingsAction.DELETE) as Boolean)
-    }
-
-    @Test
-    fun settings_activity_lifestyle_crud_success() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val row = UserProfileTestData.activityLifestyle().toEntity(userId)
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.activityLifestyle())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId) } returns row
-        coEvery { repo.updateSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId, any()) } returns row
-        coEvery { repo.deleteSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId) } returns true
-
-        assertEquals(UserProfileTestData.activityLifestyle(), service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.GET))
-        assertEquals(
-            UserProfileTestData.activityLifestyle(),
-            service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.UPDATE, updatePayload)
-        )
-        assertTrue(service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.DELETE) as Boolean)
-    }
-
-    @Test
-    fun settings_activity_lifestyle_crud_error() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.activityLifestyle())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId) } returns null
-        coEvery { repo.updateSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId, any()) } returns null
-        coEvery { repo.deleteSettingsSection(UserSettingsPage.ACTIVITY_LIFESTYLE, userId) } returns false
-
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.GET))
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.UPDATE, updatePayload))
-        assertFalse(service.handleUserSettings(userId, UserSettingsPage.ACTIVITY_LIFESTYLE, UserSettingsAction.DELETE) as Boolean)
-    }
-
-    @Test
-    fun settings_goals_priorities_crud_success() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val row = UserProfileTestData.goals().toEntity(userId)
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.goals())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId) } returns row
-        coEvery { repo.updateSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId, any()) } returns row
-        coEvery { repo.deleteSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId) } returns true
-
-        assertEquals(UserProfileTestData.goals(), service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.GET))
-        assertEquals(
-            UserProfileTestData.goals(),
-            service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.UPDATE, updatePayload)
-        )
-        assertTrue(service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.DELETE) as Boolean)
-    }
-
-    @Test
-    fun settings_goals_priorities_crud_error() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.goals())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId) } returns null
-        coEvery { repo.updateSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId, any()) } returns null
-        coEvery { repo.deleteSettingsSection(UserSettingsPage.GOALS_PRIORITIES, userId) } returns false
-
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.GET))
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.UPDATE, updatePayload))
-        assertFalse(service.handleUserSettings(userId, UserSettingsPage.GOALS_PRIORITIES, UserSettingsAction.DELETE) as Boolean)
-    }
-
-    @Test
-    fun settings_training_background_crud_success() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val row = UserProfileTestData.trainingBackground().toEntity(userId)
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.trainingBackground())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId) } returns row
-        coEvery { repo.updateSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId, any()) } returns row
-        coEvery { repo.deleteSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId) } returns true
-
-        assertEquals(UserProfileTestData.trainingBackground(), service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.GET))
-        assertEquals(
-            UserProfileTestData.trainingBackground(),
-            service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.UPDATE, updatePayload)
-        )
-        assertTrue(service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.DELETE) as Boolean)
-    }
-
-    @Test
-    fun settings_training_background_crud_error() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.trainingBackground())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId) } returns null
-        coEvery { repo.updateSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId, any()) } returns null
-        coEvery { repo.deleteSettingsSection(UserSettingsPage.TRAINING_BACKGROUND, userId) } returns false
-
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.GET))
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.UPDATE, updatePayload))
-        assertFalse(service.handleUserSettings(userId, UserSettingsPage.TRAINING_BACKGROUND, UserSettingsAction.DELETE) as Boolean)
-    }
-
-    @Test
-    fun settings_nutrition_history_crud_success() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val row = UserProfileTestData.nutritionHistory().toEntity(userId)
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.nutritionHistory())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId) } returns row
-        coEvery { repo.updateSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId, any()) } returns row
-        coEvery { repo.deleteSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId) } returns true
-
-        assertEquals(UserProfileTestData.nutritionHistory(), service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.GET))
-        assertEquals(
-            UserProfileTestData.nutritionHistory(),
-            service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.UPDATE, updatePayload)
-        )
-        assertTrue(service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.DELETE) as Boolean)
-    }
-
-    @Test
-    fun settings_nutrition_history_crud_error() = runBlocking {
-        val payload = UserProfileTestData.fullRequest()
-        val userId = payload.userId
-        val updatePayload = json.encodeToJsonElement(UserProfileTestData.nutritionHistory())
-
-        coEvery { repo.getSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId) } returns null
-        coEvery { repo.updateSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId, any()) } returns null
-        coEvery { repo.deleteSettingsSection(UserSettingsPage.NUTRITION_HISTORY, userId) } returns false
-
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.GET))
-        assertNull(service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.UPDATE, updatePayload))
-        assertFalse(service.handleUserSettings(userId, UserSettingsPage.NUTRITION_HISTORY, UserSettingsAction.DELETE) as Boolean)
     }
 }

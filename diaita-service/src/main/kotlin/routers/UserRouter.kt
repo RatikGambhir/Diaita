@@ -1,5 +1,7 @@
 package com.diaita.routers
 
+import com.diaita.AUTH_PROVIDER
+import com.diaita.authenticatedUserId
 import com.diaita.controllers.UserController
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.ServiceResult
@@ -8,6 +10,7 @@ import com.diaita.dto.UserSettingsPage
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ContentTransformationException
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -17,21 +20,31 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import io.ktor.server.routing.Route
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 
-fun Application.configureUserRoutes(userController: UserController) {
+fun Application.configureUserRoutes(userController: UserController, requireAuthentication: Boolean = false) {
     routing {
+        if (requireAuthentication) {
+            authenticate(AUTH_PROVIDER) { userRoutes(userController) }
+        } else {
+            userRoutes(userController)
+        }
+    }
+}
+
+private fun Route.userRoutes(userController: UserController) {
         post("/register") {
-            call.handleProfileUpsert(userController)
+            call.handleProfileUpsert(userController, call.authenticatedUserId())
         }
 
         post("/user/profile") {
-            call.handleProfileUpsert(userController)
+            call.handleProfileUpsert(userController, call.authenticatedUserId())
         }
 
         get("/user/profile/{userId}") {
-            val userId = call.parameters["userId"]
+            val userId = call.authenticatedUserId() ?: call.parameters["userId"]
             if (userId.isNullOrBlank()) {
                 call.respondText("Missing userId parameter", status = HttpStatusCode.BadRequest)
                 return@get
@@ -47,7 +60,7 @@ fun Application.configureUserRoutes(userController: UserController) {
         }
 
         post("/users/{userId}/recommendations/generate") {
-            val userId = call.parameters["userId"]
+            val userId = call.authenticatedUserId() ?: call.parameters["userId"]
             if (userId.isNullOrBlank()) {
                 call.respondText("Missing userId parameter", status = HttpStatusCode.BadRequest)
                 return@post
@@ -60,7 +73,7 @@ fun Application.configureUserRoutes(userController: UserController) {
         }
 
         get("/users/{userId}/recommendations") {
-            val userId = call.parameters["userId"]
+            val userId = call.authenticatedUserId() ?: call.parameters["userId"]
             if (userId.isNullOrBlank()) {
                 call.respondText("Missing userId parameter", status = HttpStatusCode.BadRequest)
                 return@get
@@ -89,17 +102,17 @@ fun Application.configureUserRoutes(userController: UserController) {
                 call.handleUserSettingsRequest(userController)
             }
         }
-    }
 }
 
-private suspend fun ApplicationCall.handleProfileUpsert(userController: UserController) {
-    val user = try {
+private suspend fun ApplicationCall.handleProfileUpsert(userController: UserController, authenticatedUserId: String?) {
+    val receivedUser = try {
         receive<RegisterUserProfileRequestDto>()
     } catch (_: ContentTransformationException) {
         respondText("Invalid request, request body is invalid", status = HttpStatusCode.BadRequest)
         return
     }
 
+    val user = authenticatedUserId?.let { receivedUser.copy(userId = it) } ?: receivedUser
     val validationError = user.validationError()
     if (validationError != null) {
         respondText(validationError, status = HttpStatusCode.BadRequest)
@@ -141,16 +154,11 @@ private fun RegisterUserProfileRequestDto.validationError(): String? {
         return "Invalid request: timePerSession must be between 0 and 1440"
     }
 
-    val hasTrainingBackground = !trainingHistory.isNullOrBlank() || !trainingAge.isNullOrBlank()
-    if (!hasTrainingBackground) {
-        return "Invalid request: at least one of trainingHistory or trainingAge is required"
-    }
-
     return null
 }
 
 private suspend fun ApplicationCall.handleUserSettingsRequest(userController: UserController) {
-    val userId = parameters["userId"]
+    val userId = authenticatedUserId() ?: parameters["userId"]
     if (userId.isNullOrBlank()) {
         respondText("Missing userId", status = HttpStatusCode.BadRequest)
         return

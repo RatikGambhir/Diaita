@@ -228,7 +228,8 @@ data class HistoricalMacroAveragesResponseDto(
 @Serializable
 data class MealBucketResponseDto(
     val items: List<MealBucketItemResponseDto> = emptyList(),
-    val historical: HistoricalMacroAveragesResponseDto? = null
+    val historical: HistoricalMacroAveragesResponseDto? = null,
+    val mealId: String? = null
 )
 
 @Serializable
@@ -239,7 +240,8 @@ data class MealBucketItemResponseDto(
     val protein: Double,
     val carb: Double,
     val servings: Double,
-    val servingSize: String? = null
+    val servingSize: String? = null,
+    val id: String? = null
 )
 
 @Serializable

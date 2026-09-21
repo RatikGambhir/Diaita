@@ -53,7 +53,7 @@ const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
 ]
 
-const updateField = (field: keyof MetricsTracking, value: any) => {
+const updateField = <K extends keyof MetricsTracking>(field: K, value: MetricsTracking[K]) => {
   emit('update:formData', { [field]: value })
 }
 
@@ -135,7 +135,7 @@ const toggleTool = (tool: string) => {
         <Label for="checkinFrequency">Preferred Check-in Frequency</Label>
         <Select
           :model-value="formData.checkinFrequency"
-          @update:model-value="updateField('checkinFrequency', $event)"
+          @update:model-value="updateField('checkinFrequency', String($event ?? ''))"
         >
           <SelectTrigger class="w-full md:w-1/2">
             <SelectValue placeholder="How often would you like to check in?" />
@@ -153,9 +153,9 @@ const toggleTool = (tool: string) => {
         <Textarea
           id="notes"
           :model-value="notes"
-          @update:model-value="emit('update:notes', String($event))"
           placeholder="Anything else you'd like us to know about your goals, preferences, or situation..."
           class="min-h-[120px]"
+          @update:model-value="emit('update:notes', String($event))"
         />
       </div>
     </div>

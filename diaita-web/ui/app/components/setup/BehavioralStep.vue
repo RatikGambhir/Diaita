@@ -19,7 +19,7 @@ interface Props {
   formData: BehavioralFactors
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 const emit = defineEmits<{
   'update:formData': [data: Partial<BehavioralFactors>]
 }>()
@@ -53,8 +53,8 @@ const supportOptions = [
   { value: 'none', label: 'None - No support system' },
 ]
 
-const updateField = (field: keyof BehavioralFactors, value: any) => {
-  emit('update:formData', { [field]: value })
+const updateField = (field: keyof BehavioralFactors, value: unknown) => {
+  emit('update:formData', { [field]: String(value ?? '') })
 }
 </script>
 
@@ -147,9 +147,9 @@ const updateField = (field: keyof BehavioralFactors, value: any) => {
         <Textarea
           id="pastSuccessFailurePatterns"
           :model-value="formData.pastSuccessFailurePatterns"
-          @update:model-value="updateField('pastSuccessFailurePatterns', $event)"
           placeholder="What has worked or not worked for you in the past?"
           class="min-h-[80px]"
+          @update:model-value="updateField('pastSuccessFailurePatterns', $event)"
         />
       </div>
 
@@ -158,9 +158,9 @@ const updateField = (field: keyof BehavioralFactors, value: any) => {
         <Textarea
           id="relationshipWithFood"
           :model-value="formData.relationshipWithFood"
-          @update:model-value="updateField('relationshipWithFood', $event)"
           placeholder="Describe your relationship with food..."
           class="min-h-[80px]"
+          @update:model-value="updateField('relationshipWithFood', $event)"
         />
       </div>
 
@@ -169,9 +169,9 @@ const updateField = (field: keyof BehavioralFactors, value: any) => {
         <Textarea
           id="stressEatingTendencies"
           :model-value="formData.stressEatingTendencies"
-          @update:model-value="updateField('stressEatingTendencies', $event)"
           placeholder="Do you tend to eat when stressed? Describe your patterns..."
           class="min-h-[80px]"
+          @update:model-value="updateField('stressEatingTendencies', $event)"
         />
       </div>
 
@@ -180,9 +180,9 @@ const updateField = (field: keyof BehavioralFactors, value: any) => {
         <Textarea
           id="disorderedEatingHistory"
           :model-value="formData.disorderedEatingHistory"
-          @update:model-value="updateField('disorderedEatingHistory', $event)"
           placeholder="Any history of disordered eating or eating disorders? (optional)"
           class="min-h-[80px]"
+          @update:model-value="updateField('disorderedEatingHistory', $event)"
         />
         <p class="text-xs text-muted-foreground">
           This helps us provide appropriate recommendations. If you're currently struggling, please seek professional support.

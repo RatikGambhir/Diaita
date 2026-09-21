@@ -14,12 +14,13 @@ defineProps<{
         name: string;
         icon: FunctionalComponent<LucideProps>;
         totals: { calories: number; carbs: number; protein: number; fat: number };
-        items: Array<{ name: string; calories: number; carbs: number; protein: number; fat: number }>;
+        items: Array<{ id: string | null; name: string; calories: number; carbs: number; protein: number; fat: number }>;
     };
 }>();
 
 const emit = defineEmits<{
     (e: "add-foods", ingredients: NutritionFood[]): void;
+    (e: "delete-food", itemId: string | null): void;
 }>();
 
 const addFoodOpen = ref(false);
@@ -91,7 +92,15 @@ const handleSaveFoods = (ingredients: NutritionFood[]) => {
                     </div>
                     <div class="flex items-center gap-3 text-muted-foreground">
                         <Pencil class="h-4 w-4 cursor-pointer hover:text-foreground transition-colors" />
-                        <Trash2 class="h-4 w-4 text-destructive cursor-pointer hover:text-destructive/80 transition-colors" />
+                        <button
+                            type="button"
+                            class="text-destructive transition-colors hover:text-destructive/80 disabled:opacity-40"
+                            :disabled="!item.id"
+                            aria-label="Remove food"
+                            @click="emit('delete-food', item.id)"
+                        >
+                            <Trash2 class="h-4 w-4" />
+                        </button>
                     </div>
                 </div>
             </div>

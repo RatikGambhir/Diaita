@@ -1,5 +1,6 @@
 package com.diaita.repo
 
+import com.diaita.database.SQLiteDatabase
 import com.diaita.dto.RegisterUserProfileRequestDto
 import com.diaita.dto.RegisteredUserProfileDto
 import com.diaita.dto.UserSettingsPage
@@ -8,103 +9,93 @@ import com.diaita.entity.BasicDemographicsRowEntity
 import com.diaita.entity.GoalsPrioritiesRowEntity
 import com.diaita.entity.NutritionHistoryRowEntity
 import com.diaita.entity.TrainingBackgroundRowEntity
-import com.diaita.entity.UserProfileRowEntity
-import com.diaita.lib.factories.PostgresFactory
-import com.diaita.lib.factories.SupabaseManager
-import com.diaita.lib.mappings.toDto
-import com.diaita.lib.mappings.toUserProfileRowEntity
+import java.time.Instant
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
-class UserRepo(private val supabaseManager: SupabaseManager) {
+class UserRepo(private val database: SQLiteDatabase) {
+    private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
 
-    suspend fun upsertUserProfile(request: RegisterUserProfileRequestDto): RegisteredUserProfileDto? {
-        val result = supabaseManager.upsert(
-            table = PostgresFactory.USER_PROFILE_TABLE,
-            data = request.toUserProfileRowEntity()
-        )
+    suspend fun upsertUserProfile(request: RegisterUserProfileRequestDto): RegisteredUserProfileDto? =
+        runCatching {
+            database.connection { connection ->
+                connection.prepareStatement(
+                    """INSERT INTO user_profiles (user_id, profile_json, updated_at)
+                       VALUES (?, ?, ?)
+                       ON CONFLICT(user_id) DO UPDATE SET profile_json = excluded.profile_json, updated_at = excluded.updated_at"""
+                ).use { statement ->
+                    statement.setString(1, request.userId)
+                    statement.setString(2, json.encodeToString(request))
+                    statement.setString(3, Instant.now().toString())
+                    statement.executeUpdate()
+                }
+            }
+            request
+        }.getOrNull()
 
-        return result.body?.toDto()
-    }
-
-    private suspend inline fun <reified T : Any> getSection(table: String, userId: String): T? {
-        val result = supabaseManager.selectSingle<T>(table, PostgresFactory.USER_ID_COLUMN, userId)
-        return result.body
-    }
-
-    private suspend inline fun <reified T : Any> updateSection(table: String, data: T, userId: String): T? {
-        val result = supabaseManager.update(table, data, PostgresFactory.USER_ID_COLUMN, userId)
-        return result.body
-    }
-
-    private suspend fun deleteSection(table: String, userId: String): Boolean {
-        val result = supabaseManager.delete(table, PostgresFactory.USER_ID_COLUMN, userId)
-        return result.error == null
-    }
-
-    suspend fun getSettingsSection(page: UserSettingsPage, userId: String): Any? = when (page) {
-        UserSettingsPage.BASIC_DEMOGRAPHICS -> getSection<BasicDemographicsRowEntity>(resolveSettingsTable(page), userId)
-        UserSettingsPage.ACTIVITY_LIFESTYLE -> getSection<ActivityLifestyleRowEntity>(resolveSettingsTable(page), userId)
-        UserSettingsPage.GOALS_PRIORITIES -> getSection<GoalsPrioritiesRowEntity>(resolveSettingsTable(page), userId)
-        UserSettingsPage.TRAINING_BACKGROUND -> getSection<TrainingBackgroundRowEntity>(resolveSettingsTable(page), userId)
-        UserSettingsPage.NUTRITION_HISTORY -> getSection<NutritionHistoryRowEntity>(resolveSettingsTable(page), userId)
-    }
-
-    suspend fun updateSettingsSection(
-        page: UserSettingsPage,
-        userId: String,
-        data: Any
-    ): Any? = when (page) {
-        UserSettingsPage.BASIC_DEMOGRAPHICS -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<BasicDemographicsRowEntity>(page, data),
-            userId
-        )
-        UserSettingsPage.ACTIVITY_LIFESTYLE -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<ActivityLifestyleRowEntity>(page, data),
-            userId
-        )
-        UserSettingsPage.GOALS_PRIORITIES -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<GoalsPrioritiesRowEntity>(page, data),
-            userId
-        )
-        UserSettingsPage.TRAINING_BACKGROUND -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<TrainingBackgroundRowEntity>(page, data),
-            userId
-        )
-        UserSettingsPage.NUTRITION_HISTORY -> updateSection(
-            resolveSettingsTable(page),
-            castPayload<NutritionHistoryRowEntity>(page, data),
-            userId
-        )
-    }
-
-    suspend fun deleteSettingsSection(page: UserSettingsPage, userId: String): Boolean =
-        deleteSection(resolveSettingsTable(page), userId)
-
-    suspend fun getFullProfile(userId: String): RegisteredUserProfileDto? {
-        val result = supabaseManager.selectSingle<UserProfileRowEntity>(
-            table = PostgresFactory.USER_PROFILE_TABLE,
-            column = PostgresFactory.USER_ID_COLUMN,
-            value = userId
-        )
-
-        return result.body?.toDto()
-    }
-
-    private fun resolveSettingsTable(page: UserSettingsPage): String = when (page) {
-        UserSettingsPage.BASIC_DEMOGRAPHICS -> PostgresFactory.BASIC_DEMOGRAPHICS_TABLE
-        UserSettingsPage.ACTIVITY_LIFESTYLE -> PostgresFactory.ACTIVITY_LIFESTYLE_TABLE
-        UserSettingsPage.GOALS_PRIORITIES -> PostgresFactory.GOALS_PRIORITIES_TABLE
-        UserSettingsPage.TRAINING_BACKGROUND -> PostgresFactory.TRAINING_BACKGROUND_TABLE
-        UserSettingsPage.NUTRITION_HISTORY -> PostgresFactory.NUTRITION_HISTORY_TABLE
-    }
-
-    private inline fun <reified T : Any> castPayload(page: UserSettingsPage, data: Any): T {
-        require(data is T) {
-            "Invalid payload type for page=$page. Expected ${T::class.simpleName}, got ${data::class.simpleName}"
+    suspend fun getFullProfile(userId: String): RegisteredUserProfileDto? = database.connection { connection ->
+        connection.prepareStatement("SELECT profile_json FROM user_profiles WHERE user_id = ?").use { statement ->
+            statement.setString(1, userId)
+            statement.executeQuery().use { result ->
+                if (result.next()) json.decodeFromString<RegisterUserProfileRequestDto>(result.getString(1)) else null
+            }
         }
-        return data
     }
+
+    suspend fun getSettingsSection(page: UserSettingsPage, userId: String): Any? = database.connection { connection ->
+        connection.prepareStatement(
+            "SELECT data_json FROM user_settings WHERE user_id = ? AND section = ?"
+        ).use { statement ->
+            statement.setString(1, userId)
+            statement.setString(2, page.storageKey)
+            statement.executeQuery().use { result ->
+                if (!result.next()) null else decodeSection(page, result.getString(1))
+            }
+        }
+    }
+
+    suspend fun updateSettingsSection(page: UserSettingsPage, userId: String, data: Any): Any? = runCatching {
+        val encoded = encodeSection(page, data)
+        database.connection { connection ->
+            connection.prepareStatement(
+                """INSERT INTO user_settings (user_id, section, data_json, updated_at)
+                   VALUES (?, ?, ?, ?)
+                   ON CONFLICT(user_id, section) DO UPDATE SET data_json = excluded.data_json, updated_at = excluded.updated_at"""
+            ).use { statement ->
+                statement.setString(1, userId)
+                statement.setString(2, page.storageKey)
+                statement.setString(3, encoded)
+                statement.setString(4, Instant.now().toString())
+                statement.executeUpdate()
+            }
+        }
+        data
+    }.getOrNull()
+
+    suspend fun deleteSettingsSection(page: UserSettingsPage, userId: String): Boolean = database.connection { connection ->
+        connection.prepareStatement("DELETE FROM user_settings WHERE user_id = ? AND section = ?").use { statement ->
+            statement.setString(1, userId)
+            statement.setString(2, page.storageKey)
+            statement.executeUpdate() > 0
+        }
+    }
+
+    private fun encodeSection(page: UserSettingsPage, data: Any): String = when (page) {
+        UserSettingsPage.BASIC_DEMOGRAPHICS -> json.encodeToString(data as BasicDemographicsRowEntity)
+        UserSettingsPage.ACTIVITY_LIFESTYLE -> json.encodeToString(data as ActivityLifestyleRowEntity)
+        UserSettingsPage.GOALS_PRIORITIES -> json.encodeToString(data as GoalsPrioritiesRowEntity)
+        UserSettingsPage.TRAINING_BACKGROUND -> json.encodeToString(data as TrainingBackgroundRowEntity)
+        UserSettingsPage.NUTRITION_HISTORY -> json.encodeToString(data as NutritionHistoryRowEntity)
+    }
+
+    private fun decodeSection(page: UserSettingsPage, value: String): Any = when (page) {
+        UserSettingsPage.BASIC_DEMOGRAPHICS -> json.decodeFromString<BasicDemographicsRowEntity>(value)
+        UserSettingsPage.ACTIVITY_LIFESTYLE -> json.decodeFromString<ActivityLifestyleRowEntity>(value)
+        UserSettingsPage.GOALS_PRIORITIES -> json.decodeFromString<GoalsPrioritiesRowEntity>(value)
+        UserSettingsPage.TRAINING_BACKGROUND -> json.decodeFromString<TrainingBackgroundRowEntity>(value)
+        UserSettingsPage.NUTRITION_HISTORY -> json.decodeFromString<NutritionHistoryRowEntity>(value)
+    }
+
+    private val UserSettingsPage.storageKey: String
+        get() = name.lowercase()
 }

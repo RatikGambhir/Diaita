@@ -1,223 +1,102 @@
 <script setup lang="ts">
+import axios from "axios";
 import * as z from "zod";
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm, Field as FormField } from 'vee-validate'
-import { supabase } from "~/utils";
+import { toTypedSchema } from "@vee-validate/zod";
+import { Field as FormField, useForm } from "vee-validate";
+import { AlertCircle, ChevronLeft, LoaderCircle, LockKeyhole, Mail } from "lucide-vue-next";
+import { authApi } from "~/api/auth";
 import { useUserStore } from "~/stores/useUserStore";
-import type { AuthError, Session, User } from "@supabase/supabase-js";
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
-import Button from '~/components/ui/button/Button.vue'
-import Input from '~/components/ui/input/Input.vue'
-import FormItem from '~/components/ui/form/FormItem.vue'
-import FormControl from '~/components/ui/form/FormControl.vue'
-import FormMessage from '~/components/ui/form/FormMessage.vue'
-import { AlertCircle, ChevronLeft, LoaderCircle, Mail } from 'lucide-vue-next'
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import Button from "~/components/ui/button/Button.vue";
+import Input from "~/components/ui/input/Input.vue";
+import FormItem from "~/components/ui/form/FormItem.vue";
+import FormControl from "~/components/ui/form/FormControl.vue";
+import FormMessage from "~/components/ui/form/FormMessage.vue";
 
-definePageMeta({
-    layout: false,
-});
+definePageMeta({ layout: false });
 
-export interface UserSession {
-  error: AuthError | null,
-  user: User | null,
-  session: Session | null
-}
-
+const schema = toTypedSchema(z.object({
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+}));
+const { handleSubmit } = useForm({ validationSchema: schema });
 const userStore = useUserStore();
-
-const toast = useToast();
+const router = useRouter();
+const route = useRoute();
 const isLoading = ref(false);
 const errorMessage = ref("");
 
-const schema = toTypedSchema(z.object({
-    email: z.string().email("Invalid email"),
-}));
-
-const { handleSubmit } = useForm({
-  validationSchema: schema,
-});
-
-const router = useRouter();
-const route = useRoute();
-
-async function login(email: string): Promise<UserSession> {
-    const { data, error } = await supabase.auth.signInWithOtp({
-        email: email,
-    });
-    if (error) {
-        return {
-          error: error,
-          user: null,
-          session: null
-        }
-    }
-        toast.add({
-            title: "Success",
-            description: "Continuing with email login...",
-            color: "primary",
-        });
-        return {
-          user: data.user,
-          session: data.session,
-          error: error
-        }
-
-}
-
 const onSubmit = handleSubmit(async (values) => {
-    isLoading.value = true;
-    errorMessage.value = "";
-    const { email } = values;
-    try {
-      const {user, session, error} = await login(email)
-      if(error) {
-        errorMessage.value = error.message;
-        toast.add({
-          title: "Login failed",
-          description: error.message,
-          color: "error",
-        });
-      } else {
-        userStore.addUserSession(user ?? null, session ?? null);
-
-        const redirectPath = route.query.redirect as string | undefined
-
-        await router.push({
-          path: "/verify-email",
-          query: {
-            email: values.email,
-            ...(redirectPath && { redirect: redirectPath }),
-          },
-        });
-      }
-    } finally {
-      isLoading.value = false;
-    }
+  isLoading.value = true;
+  errorMessage.value = "";
+  try {
+    userStore.setSession(await authApi.login(values));
+    const profile = await useUserProfile().fetchProfile({ force: true });
+    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : null;
+    await router.push(redirect || (profile ? "/" : "/setup-profile"));
+  } catch (error: unknown) {
+    errorMessage.value = axios.isAxiosError(error)
+      ? error.response?.data?.message || "Invalid email or password"
+      : "Unable to sign in right now";
+  } finally {
+    isLoading.value = false;
+  }
 });
 </script>
 
 <template>
-    <div class="min-h-screen flex">
-        <div
-            class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-cover bg-center bg-no-repeat"
-            style="background-image: url('/assets/fitness-bento.jpeg')"
-        >
-            <div class="absolute bottom-12 left-12 max-w-lg z-10">
-                <p class="text-white text-2xl font-medium mb-4">
-                    "This platform has helped me to save time and serve my
-                    clients faster than ever before."
-                </p>
-                <p class="text-white/80 text-sm">Amanda Go - Yoga Instructor</p>
-            </div>
+  <div class="min-h-screen lg:grid lg:grid-cols-2">
+    <div
+      class="hidden bg-cover bg-center lg:block"
+      style="background-image: linear-gradient(180deg, transparent, rgb(15 23 42 / .72)), url('/assets/fitness-bento.jpeg')"
+    />
+    <main class="flex min-h-screen items-center justify-center bg-background p-8">
+      <div class="w-full max-w-md space-y-8">
+        <NuxtLink to="/landing" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <ChevronLeft class="h-4 w-4" /> Back to Diaita
+        </NuxtLink>
+        <div>
+          <h1 class="text-3xl font-bold">Welcome back</h1>
+          <p class="mt-2 text-muted-foreground">Sign in to continue tracking your nutrition and training.</p>
         </div>
-
-        <div
-            class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background"
-        >
-            <div class="w-full max-w-md">
-                <div class="mb-16">
-                    <NuxtLink to="/" class="flex items-center gap-2">
-                        <span
-                            class="text-xl font-bold text-foreground"
-                            >Diaita</span
-                        >
-                    </NuxtLink>
+        <Alert v-if="errorMessage" variant="destructive">
+          <AlertCircle class="h-4 w-4" />
+          <AlertTitle>Sign in failed</AlertTitle>
+          <AlertDescription>{{ errorMessage }}</AlertDescription>
+        </Alert>
+        <form class="space-y-5" @submit="onSubmit">
+          <FormField v-slot="{ componentField }" name="email">
+            <FormItem>
+              <FormControl>
+                <div class="relative">
+                  <Mail class="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                  <Input v-bind="componentField" type="email" autocomplete="email" placeholder="you@example.com" class="h-11 pl-10" />
                 </div>
-
-                <NuxtLink
-                    to="/"
-                    class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-12"
-                >
-                    <ChevronLeft class="w-4 h-4" />
-                    Home
-                </NuxtLink>
-
-                <div class="space-y-8">
-                    <Alert v-if="errorMessage" variant="destructive">
-                        <AlertCircle class="h-4 w-4" />
-                        <AlertTitle>Login failed</AlertTitle>
-                        <AlertDescription>{{ errorMessage }}</AlertDescription>
-                    </Alert>
-
-                    <div>
-                        <h1
-                            class="text-3xl font-bold text-foreground mb-2"
-                        >
-                            Sign In or Join Now!
-                        </h1>
-                        <p class="text-muted-foreground">
-                            login or create your Diaita account.
-                        </p>
-                    </div>
-
-                    <div class="relative">
-                        <div class="absolute inset-0 flex items-center">
-                            <div
-                                class="w-full border-t border-border"
-                            />
-                        </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span
-                                class="px-2 bg-background text-muted-foreground"
-                                >OR</span
-                            >
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <p class="text-sm text-muted-foreground">
-                            Enter your email address to sign in or create an
-                            account
-                        </p>
-
-                        <form class="space-y-4" @submit="onSubmit">
-                            <FormField v-slot="{ componentField }" name="email">
-                                <FormItem>
-                                    <FormControl>
-                                        <div class="relative">
-                                            <Mail class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                v-bind="componentField"
-                                                type="email"
-                                                placeholder="your.email@example.com"
-                                                class="h-11 w-full bg-white pl-10 focus-visible:bg-white"
-                                            />
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            </FormField>
-
-                            <Button
-                                type="submit"
-                                size="lg"
-                                class="w-full font-medium"
-                                :disabled="isLoading"
-                            >
-                                <LoaderCircle v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
-                                {{ isLoading ? "Sending..." : "Continue With Email" }}
-                            </Button>
-                        </form>
-
-                        <p
-                            class="text-xs text-muted-foreground text-center"
-                        >
-                            By clicking continue, you agree to our
-                            <NuxtLink
-                                to="/terms"
-                                class="underline hover:text-foreground"
-                                >Terms of Service</NuxtLink
-                            >
-                            and
-                            <NuxtLink
-                                to="/privacy"
-                                class="underline hover:text-foreground"
-                                >Privacy Policy</NuxtLink
-                            >.
-                        </p>
-                    </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+          <FormField v-slot="{ componentField }" name="password">
+            <FormItem>
+              <FormControl>
+                <div class="relative">
+                  <LockKeyhole class="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                  <Input v-bind="componentField" type="password" autocomplete="current-password" placeholder="Password" class="h-11 pl-10" />
                 </div>
-            </div>
-        </div>
-    </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+          <Button type="submit" size="lg" class="w-full" :disabled="isLoading">
+            <LoaderCircle v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
+            {{ isLoading ? "Signing in…" : "Sign in" }}
+          </Button>
+        </form>
+        <p class="text-center text-sm text-muted-foreground">
+          New to Diaita?
+          <NuxtLink to="/register" class="font-medium text-foreground hover:underline">Create an account</NuxtLink>
+        </p>
+      </div>
+    </main>
+  </div>
 </template>

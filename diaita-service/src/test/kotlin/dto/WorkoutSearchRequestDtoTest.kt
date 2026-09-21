@@ -9,7 +9,7 @@ class WorkoutSearchRequestDtoTest {
 
     @Test
     fun validate_rejects_negative_page() {
-        val request = WorkoutSearchRequestDto(exerciseType = "Cardio", page = -1)
+        val request = WorkoutSearchRequestDto(exerciseTypes = listOf("Cardio/Conditioning"), page = -1)
 
         val validation = request.validate()
 
@@ -19,7 +19,7 @@ class WorkoutSearchRequestDtoTest {
 
     @Test
     fun validate_rejects_page_size_above_100() {
-        val request = WorkoutSearchRequestDto(exerciseType = "Cardio", pageSize = 101)
+        val request = WorkoutSearchRequestDto(exerciseTypes = listOf("Cardio/Conditioning"), pageSize = 101)
 
         val validation = request.validate()
 
@@ -30,10 +30,10 @@ class WorkoutSearchRequestDtoTest {
     @Test
     fun validate_rejects_when_all_filters_missing_or_blank() {
         val request = WorkoutSearchRequestDto(
-            exercise = "  ",
-            exerciseType = null,
+            query = "  ",
+            exerciseTypes = emptyList(),
             exerciseVariation = "",
-            primaryFitnessFocus = null
+            primaryFitnessFocuses = null
         )
 
         val validation = request.validate()
@@ -44,11 +44,34 @@ class WorkoutSearchRequestDtoTest {
 
     @Test
     fun validate_accepts_when_at_least_one_filter_is_provided() {
-        val request = WorkoutSearchRequestDto(primaryFitnessFocus = "endurance")
+        val request = WorkoutSearchRequestDto(primaryFitnessFocuses = listOf("Back"))
 
         val validation = request.validate()
 
         assertTrue(validation.isValid)
         assertEquals(null, validation.errorMessage)
+    }
+
+    @Test
+    fun validate_rejects_invalid_exercise_type() {
+        val request = WorkoutSearchRequestDto(exerciseTypes = listOf("powerlifting"))
+
+        val validation = request.validate()
+
+        assertFalse(validation.isValid)
+        assertTrue(validation.errorMessage?.contains("Invalid exercise type") == true)
+    }
+
+    @Test
+    fun normalized_canonicalizes_exercise_types_and_focuses() {
+        val request = WorkoutSearchRequestDto(
+            exerciseTypes = listOf("Cardio Conditioning", "SPORT"),
+            primaryFitnessFocuses = listOf(" Back ", "CHEST")
+        )
+
+        val normalized = request.normalized()
+
+        assertEquals(listOf("cardio/conditioning", "sport"), normalized.exerciseTypes)
+        assertEquals(listOf("back", "chest"), normalized.primaryFitnessFocuses)
     }
 }

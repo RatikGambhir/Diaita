@@ -1,7 +1,0 @@
-export { default as Expandable } from "./Expandable.vue"
-export { default as ExpandableTrigger } from "./ExpandableTrigger.vue"
-export { default as ExpandableCard } from "./ExpandableCard.vue"
-export { default as ExpandableCardHeader } from "./ExpandableCardHeader.vue"
-export { default as ExpandableCardContent } from "./ExpandableCardContent.vue"
-export { default as ExpandableCardFooter } from "./ExpandableCardFooter.vue"
-export { default as ExpandableContent } from "./ExpandableContent.vue"

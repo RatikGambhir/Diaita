@@ -14,22 +14,20 @@ let toastId = 0
 export function useToast() {
   const add = (toast: Omit<Toast, 'id'>) => {
     const id = ++toastId
+    const timeout = toast.timeout ?? 5000
     const newToast: Toast = {
       id,
       ...toast,
-      timeout: toast.timeout ?? 5000
+      timeout
     }
     toasts.value.push(newToast)
 
     // Auto remove after timeout
-    if (newToast.timeout > 0) {
+    if (timeout > 0) {
       setTimeout(() => {
         remove(id)
-      }, newToast.timeout)
+      }, timeout)
     }
-
-    // Also log to console for debugging
-    console.log(`[Toast] ${toast.title}: ${toast.description || ''}`)
 
     return id
   }
