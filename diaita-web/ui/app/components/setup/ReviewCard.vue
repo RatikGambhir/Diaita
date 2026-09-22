@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import Card from '~/components/ui/card/Card.vue'
 import CardContent from '~/components/ui/card/CardContent.vue'
 import Badge from '~/components/ui/badge/Badge.vue'
+import { formatOptionLabel } from '~/lib/utils'
 
 interface FieldConfig {
   key: string
@@ -14,7 +15,7 @@ interface FieldConfig {
 
 interface Props {
   title: string
-  data: Record<string, any>
+  data: Record<string, unknown>
   fields: FieldConfig[]
   showEmpty?: boolean
 }
@@ -23,14 +24,15 @@ const props = withDefaults(defineProps<Props>(), {
   showEmpty: false,
 })
 
-const formatValue = (value: any, field: FieldConfig): string => {
+const formatValue = (value: unknown, field: FieldConfig): string => {
   if (value === null || value === undefined || value === '') return '—'
   if (field.type === 'boolean') return value ? 'Yes' : 'No'
   if (field.type === 'array' && Array.isArray(value)) {
-    return value.length > 0 ? value.join(', ') : '—'
+    return value.length > 0 ? value.map(item => formatOptionLabel(String(item))).join(', ') : '—'
   }
   const suffix = field.suffix ? ` ${field.suffix}` : ''
-  return String(value) + suffix
+  const text = typeof value === 'string' ? formatOptionLabel(value) : String(value)
+  return text + suffix
 }
 
 const hasData = (field: FieldConfig): boolean => {
@@ -47,6 +49,12 @@ const visibleFields = computed(() => {
 
 const gridFields = computed(() => visibleFields.value.filter(f => f.type !== 'badges'))
 const badgeFields = computed(() => visibleFields.value.filter(f => f.type === 'badges'))
+
+const badgeValues = (field: FieldConfig): Array<string | number> => {
+  const value = props.data[field.key]
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string | number => typeof item === 'string' || typeof item === 'number')
+}
 
 const hasAnyData = computed(() => visibleFields.value.length > 0)
 </script>
@@ -69,11 +77,11 @@ const hasAnyData = computed(() => visibleFields.value.length > 0)
         <p class="text-muted-foreground text-sm mb-2">{{ field.label }}</p>
         <div class="flex flex-wrap gap-2">
           <Badge
-            v-for="item in (data[field.key] || [])"
+            v-for="item in badgeValues(field)"
             :key="item"
             :variant="field.badgeVariant || 'secondary'"
           >
-            {{ item }}
+            {{ formatOptionLabel(String(item)) }}
           </Badge>
         </div>
       </div>

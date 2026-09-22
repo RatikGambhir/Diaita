@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue"
-import { Search } from "lucide-vue-next"
+import { Plus, Search } from "lucide-vue-next"
 import { useNutritionAutocomplete } from "~/composables/useNutritionAutocomplete"
 import { useNutritionSearch } from "~/composables/useNutritionSearch"
 import Dialog from "~/components/ui/dialog/Dialog.vue"
@@ -30,6 +30,14 @@ const emit = defineEmits<{
 const selectedFoods = ref<NutritionFood[]>([]);
 const showSuggestions = ref(true);
 const hiddenSuggestionsQuery = ref<string | null>(null);
+const customFood = reactive({
+    name: "",
+    servingSize: "1 serving",
+    calories: 0,
+    carbs: 0,
+    protein: 0,
+    fat: 0,
+});
 
 const {
     query: searchQuery,
@@ -58,6 +66,14 @@ const isOpen = computed({
 
 const resetModalState = () => {
     selectedFoods.value = [];
+    Object.assign(customFood, {
+        name: "",
+        servingSize: "1 serving",
+        calories: 0,
+        carbs: 0,
+        protein: 0,
+        fat: 0,
+    });
     showSuggestions.value = true;
     hiddenSuggestionsQuery.value = null;
     resetSearch();
@@ -108,6 +124,23 @@ const handleRemoveFood = (index: number) => {
     selectedFoods.value.splice(index, 1);
 };
 
+const handleAddCustomFood = () => {
+    const name = customFood.name.trim();
+    if (!name) return;
+    selectedFoods.value.push({
+        id: crypto.randomUUID(),
+        name,
+        brand: null,
+        category: "custom",
+        servingSize: customFood.servingSize.trim() || "1 serving",
+        calories: Math.max(0, Number(customFood.calories) || 0),
+        carbs: Math.max(0, Number(customFood.carbs) || 0),
+        protein: Math.max(0, Number(customFood.protein) || 0),
+        fat: Math.max(0, Number(customFood.fat) || 0),
+    });
+    Object.assign(customFood, { name: "", servingSize: "1 serving", calories: 0, carbs: 0, protein: 0, fat: 0 });
+};
+
 const handleCancel = () => {
     isOpen.value = false;
 };
@@ -131,6 +164,21 @@ const handleSave = () => {
             </DialogHeader>
 
             <div class="flex flex-col gap-4 py-2 flex-1 min-h-0">
+                <div class="rounded-lg border bg-muted/30 p-3">
+                    <p class="mb-3 text-sm font-medium">Quick add custom food</p>
+                    <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+                        <Input v-model="customFood.name" class="md:col-span-2" placeholder="Food name" />
+                        <Input v-model="customFood.servingSize" placeholder="Serving size" />
+                        <Input v-model.number="customFood.calories" type="number" min="0" step="0.1" placeholder="Calories" />
+                        <Input v-model.number="customFood.protein" type="number" min="0" step="0.1" placeholder="Protein (g)" />
+                        <Input v-model.number="customFood.carbs" type="number" min="0" step="0.1" placeholder="Carbs (g)" />
+                        <Input v-model.number="customFood.fat" type="number" min="0" step="0.1" placeholder="Fat (g)" />
+                        <Button type="button" variant="secondary" :disabled="!customFood.name.trim()" @click="handleAddCustomFood">
+                            <Plus class="mr-2 h-4 w-4" /> Add custom
+                        </Button>
+                    </div>
+                </div>
+
                 <div class="flex items-center gap-2">
                     <div class="relative flex-1">
                         <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

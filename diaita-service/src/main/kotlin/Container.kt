@@ -1,23 +1,38 @@
 package com.diaita
 
 import io.ktor.server.application.*
+import com.diaita.auth.AuthService
+import com.diaita.auth.PasswordHasher
+import com.diaita.auth.TokenService
+import com.diaita.database.SQLiteDatabase
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 import kotlin.collections.flatten
 
-fun Application.genSingletons(): List<Any> {
+fun Application.genSingletons(database: SQLiteDatabase): List<Any> {
+    val jwtSecret = System.getenv("JWT_SECRET")
+        ?.trim()
+        ?.takeIf(String::isNotEmpty)
+        ?: environment.config.property("jwt.secret").getString()
+    val tokenService = TokenService(
+        secret = jwtSecret,
+        issuer = environment.config.property("jwt.issuer").getString(),
+        audience = environment.config.property("jwt.audience").getString(),
+        lifetimeSeconds = environment.config.property("jwt.lifetimeSeconds").getString().toLong()
+    )
+
     return listOf(
-        listOf(configureDatabases()),
+        listOf(database, PasswordHasher(), tokenService),
         configureRestClient()
     ).flatten()
 }
 
-fun Application.configureContainer(): Container {
-    val singletons = genSingletons()
+fun Application.configureContainer(database: SQLiteDatabase): Container {
+    val singletons = genSingletons(database)
     val container = Container()
     container.bindAll(singletons)
+    container.get<AuthService>()
     return container
-
 }
 
 class Container {
@@ -92,4 +107,3 @@ class Container {
         return get(classname as KClass<Any>)
     }
     }
-

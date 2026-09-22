@@ -37,33 +37,14 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.config.yaml)
 
-    // --- DB / pool / logging ---
-    implementation(libs.postgresql)
-    implementation(libs.h2)
-    implementation(libs.hikariCP)
+    // --- Local persistence / logging ---
+    implementation(libs.sqlite.jdbc)
     implementation(libs.logback.classic)
-    implementation("com.google.genai:google-genai:1.0.0")
 
-    // --- Supabase Kotlin Client ---
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    implementation("io.ktor:ktor-client-cio:3.1.1")
-
-
-    // --- Ktor client (optional in a server module) ---
+    // --- Ktor client for the optional food search provider ---
     implementation(libs.ktor.client.core)
-    implementation("io.ktor:ktor-client-cio:<latest_version>")
     implementation(libs.ktor.client.apache)
-
-    // --- Koin (optional; remove if doing manual DI) ---
-    implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
-    implementation("io.ktor:ktor-server-content-negotiation:3.2.3")
-    implementation("io.ktor:ktor-server-core:3.2.3")
-    implementation("io.ktor:ktor-server-core:3.2.3")
-    implementation("io.ktor:ktor-serialization-gson:3.2.3")
-    implementation("io.ktor:ktor-server-content-negotiation:3.2.3")
-    implementation("io.ktor:ktor-server-core:3.2.3")
+    implementation(libs.ktor.client.content.negotiation)
 
 
     // --- Tests ---

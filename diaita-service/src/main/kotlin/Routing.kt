@@ -6,6 +6,8 @@ import com.diaita.controllers.WorkoutController
 import com.diaita.routers.configureNutritionRoutes
 import com.diaita.routers.configureUserRoutes
 import com.diaita.routers.configureWorkoutRoutes
+import com.diaita.routers.configureAuthRoutes
+import com.diaita.auth.AuthService
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -18,9 +20,10 @@ fun Application.configureRouting(container: Container) {
     // objects, and wire them up
     install(SSE)
 
-    configureUserRoutes(container.get<UserController>());
-    configureNutritionRoutes(container.get<NutritionController>())
-    configureWorkoutRoutes(container.get<WorkoutController>())
+    configureAuthRoutes(container.get<AuthService>())
+    configureUserRoutes(container.get<UserController>(), requireAuthentication = true)
+    configureNutritionRoutes(container.get<NutritionController>(), requireAuthentication = true)
+    configureWorkoutRoutes(container.get<WorkoutController>(), requireAuthentication = true)
 
 //    routing {
 //        get("/") { call.respondText("Hello World!") }

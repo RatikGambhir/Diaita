@@ -69,6 +69,7 @@ export type NutritionHistoricalAverages = {
 };
 
 export type NutritionMealBucketItem = {
+  id: string | null;
   foodName: string;
   cal: number;
   fat: number;
@@ -79,6 +80,7 @@ export type NutritionMealBucketItem = {
 };
 
 export type NutritionMealBucket = {
+  mealId: string | null;
   items: NutritionMealBucketItem[];
   historical: NutritionHistoricalAverages | null;
 };

@@ -29,7 +29,7 @@ const conditionInput = ref('')
 const restrictionInput = ref('')
 const medicationInput = ref('')
 
-const updateField = (field: keyof MedicalHistory, value: any) => {
+const updateField = <K extends keyof MedicalHistory>(field: K, value: MedicalHistory[K]) => {
   emit('update:formData', { [field]: value })
 }
 
@@ -151,9 +151,9 @@ const removeMedication = (index: number) => {
         <Textarea
           id="painPatterns"
           :model-value="formData.painPatterns"
-          @update:model-value="updateField('painPatterns', $event)"
           placeholder="Describe any recurring pain or discomfort you experience..."
           class="min-h-[80px]"
+          @update:model-value="updateField('painPatterns', String($event ?? ''))"
         />
       </div>
 
@@ -216,9 +216,9 @@ const removeMedication = (index: number) => {
         <Textarea
           id="doctorRestrictions"
           :model-value="formData.doctorRestrictions"
-          @update:model-value="updateField('doctorRestrictions', $event)"
           placeholder="Any exercise or dietary restrictions from your doctor..."
           class="min-h-[80px]"
+          @update:model-value="updateField('doctorRestrictions', String($event ?? ''))"
         />
       </div>
     </div>

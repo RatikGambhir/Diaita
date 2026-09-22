@@ -45,14 +45,14 @@ class WorkoutRouterTest {
 
     @Test
     fun search_returns_200_and_response_body_on_success() = testApplication {
-        val request = WorkoutSearchRequestDto(exerciseType = "Cardio")
+        val request = WorkoutSearchRequestDto(exerciseTypes = listOf("Cardio/Conditioning"))
 
         coEvery { service.searchWorkouts(request) } returns WorkoutSearchResponseDto(
             exercises = listOf(
                 ExerciseDto(
                     id = 1,
                     exercise = "Running",
-                    exerciseType = "Cardio",
+                    exerciseType = "cardio/conditioning",
                     description = "Equipment: None | Mechanics: Isolation"
                 )
             ),
@@ -96,7 +96,7 @@ class WorkoutRouterTest {
 
         val response = client.post("/workouts/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            setBody(json.encodeToString(WorkoutSearchRequestDto(page = -1, exerciseType = "Cardio")))
+            setBody(json.encodeToString(WorkoutSearchRequestDto(page = -1, exerciseTypes = listOf("Cardio/Conditioning"))))
         }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -105,7 +105,7 @@ class WorkoutRouterTest {
 
     @Test
     fun search_returns_500_when_service_returns_null() = testApplication {
-        val request = WorkoutSearchRequestDto(exerciseType = "Cardio")
+        val request = WorkoutSearchRequestDto(exerciseTypes = listOf("Cardio/Conditioning"))
 
         coEvery { service.searchWorkouts(request) } returns null
 

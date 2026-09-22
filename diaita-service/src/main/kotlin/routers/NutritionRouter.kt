@@ -1,5 +1,7 @@
 package com.diaita.routers
 
+import com.diaita.AUTH_PROVIDER
+import com.diaita.authenticatedUserId
 import com.diaita.controllers.NutritionController
 import com.diaita.dto.IngredientAutocompleteFiltersDto
 import com.diaita.dto.IngredientSearchFiltersDto
@@ -12,11 +14,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
+import io.ktor.server.auth.authenticate
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import io.ktor.server.routing.Route
 import java.time.LocalDate
 import java.util.UUID
 
@@ -117,10 +121,19 @@ private fun isValidUuid(value: String): Boolean =
 private fun isValidIsoDate(value: String): Boolean =
     runCatching { LocalDate.parse(value.trim()) }.isSuccess
 
-fun Application.configureNutritionRoutes(nutritionController: NutritionController) {
+fun Application.configureNutritionRoutes(nutritionController: NutritionController, requireAuthentication: Boolean = false) {
     routing {
+        if (requireAuthentication) {
+            authenticate(AUTH_PROVIDER) { nutritionRoutes(nutritionController) }
+        } else {
+            nutritionRoutes(nutritionController)
+        }
+    }
+}
+
+private fun Route.nutritionRoutes(nutritionController: NutritionController) {
         get("/nutrition/day-summary") {
-            val userId = call.requiredQueryParam("userId") ?: return@get
+            val userId = call.authenticatedUserId() ?: call.requiredQueryParam("userId") ?: return@get
             val date = call.requiredQueryParam("date") ?: return@get
 
             if (!isValidUuid(userId)) {
@@ -148,13 +161,14 @@ fun Application.configureNutritionRoutes(nutritionController: NutritionControlle
         }
 
         post("/nutrition/meals/upsert") {
-            val request = try {
+            val receivedRequest = try {
                 call.receive<UpsertMealsRequestDto>()
             } catch (e: Exception) {
                 call.respondText("Invalid request payload", status = HttpStatusCode.BadRequest)
                 return@post
             }
 
+            val request = call.authenticatedUserId()?.let { receivedRequest.copy(userId = it) } ?: receivedRequest
             val validation = request.validate()
             if (!validation.isValid) {
                 call.respond(
@@ -273,5 +287,4 @@ fun Application.configureNutritionRoutes(nutritionController: NutritionControlle
                 getById = { nutritionController.getMenuItemById(it) }
             )
         }
-    }
 }

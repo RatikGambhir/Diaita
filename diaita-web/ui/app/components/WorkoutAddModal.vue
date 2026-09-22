@@ -72,7 +72,7 @@ const handleCancel = () => {
                 >
                     Cancel
                 </Button>
-                <Button @click="handleCreate">
+                <Button :disabled="!workoutName.trim()" @click="handleCreate">
                     Create Workout
                 </Button>
             </DialogFooter>

@@ -25,7 +25,7 @@ class WorkoutServiceTest {
 
     @Test
     fun searchWorkouts_maps_paginated_result_to_response() = runBlocking {
-        val request = WorkoutSearchRequestDto(exerciseType = "Cardio", page = 1, pageSize = 2)
+        val request = WorkoutSearchRequestDto(exerciseTypes = listOf("Cardio/Conditioning"), page = 1, pageSize = 2)
 
         coEvery { repo.searchExercises(request) } returns Result(
             body = PaginatedResult(
@@ -33,11 +33,11 @@ class WorkoutServiceTest {
                     ExerciseEntity(
                         id = 1,
                         exercise = "Running",
-                        exerciseType = "Cardio",
+                        exerciseType = "cardio/conditioning",
                         equipment = "None",
                         mechanics = "Isolation"
                     ),
-                    ExerciseEntity(id = 2, exercise = "Rowing", exerciseType = "Cardio")
+                    ExerciseEntity(id = 2, exercise = "Rowing", exerciseType = "cardio/conditioning")
                 ),
                 total = 5,
                 page = 1,
@@ -64,7 +64,7 @@ class WorkoutServiceTest {
 
     @Test
     fun searchWorkouts_returns_null_when_repo_fails() = runBlocking {
-        val request = WorkoutSearchRequestDto(exerciseType = "Cardio")
+        val request = WorkoutSearchRequestDto(exerciseTypes = listOf("Cardio/Conditioning"))
 
         coEvery { repo.searchExercises(request) } returns Result(
             body = null,

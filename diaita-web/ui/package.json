@@ -16,7 +16,6 @@
     "@nuxt/scripts": "^0.11.10",
     "@nuxt/test-utils": "^3.19.2",
     "@pinia/nuxt": "^0.11.3",
-    "@supabase/supabase-js": "^2.88.0",
     "@unhead/vue": "^2.0.13",
     "@unovis/ts": "^1.5.2",
     "@unovis/vue": "^1.5.2",

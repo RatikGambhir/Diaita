@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue"
+import type { TransitionProps } from "vue"
+import ToastViewport from "~/components/ToastViewport.vue"
 
 const route = useRoute()
 
-const pageTransition = computed(() => {
+const pageTransition = computed<false | TransitionProps>(() => {
   const layout = route.meta.layout
   if (layout === false || layout === "landing") {
     return false
@@ -26,5 +28,6 @@ const pageTransition = computed(() => {
     <NuxtLayout>
       <NuxtPage :transition="pageTransition" />
     </NuxtLayout>
+    <ToastViewport />
   </div>
 </template>

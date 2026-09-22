@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Label from '~/components/ui/label/Label.vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
+import { PRIMARY_GOAL_OPTIONS } from '~/lib/profileOptions'
 
 interface GoalsForm {
   primaryGoal: string
@@ -15,17 +16,6 @@ defineProps<Props>()
 const emit = defineEmits<{
   'update:formData': [data: Partial<GoalsForm>]
 }>()
-
-const primaryGoalOptions = [
-  { value: 'lose_weight', label: 'Lose Weight' },
-  { value: 'build_muscle', label: 'Build Muscle' },
-  { value: 'improve_endurance', label: 'Improve Endurance' },
-  { value: 'maintain_weight', label: 'Maintain Weight' },
-  { value: 'improve_health', label: 'Improve Overall Health' },
-  { value: 'increase_strength', label: 'Increase Strength' },
-  { value: 'improve_flexibility', label: 'Improve Flexibility' },
-  { value: 'body_recomposition', label: 'Body Recomposition' },
-]
 
 const timeframeOptions = [
   { value: '4_weeks', label: '4 Weeks' },
@@ -58,7 +48,7 @@ const updateField = (field: keyof GoalsForm, value: string) => {
             <SelectValue placeholder="Select your main goal" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="option in primaryGoalOptions" :key="option.value" :value="option.value">
+            <SelectItem v-for="option in PRIMARY_GOAL_OPTIONS" :key="option.value" :value="option.value">
               {{ option.label }}
             </SelectItem>
           </SelectContent>

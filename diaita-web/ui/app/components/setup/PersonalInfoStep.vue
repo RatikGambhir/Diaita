@@ -45,8 +45,8 @@ const handleNumberInput = (field: keyof PersonalInfoForm, value: string | number
           max="120"
           class="bg-background"
           :model-value="formData.age?.toString() ?? ''"
-          @update:model-value="handleNumberInput('age', $event)"
           placeholder="25"
+          @update:model-value="handleNumberInput('age', $event)"
         />
       </div>
 
@@ -59,8 +59,8 @@ const handleNumberInput = (field: keyof PersonalInfoForm, value: string | number
           type="number"
           min="1"
           :model-value="formData.height?.toString() ?? ''"
-          @update:model-value="handleNumberInput('height', $event)"
           placeholder="178.5"
+          @update:model-value="handleNumberInput('height', $event)"
         />
       </div>
 
@@ -73,8 +73,8 @@ const handleNumberInput = (field: keyof PersonalInfoForm, value: string | number
           type="number"
           min="1"
           :model-value="formData.weight?.toString() ?? ''"
-          @update:model-value="handleNumberInput('weight', $event)"
           placeholder="78.2"
+          @update:model-value="handleNumberInput('weight', $event)"
         />
       </div>
     </div>

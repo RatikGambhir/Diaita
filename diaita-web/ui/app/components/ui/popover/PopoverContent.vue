@@ -11,6 +11,7 @@ const props = withDefaults(
     sideOffset: 4,
     align: "center",
     side: "bottom",
+    class: undefined,
   },
 )
 

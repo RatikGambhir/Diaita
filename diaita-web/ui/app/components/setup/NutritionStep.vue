@@ -115,8 +115,8 @@ const addRestriction = () => {
           <Input
             id="eatingSchedule"
             :model-value="formData.eatingSchedule"
-            @update:model-value="updateField('eatingSchedule', $event)"
             placeholder="e.g., 3 meals + 1 snack"
+            @update:model-value="updateField('eatingSchedule', String($event ?? ''))"
           />
         </div>
       </div>
@@ -133,7 +133,7 @@ const addRestriction = () => {
               'px-3 py-1.5 rounded-full text-sm border transition-colors',
               formData.foodAllergies.includes(allergy)
                 ? 'bg-destructive text-destructive-foreground border-destructive'
-                : 'bg-background text-foreground border-border hover:bg-white'
+                : 'bg-background text-foreground border-border hover:bg-muted'
             ]"
             @click="toggleAllergy(allergy)"
           >
@@ -176,7 +176,7 @@ const addRestriction = () => {
               'px-3 py-1.5 rounded-full text-sm border transition-colors',
               formData.dietaryRestrictions.includes(restriction)
                 ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background text-foreground border-border hover:bg-white'
+                : 'bg-background text-foreground border-border hover:bg-muted'
             ]"
             @click="toggleRestriction(restriction)"
           >

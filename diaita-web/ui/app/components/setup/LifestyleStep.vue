@@ -2,6 +2,7 @@
 import Input from '~/components/ui/input/Input.vue'
 import Label from '~/components/ui/label/Label.vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
+import { ACTIVITY_LEVEL_OPTIONS } from '~/lib/profileOptions'
 
 interface LifestyleForm {
   activityLevel: string
@@ -17,14 +18,6 @@ defineProps<Props>()
 const emit = defineEmits<{
   'update:formData': [data: Partial<LifestyleForm>]
 }>()
-
-const activityLevels = [
-  { value: 'sedentary', label: 'Sedentary (little or no exercise)' },
-  { value: 'lightly_active', label: 'Lightly Active (1-3 days/week)' },
-  { value: 'moderately_active', label: 'Moderately Active (3-5 days/week)' },
-  { value: 'very_active', label: 'Very Active (6-7 days/week)' },
-  { value: 'extremely_active', label: 'Extremely Active (athlete/physical job)' },
-]
 
 const stressLevelOptions = [
   { value: 'low', label: 'Low' },
@@ -62,7 +55,7 @@ const handleNumberInput = (field: keyof LifestyleForm, value: string | number) =
             <SelectValue placeholder="Select activity level" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="level in activityLevels" :key="level.value" :value="level.value">
+            <SelectItem v-for="level in ACTIVITY_LEVEL_OPTIONS" :key="level.value" :value="level.value">
               {{ level.label }}
             </SelectItem>
           </SelectContent>
@@ -78,8 +71,8 @@ const handleNumberInput = (field: keyof LifestyleForm, value: string | number) =
           max="24"
           step="0.5"
           :model-value="formData.sleepDuration?.toString() ?? ''"
-          @update:model-value="handleNumberInput('sleepDuration', $event)"
           placeholder="7.5"
+          @update:model-value="handleNumberInput('sleepDuration', $event)"
         />
       </div>
 

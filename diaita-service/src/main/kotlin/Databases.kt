@@ -1,26 +1,22 @@
 package com.diaita
 
-import com.diaita.lib.factories.SupabaseManager
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
+import com.diaita.database.SQLiteDatabase
 import io.ktor.server.application.*
+import java.nio.file.Files
+import java.nio.file.Path
 
+fun Application.configureDatabases(): SQLiteDatabase {
+    val configuredPath = System.getenv("DIAITA_DB_PATH")
+        ?.trim()
+        ?.takeIf(String::isNotEmpty)
+        ?: environment.config.propertyOrNull("database.path")?.getString()
+        ?: "./data/diaita.db"
 
-fun Application.configureDatabases(): SupabaseManager {
-    val client = connectToSupabase()
-    log.info("Connected to Supabase!")
-    return SupabaseManager(client)
-}
+    if (configuredPath != ":memory:" && !configuredPath.startsWith("file:")) {
+        Path.of(configuredPath).toAbsolutePath().parent?.let(Files::createDirectories)
+    }
 
-fun Application.connectToSupabase(): SupabaseClient {
-    val supabaseUrl = environment.config.property("postgres.url").getString()
-    val supabaseKey = environment.config.property("postgres.secret_key").getString()
-
-    return createSupabaseClient(
-        supabaseUrl = supabaseUrl,
-        supabaseKey = supabaseKey
-    ) {
-        install(Postgrest)
+    return SQLiteDatabase(configuredPath).also {
+        log.info("SQLite database ready at {}", configuredPath)
     }
 }
